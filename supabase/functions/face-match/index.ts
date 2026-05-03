@@ -88,24 +88,9 @@ serve(async (req) => {
       );
     }
 
-    // If only one binding and NOT duplicate check mode, skip AI
-    if (bindings.length === 1 && mode !== "check_duplicate") {
-      const b = bindings[0];
-      // Generate verifyUrl server-side — NEVER send private_key to client
-      const verifyUrl = await generateVerifyUrl(b.private_key, displayName);
-      return new Response(
-        JSON.stringify({ 
-          match: {
-            id: b.id,
-            wallet_address: b.wallet_address,
-            face_photo_url: b.face_photo_url,
-            user_id: b.user_id,
-          },
-          verifyUrl,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // NOTE: Always run AI face matching, even when only one binding exists.
+    // Previously we short-circuited and returned the single binding without
+    // verifying the face — that allowed any face to "match" any wallet.
 
     // Download stored face photos and convert to base64
     const bindingsWithPhotos = [];
