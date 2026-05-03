@@ -18,6 +18,17 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
+const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.88;
+
+function extractJsonObject(text: string): any | null {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return null;
+  }
+}
 
 async function generateVerifyUrl(privateKey: string, displayName?: string): Promise<string> {
   const wallet = new ethers.Wallet(privateKey);
@@ -123,29 +134,39 @@ serve(async (req) => {
     let promptText: string;
     
     if (mode === "check_duplicate") {
-      promptText = `You are a face duplicate detection system. I will show you a NEW selfie photo (labeled "NEW_FACE") and ${bindingsWithPhotos.length} existing stored photos (labeled "EXISTING_1", "EXISTING_2", etc.).
+      promptText = `You are a strict biometric face duplicate detection system. I will show you a NEW selfie photo (labeled "NEW_FACE") and ${bindingsWithPhotos.length} existing stored photos (labeled "EXISTING_1", "EXISTING_2", etc.).
 
-Your task: Check if the NEW_FACE matches ANY of the existing photos. Two photos match if they show the SAME person — consider face shape, eyes, nose, mouth, skin tone, and overall facial structure.
+Your task: Check if the NEW_FACE matches ANY existing photo by FACE IDENTITY ONLY.
 
-IMPORTANT RULES:
-- Even if the angle or lighting is slightly different, if it's the SAME person, it's a match.
-- Be strict: if you're unsure, say it's a match (err on the side of caution).
+CRITICAL RULES:
+- IGNORE shirt/clothing color, background, lighting, camera quality, pose, hairstyle, beard style, accessories, and image composition.
+- Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
+- Same shirt color or same background is NOT evidence of a match.
+- If facial features are not clearly the same person, return no duplicate.
+- Do not guess. Only match when you are highly confident from facial structure.
 
 Existing photo IDs:
 ${bindingsWithPhotos.map((b, i) => `EXISTING_${i + 1}: ID="${b.id}"`).join("\n")}
 
 Respond with ONLY a JSON object:
-- If a match is found: {"is_duplicate": true, "matched_id": "the-id-here"}  
-- If no match: {"is_duplicate": false, "matched_id": null}`;
+- If a match is found: {"is_duplicate": true, "matched_id": "the-id-here", "confidence": 0.0 to 1.0, "face_only_reason": "short reason"}
+- If no match: {"is_duplicate": false, "matched_id": null, "confidence": 0, "face_only_reason": "short reason"}`;
     } else {
-      promptText = `You are a face matching system. I will show you a captured selfie photo (labeled "SELFIE") and ${bindingsWithPhotos.length} stored reference photos (labeled "REF_1", "REF_2", etc.). Each reference photo has an ID.
+      promptText = `You are a strict biometric face matching system. I will show you a captured selfie photo (labeled "SELFIE") and ${bindingsWithPhotos.length} stored reference photos (labeled "REF_1", "REF_2", etc.). Each reference photo has an ID.
 
-Your task: Find which reference photo shows the SAME person as the selfie. Consider face shape, features, skin tone, and overall appearance.
+Your task: Find which reference photo shows the SAME person as the selfie using FACE IDENTITY ONLY.
+
+CRITICAL RULES:
+- IGNORE shirt/clothing color, background, lighting, camera quality, pose, hairstyle, beard style, accessories, and image composition.
+- Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
+- Same shirt color or same background is NOT evidence of a match.
+- If facial features are not clearly the same person, return null.
+- Do not guess. Only match when you are highly confident from facial structure.
 
 Reference photo IDs:
 ${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}
 
-IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here"} or {"matched_id": null} if no match is found. No other text.`;
+IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "confidence": 0.0 to 1.0, "face_only_reason": "short reason"} or {"matched_id": null, "confidence": 0, "face_only_reason": "short reason"} if no match is found. No other text.`;
     }
 
     const content: any[] = [
@@ -210,15 +231,21 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here"} or
     if (mode === "check_duplicate") {
       let isDuplicate = false;
       let matchedId: string | null = null;
+      let confidence = 0;
       try {
-        const jsonMatch = aiText.match(/\{[^}]*"is_duplicate"\s*:\s*(true|false)[^}]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = extractJsonObject(aiText);
+        if (parsed && typeof parsed.is_duplicate === "boolean") {
           isDuplicate = parsed.is_duplicate === true;
           matchedId = parsed.matched_id || null;
+          confidence = Number(parsed.confidence) || 0;
         }
       } catch {
         console.error("Failed to parse duplicate check response");
+      }
+
+      if (isDuplicate && confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+        isDuplicate = false;
+        matchedId = null;
       }
 
       let matchedBinding = null;
@@ -241,19 +268,20 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here"} or
 
     // Original match mode
     let matchedId: string | null = null;
+    let confidence = 0;
     try {
-      const jsonMatch = aiText.match(/\{[^}]*"matched_id"\s*:\s*("[^"]*"|null)[^}]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = extractJsonObject(aiText);
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "matched_id")) {
         matchedId = parsed.matched_id;
+        confidence = Number(parsed.confidence) || 0;
       }
     } catch {
       console.error("Failed to parse AI response");
     }
 
-    if (!matchedId) {
+    if (!matchedId || confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
       return new Response(
-        JSON.stringify({ match: null, reason: "no_match_found" }),
+        JSON.stringify({ match: null, reason: confidence > 0 ? "low_confidence_face_match" : "no_match_found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
