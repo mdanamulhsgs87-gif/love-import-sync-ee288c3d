@@ -60,22 +60,7 @@ export function KeySubmitter() {
     capturedPhotoRef.current = null;
   }, []);
 
-  // When user returns from GoodDollar, auto-check whitelist
-  useEffect(() => {
-    let leftApp = false;
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden" && activeKey && step === "verify_link") {
-        leftApp = true;
-      }
-      if (document.visibilityState === "visible" && leftApp && activeKey && step === "verify_link") {
-        leftApp = false;
-        checkWhitelistAndBind(activeKey);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [activeKey, step]);
-
+  // Manual submit — fast single whitelist check, bind if pass, cancel if fail
   const checkWhitelistAndBind = async (key: GeneratedKey) => {
     setStep("checking");
     setStatusMessage("🔍 হোয়াইটলিস্ট চেক হচ্ছে...");
@@ -87,28 +72,26 @@ export function KeySubmitter() {
         return;
       }
 
-      // Check whitelist on-chain with retry (blockchain may take time to reflect)
+      // Fast single whitelist check
       const provider = new ethers.JsonRpcProvider(CELO_RPC);
       const contract = new ethers.Contract(GD_IDENTITY_ADDRESS, GD_IDENTITY_ABI, provider);
       let isWhitelisted = false;
-      const maxRetries = 3;
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          isWhitelisted = await contract.isWhitelisted(key.address);
-        } catch (e) {
-          console.error(`Whitelist check attempt ${attempt + 1} failed:`, e);
-        }
-        if (isWhitelisted) break;
-        if (attempt < maxRetries - 1) {
-          setStatusMessage(`🔍 চেক হচ্ছে... (${attempt + 2}/${maxRetries})`);
-          await new Promise(r => setTimeout(r, 5000)); // Wait 5s between retries
-        }
+      try {
+        isWhitelisted = await contract.isWhitelisted(key.address);
+      } catch (e) {
+        console.error("Whitelist check failed:", e);
       }
 
       if (!isWhitelisted) {
-        // Don't reset — show manual submit option
-        setStep("manual_submit");
-        setStatusMessage("⚠️ অটো চেকে ভেরিফাই পাওয়া যায়নি। আপনি যদি GoodDollar এ ভেরিফাই করে থাকেন তাহলে নিচের বাটনে ক্লিক করে ম্যানুয়ালি সাবমিট করুন।");
+        // Cancel — delete unused pool key, reset
+        await supabase.from("verification_pool").delete()
+          .eq("private_key", key.privateKey)
+          .eq("is_used", false);
+        capturedPhotoRef.current = null;
+        setStep("done_failed");
+        setStatusMessage("❌ Whitelist হয়নি। বাতিল করা হলো।");
+        toast({ title: "❌ Whitelist পাওয়া যায়নি", variant: "destructive" });
+        setTimeout(() => { resetUI(); setStatusMessage(null); }, 3000);
         return;
       }
 
@@ -594,12 +577,17 @@ export function KeySubmitter() {
                 </motion.a>
               </div>
 
-              <button
+              <motion.button
                 onClick={() => checkWhitelistAndBind(activeKey)}
-                className="w-full py-3 rounded-xl border border-[hsl(var(--cyan))]/40 bg-[hsl(var(--cyan))]/10 text-sm font-bold text-[hsl(var(--cyan))] hover:bg-[hsl(var(--cyan))]/20 transition-all flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full relative py-4 rounded-2xl font-black text-sm overflow-hidden text-primary-foreground shadow-lg"
               >
-                <ShieldCheck className="w-4 h-4" /> ম্যানুয়ালি চেক করুন
-              </button>
+                <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]" />
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <ShieldCheck className="w-5 h-5" /> সাবমিট করুন
+                </span>
+              </motion.button>
 
               <button
                 onClick={() => {
