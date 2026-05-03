@@ -577,12 +577,17 @@ export function KeySubmitter() {
                 </motion.a>
               </div>
 
-              <button
+              <motion.button
                 onClick={() => checkWhitelistAndBind(activeKey)}
-                className="w-full py-3 rounded-xl border border-[hsl(var(--cyan))]/40 bg-[hsl(var(--cyan))]/10 text-sm font-bold text-[hsl(var(--cyan))] hover:bg-[hsl(var(--cyan))]/20 transition-all flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full relative py-4 rounded-2xl font-black text-sm overflow-hidden text-primary-foreground shadow-lg"
               >
-                <ShieldCheck className="w-4 h-4" /> ম্যানুয়ালি চেক করুন
-              </button>
+                <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]" />
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <ShieldCheck className="w-5 h-5" /> সাবমিট করুন
+                </span>
+              </motion.button>
 
               <button
                 onClick={() => {
