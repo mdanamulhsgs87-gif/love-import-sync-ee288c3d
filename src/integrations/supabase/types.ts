@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_key_features: {
+        Row: {
+          api_key_id: string
+          feature_name: string
+          id: string
+          is_enabled: boolean
+        }
+        Insert: {
+          api_key_id: string
+          feature_name: string
+          id?: string
+          is_enabled?: boolean
+        }
+        Update: {
+          api_key_id?: string
+          feature_name?: string
+          id?: string
+          is_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_features_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          api_key: string
+          branding_text: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          api_key?: string
+          branding_text?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          api_key?: string
+          branding_text?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       call_signals: {
         Row: {
           caller_id: number
@@ -142,6 +198,41 @@ export type Database = {
           {
             foreignKeyName: "conversations_participant_2_fkey"
             columns: ["participant_2"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      face_wallet_bindings: {
+        Row: {
+          created_at: string
+          face_photo_url: string
+          id: string
+          private_key: string
+          user_id: number
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          face_photo_url: string
+          id?: string
+          private_key: string
+          user_id: number
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          face_photo_url?: string
+          id?: string
+          private_key?: string
+          user_id?: number
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "face_wallet_bindings_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -461,6 +552,7 @@ export type Database = {
           payment_number: string | null
           phone_number: string
           reset_at: string | null
+          reset_batch_id: string | null
           submitted_by: string
           verified_count: number
         }
@@ -470,6 +562,7 @@ export type Database = {
           payment_number?: string | null
           phone_number: string
           reset_at?: string | null
+          reset_batch_id?: string | null
           submitted_by?: string
           verified_count?: number
         }
@@ -479,10 +572,62 @@ export type Database = {
           payment_number?: string | null
           phone_number?: string
           reset_at?: string | null
+          reset_batch_id?: string | null
           submitted_by?: string
           verified_count?: number
         }
         Relationships: []
+      }
+      reverify_queue: {
+        Row: {
+          assigned_user_id: number
+          binding_id: string | null
+          completed_at: string | null
+          created_at: string
+          face_photo_url: string
+          id: string
+          private_key: string
+          status: string
+          wallet_address: string
+        }
+        Insert: {
+          assigned_user_id: number
+          binding_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          face_photo_url: string
+          id?: string
+          private_key: string
+          status?: string
+          wallet_address: string
+        }
+        Update: {
+          assigned_user_id?: number
+          binding_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          face_photo_url?: string
+          id?: string
+          private_key?: string
+          status?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reverify_queue_assigned_user_id_fkey"
+            columns: ["assigned_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reverify_queue_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "face_wallet_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings: {
         Row: {
@@ -848,6 +993,8 @@ export type Database = {
           online_at: string | null
           payment_scheduled_at: string | null
           payment_status: string
+          reverify_count: number
+          watched_video_url: string | null
         }
         Insert: {
           auth_id?: string | null
@@ -866,6 +1013,8 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          reverify_count?: number
+          watched_video_url?: string | null
         }
         Update: {
           auth_id?: string | null
@@ -884,6 +1033,8 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          reverify_count?: number
+          watched_video_url?: string | null
         }
         Relationships: []
       }
@@ -919,7 +1070,59 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_cancel_requests_by_requester: {
+        Args: { p_requester_guest_id: string }
+        Returns: number
+      }
+      admin_cancel_transfer_batch: {
+        Args: { p_batch_id: string }
+        Returns: number
+      }
+      admin_dismiss_transfer_request: {
+        Args: { p_request_id: number }
+        Returns: boolean
+      }
+      admin_reset_transfer_batch: {
+        Args: { p_admin_name?: string; p_batch_id: string }
+        Returns: number
+      }
+      admin_reset_transfer_request: {
+        Args: { p_admin_name?: string; p_request_id: number }
+        Returns: boolean
+      }
+      cancel_incoming_request: {
+        Args: { p_request_id: number; p_target_guest_id: string }
+        Returns: boolean
+      }
+      get_user_bindings_count: { Args: { p_user_id: number }; Returns: number }
+      recalculate_all_balances: { Args: { p_rate: number }; Returns: undefined }
+      reset_all_reverify_counts: {
+        Args: { p_admin_name?: string }
+        Returns: number
+      }
+      reset_all_verified_counts: {
+        Args: { p_admin_name?: string }
+        Returns: string
+      }
+      submit_user_request_batch: {
+        Args: {
+          p_password: string
+          p_submitter_name: string
+          p_submitter_payment_method?: string
+          p_submitter_payment_number?: string
+          p_submitter_rate?: number
+          p_target_guest_id: string
+        }
+        Returns: string
+      }
+      sync_user_request_submission_count: {
+        Args: { p_batch_id: string }
+        Returns: undefined
+      }
+      undo_last_verified_reset: {
+        Args: { p_batch_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
