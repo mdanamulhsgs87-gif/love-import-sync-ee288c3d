@@ -359,7 +359,7 @@ export default function Dashboard() {
 
       {/* Feed onboarding overlay */}
       <AnimatePresence>
-        {!userHasPosted && (
+        {!userHasPosted && !sessionStorage.getItem("skipPostPrompt") && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-background/95 backdrop-blur-md flex items-center justify-center p-6">
             <motion.div initial={{ scale: 0.8, y: 30 }} animate={{ scale: 1, y: 0 }} transition={{ type: "spring", damping: 20 }} className="w-full max-w-sm text-center space-y-6">
@@ -377,6 +377,12 @@ export default function Dashboard() {
                   animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} style={{ backgroundSize: "200% 100%" }} />
                 <span className="relative z-10 flex items-center justify-center gap-2"><Sparkles className="w-5 h-5" /> নিউজ ফিডে যান</span>
               </motion.button>
+              <button
+                onClick={() => { sessionStorage.setItem("skipPostPrompt", "1"); queryClient.invalidateQueries({ queryKey: ["user-has-posted", user?.id] }); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+              >
+                পরে করব
+              </button>
             </motion.div>
           </motion.div>
         )}
