@@ -231,7 +231,7 @@ export function ReverifySection() {
         {/* Bengali reassuring text */}
         <div className="bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/20 rounded-xl p-3">
           <p className="text-[11px] text-foreground/80 leading-relaxed text-center">
-            🔒 আপনার ফেস ফটো কোথাও সেভ হয় না — শুধুমাত্র ক্যামেরায় মুখ ধরলেই অটো স্ক্যান হয়ে ওয়ালেট খুঁজে বের করে। সম্পূর্ণ নিরাপদ ও প্রাইভেট।
+            🔒 ক্যামেরায় মুখ ধরলেই অটো স্ক্যান হয়ে আপনার ওয়ালেট খুঁজে বের করবে। দ্রুত, নিরাপদ ও সম্পূর্ণ এনক্রিপ্টেড।
           </p>
         </div>
 
