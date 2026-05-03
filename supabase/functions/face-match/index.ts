@@ -231,15 +231,21 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
     if (mode === "check_duplicate") {
       let isDuplicate = false;
       let matchedId: string | null = null;
+      let confidence = 0;
       try {
-        const jsonMatch = aiText.match(/\{[^}]*"is_duplicate"\s*:\s*(true|false)[^}]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = extractJsonObject(aiText);
+        if (parsed && typeof parsed.is_duplicate === "boolean") {
           isDuplicate = parsed.is_duplicate === true;
           matchedId = parsed.matched_id || null;
+          confidence = Number(parsed.confidence) || 0;
         }
       } catch {
         console.error("Failed to parse duplicate check response");
+      }
+
+      if (isDuplicate && confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+        isDuplicate = false;
+        matchedId = null;
       }
 
       let matchedBinding = null;
@@ -262,19 +268,20 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
 
     // Original match mode
     let matchedId: string | null = null;
+    let confidence = 0;
     try {
-      const jsonMatch = aiText.match(/\{[^}]*"matched_id"\s*:\s*("[^"]*"|null)[^}]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = extractJsonObject(aiText);
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "matched_id")) {
         matchedId = parsed.matched_id;
+        confidence = Number(parsed.confidence) || 0;
       }
     } catch {
       console.error("Failed to parse AI response");
     }
 
-    if (!matchedId) {
+    if (!matchedId || confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
       return new Response(
-        JSON.stringify({ match: null, reason: "no_match_found" }),
+        JSON.stringify({ match: null, reason: confidence > 0 ? "low_confidence_face_match" : "no_match_found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
