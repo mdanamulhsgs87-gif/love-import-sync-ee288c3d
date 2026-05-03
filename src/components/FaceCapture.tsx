@@ -79,7 +79,7 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
     if (!cameraReady || capturedImage) return;
 
     let consecutiveDetections = 0;
-    const REQUIRED_DETECTIONS = 4;
+    const REQUIRED_DETECTIONS = 6;
 
     detectionRef.current = setInterval(() => {
       if (!videoRef.current || !canvasRef.current) return;
@@ -105,22 +105,39 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
       const centerSkin = countSkinInRegion(ctx, faceX + zoneW, faceY + zoneH, zoneW, zoneH); // nose area
       const totalFaceSkin = countSkinInRegion(ctx, faceX, faceY, faceW, faceH);
 
-      const MIN_ZONE = 0.06;
-      const MIN_CENTER = 0.12;
-      const MIN_TOTAL = 0.14;
+      // Background reference – sample corners outside the face oval
+      const bgTL = countSkinInRegion(ctx, 0, 0, 30, 30);
+      const bgTR = countSkinInRegion(ctx, 130, 0, 30, 30);
+      const bgBL = countSkinInRegion(ctx, 0, 90, 30, 30);
+      const bgBR = countSkinInRegion(ctx, 130, 90, 30, 30);
+      const bgAvg = (bgTL + bgTR + bgBL + bgBR) / 4;
+
+      const MIN_ZONE = 0.18;
+      const MIN_CENTER = 0.28;
+      const MIN_TOTAL = 0.30;
+      const MAX_TOTAL = 0.85; // too much skin = too close / hand covering
       const visibleZones = [upperSkin, bottomSkin, leftSkin, rightSkin].filter((v) => v > MIN_ZONE).length;
 
-      const allZonesOk = centerSkin > MIN_CENTER && totalFaceSkin > MIN_TOTAL && visibleZones >= 3;
+      // Face must clearly stand out from background (avoid skin-toned walls/objects)
+      const faceVsBg = totalFaceSkin - bgAvg;
+      const FACE_BG_DIFF = 0.18;
+
+      const allZonesOk =
+        centerSkin > MIN_CENTER &&
+        totalFaceSkin > MIN_TOTAL &&
+        totalFaceSkin < MAX_TOTAL &&
+        visibleZones === 4 &&
+        faceVsBg > FACE_BG_DIFF;
 
       // Generate warning message
-      if (centerSkin < MIN_CENTER) {
-        setFaceWarning("মুখ ফ্রেমের মাঝে রাখুন");
-      } else if (totalFaceSkin < MIN_TOTAL) {
-        setFaceWarning("আরেকটু আলোতে সোজা সামনে তাকান");
-      } else if (bottomSkin < MIN_ZONE) {
-        setFaceWarning("মুখটা একটু উপরে তুলুন");
-      } else if (visibleZones < 3) {
-        setFaceWarning("মুখটা ফ্রেমের মধ্যে সোজা রাখুন");
+      if (totalFaceSkin < MIN_TOTAL || faceVsBg < FACE_BG_DIFF) {
+        setFaceWarning("মুখ দেখা যাচ্ছে না — ফ্রেমে সোজা সামনে তাকান");
+      } else if (centerSkin < MIN_CENTER) {
+        setFaceWarning("মুখ ফ্রেমের ঠিক মাঝে রাখুন");
+      } else if (totalFaceSkin > MAX_TOTAL) {
+        setFaceWarning("একটু দূরে যান");
+      } else if (visibleZones < 4) {
+        setFaceWarning("পুরো মুখ ফ্রেমে আনুন — কোনো অংশ কাটছে");
       } else {
         setFaceWarning(null);
       }
