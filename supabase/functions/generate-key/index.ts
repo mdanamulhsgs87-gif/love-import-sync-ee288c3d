@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
     // ensure binding exists in vault, send telegram
     // Uses adminClient for all DB ops (bypasses RLS)
     if (action === "rebind_wallet") {
-      const { walletAddress, rewardRate } = body;
+      const { walletAddress, rewardRate, newFacePhotoUrl } = body;
 
       if (!walletAddress) {
         return new Response(JSON.stringify({ error: "Missing walletAddress" }), {
@@ -154,6 +154,16 @@ Deno.serve(async (req) => {
       }
 
       const rate = rewardRate || 0;
+
+      // 0. If a new face photo URL is provided, refresh the binding's stored photo
+      //    so future re-verifications match the user's CURRENT face (people age,
+      //    grow beards, change appearance over time).
+      if (newFacePhotoUrl && typeof newFacePhotoUrl === "string") {
+        await adminClient
+          .from("face_wallet_bindings")
+          .update({ face_photo_url: newFacePhotoUrl })
+          .eq("wallet_address", walletAddress);
+      }
 
       // 1. Increment reverify_count + balance (server-side, reliable)
       const { data: userData } = await adminClient
