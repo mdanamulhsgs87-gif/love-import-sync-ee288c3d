@@ -18,6 +18,17 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
+const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.88;
+
+function extractJsonObject(text: string): any | null {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return null;
+  }
+}
 
 async function generateVerifyUrl(privateKey: string, displayName?: string): Promise<string> {
   const wallet = new ethers.Wallet(privateKey);
