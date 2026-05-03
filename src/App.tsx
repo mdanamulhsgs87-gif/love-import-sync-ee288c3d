@@ -1,12 +1,134 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import IncomingCallHandler from "./components/IncomingCallHandler";
+import FloatingDashboardButton from "./components/FloatingDashboardButton";
+import { useOnlineHeartbeat } from "@/hooks/use-online";
+import { AuthProvider } from "@/hooks/use-auth";
+import { MaintenanceScreen } from "@/components/MaintenanceScreen";
+import { getPublicSettings } from "@/lib/api";
 
-const queryClient = new QueryClient();
+function lazyRetry(factory: () => Promise<any>, retries = 3): ReturnType<typeof lazy> {
+  return lazy(() =>
+    factory().catch((err) => {
+      if (retries > 0) {
+        return new Promise<void>((resolve) => setTimeout(resolve, 500)).then(() =>
+          lazyRetry(factory, retries - 1) as any
+        );
+      }
+      window.location.reload();
+      throw err;
+    })
+  );
+}
+
+const Register = lazyRetry(() => import("./pages/Register"));
+const VerifyEmail = lazyRetry(() => import("./pages/VerifyEmail"));
+const Dashboard = lazyRetry(() => import("./pages/Dashboard"));
+const Profile = lazyRetry(() => import("./pages/Profile"));
+const AdminPanel = lazyRetry(() => import("./pages/AdminPanel"));
+const AddKeys = lazyRetry(() => import("./pages/AddKeys"));
+const Chat = lazyRetry(() => import("./pages/Chat"));
+const Feed = lazyRetry(() => import("./pages/Feed"));
+const Reels = lazyRetry(() => import("./pages/Reels"));
+const ShortReels = lazyRetry(() => import("./pages/ShortReels"));
+const UserProfile = lazyRetry(() => import("./pages/UserProfile"));
+const ChannelPage = lazyRetry(() => import("./pages/ChannelPage"));
+const WatchVideo = lazyRetry(() => import("./pages/WatchVideo"));
+const CallPage = lazyRetry(() => import("./pages/CallPage"));
+const Install = lazyRetry(() => import("./pages/Install"));
+const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
+const MobileRecharge = lazyRetry(() => import("./pages/MobileRecharge"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 15_000,
+      gcTime: 15 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      retry: (failureCount, error) => {
+        const message = error instanceof Error ? error.message.toLowerCase() : "";
+        const isTransient =
+          message.includes("timeout") ||
+          message.includes("failed to fetch") ||
+          message.includes("network") ||
+          message.includes("connection");
+        return isTransient ? failureCount < 4 : failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10_000),
+    },
+  },
+});
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
+function MaintenanceGuard({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const { data: settings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: getPublicSettings,
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+
+  const isAdminRoute = location.pathname === "/admin";
+
+  if (!isAdminRoute && settings?.maintenanceMode === "on") {
+    return <MaintenanceScreen notice={settings.maintenanceNotice || ""} />;
+  }
+
+  return <>{children}</>;
+}
+
+function AppInner() {
+  useOnlineHeartbeat();
+  return (
+    <>
+      <IncomingCallHandler />
+      <FloatingDashboardButton />
+      <MaintenanceGuard>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/index" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/add-keys" element={<AddKeys />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/reels" element={<Reels />} />
+            <Route path="/short-reels" element={<ShortReels />} />
+            <Route path="/user/:userId" element={<UserProfile />} />
+            <Route path="/channel/:userId" element={<ChannelPage />} />
+            <Route path="/watch/:postId" element={<WatchVideo />} />
+            <Route path="/call/:userId" element={<CallPage />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/mobile-recharge" element={<MobileRecharge />} />
+            <Route path="/~oauth" element={<Login />} />
+            <Route path="/~c" element={<Login />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </MaintenanceGuard>
+    </>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +136,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <AppInner />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
