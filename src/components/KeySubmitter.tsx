@@ -60,22 +60,7 @@ export function KeySubmitter() {
     capturedPhotoRef.current = null;
   }, []);
 
-  // When user returns from GoodDollar, auto-check whitelist
-  useEffect(() => {
-    let leftApp = false;
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden" && activeKey && step === "verify_link") {
-        leftApp = true;
-      }
-      if (document.visibilityState === "visible" && leftApp && activeKey && step === "verify_link") {
-        leftApp = false;
-        checkWhitelistAndBind(activeKey);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [activeKey, step]);
-
+  // Manual submit — fast single whitelist check, bind if pass, cancel if fail
   const checkWhitelistAndBind = async (key: GeneratedKey) => {
     setStep("checking");
     setStatusMessage("🔍 হোয়াইটলিস্ট চেক হচ্ছে...");
@@ -87,28 +72,26 @@ export function KeySubmitter() {
         return;
       }
 
-      // Check whitelist on-chain with retry (blockchain may take time to reflect)
+      // Fast single whitelist check
       const provider = new ethers.JsonRpcProvider(CELO_RPC);
       const contract = new ethers.Contract(GD_IDENTITY_ADDRESS, GD_IDENTITY_ABI, provider);
       let isWhitelisted = false;
-      const maxRetries = 3;
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          isWhitelisted = await contract.isWhitelisted(key.address);
-        } catch (e) {
-          console.error(`Whitelist check attempt ${attempt + 1} failed:`, e);
-        }
-        if (isWhitelisted) break;
-        if (attempt < maxRetries - 1) {
-          setStatusMessage(`🔍 চেক হচ্ছে... (${attempt + 2}/${maxRetries})`);
-          await new Promise(r => setTimeout(r, 5000)); // Wait 5s between retries
-        }
+      try {
+        isWhitelisted = await contract.isWhitelisted(key.address);
+      } catch (e) {
+        console.error("Whitelist check failed:", e);
       }
 
       if (!isWhitelisted) {
-        // Don't reset — show manual submit option
-        setStep("manual_submit");
-        setStatusMessage("⚠️ অটো চেকে ভেরিফাই পাওয়া যায়নি। আপনি যদি GoodDollar এ ভেরিফাই করে থাকেন তাহলে নিচের বাটনে ক্লিক করে ম্যানুয়ালি সাবমিট করুন।");
+        // Cancel — delete unused pool key, reset
+        await supabase.from("verification_pool").delete()
+          .eq("private_key", key.privateKey)
+          .eq("is_used", false);
+        capturedPhotoRef.current = null;
+        setStep("done_failed");
+        setStatusMessage("❌ Whitelist হয়নি। বাতিল করা হলো।");
+        toast({ title: "❌ Whitelist পাওয়া যায়নি", variant: "destructive" });
+        setTimeout(() => { resetUI(); setStatusMessage(null); }, 3000);
         return;
       }
 
