@@ -131,7 +131,7 @@ export default function Dashboard() {
       if (!(user as any).request_password) updates.request_password = userRequestPassword.trim();
       if (!(user as any).locked_target_guest_id) updates.locked_target_guest_id = targetGuestId;
       if (Object.keys(updates).length > 0) {
-        await supabase.from("users").update(updates).eq("id", user.id);
+        await supabase.from("users").update(updates as any).eq("id", user.id);
         await refreshUser();
       }
     },
