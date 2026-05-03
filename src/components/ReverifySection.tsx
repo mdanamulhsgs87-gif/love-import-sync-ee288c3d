@@ -166,12 +166,36 @@ export function ReverifySection() {
       const settings = await getPublicSettings();
       const rewardRate = settings.rewardRate || 0;
 
+      // Upload the freshly captured face photo so the binding stores the
+      // user's CURRENT appearance (handles aging, beard growth, etc).
+      let newFacePhotoUrl: string | undefined;
+      try {
+        if (capturedPhotoBase64) {
+          const byteChars = atob(capturedPhotoBase64);
+          const byteNumbers = new Array(byteChars.length);
+          for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+          const byteArray = new Uint8Array(byteNumbers);
+          const photoBlob = new Blob([byteArray], { type: "image/jpeg" });
+          const fileName = `face-${user.id}-${matchedBinding.wallet_address}-${Date.now()}.jpg`;
+          const { error: upErr } = await supabase.storage
+            .from("face-photos")
+            .upload(fileName, photoBlob, { contentType: "image/jpeg", upsert: true });
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
+            newFacePhotoUrl = urlData.publicUrl;
+          }
+        }
+      } catch (e) {
+        console.warn("Face photo refresh upload failed, continuing without update:", e);
+      }
+
       // All logic handled server-side via edge function (reliable, bypasses RLS)
       const { data: result, error: rebindError } = await supabase.functions.invoke("generate-key", {
         body: {
           action: "rebind_wallet",
           walletAddress: matchedBinding.wallet_address,
           rewardRate,
+          newFacePhotoUrl,
         },
       });
 
