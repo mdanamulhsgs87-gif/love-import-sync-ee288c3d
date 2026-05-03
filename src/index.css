@@ -2,95 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 152 56% 38%;
+    --primary-foreground: 222 47% 6%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 90%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 6%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 222 20% 16%;
+    --input: 222 20% 16%;
+    --ring: 152 56% 38%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 152 56% 38%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 30% 14%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 20% 16%;
+    --sidebar-ring: 152 56% 38%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Custom tokens */
+    --emerald: 152 56% 38%;
+    --emerald-foreground: 152 56% 90%;
+    --emerald-foreground: 152 68% 95%;
+    --amber: 38 92% 50%;
+    --pink: 330 80% 60%;
+    --orange: 25 95% 53%;
+    --cyan: 187 72% 50%;
+    --purple: 270 70% 60%;
+    --blue: 217 91% 60%;
   }
 }
 
@@ -98,8 +60,236 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/90 border border-border/50;
+  }
+
+  .input-field {
+    @apply w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all;
+  }
+
+  .btn-primary {
+    @apply w-full rounded-2xl px-6 py-3 font-black text-base flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden;
+    background: linear-gradient(135deg, hsl(152 56% 32%), hsl(152 68% 42%), hsl(160 60% 45%), hsl(152 68% 42%), hsl(152 56% 32%));
+    background-size: 400% 400%;
+    animation: btn-shimmer 4s ease infinite;
+    color: hsl(var(--primary-foreground));
+    box-shadow: 
+      0 4px 15px -3px hsl(152 56% 38% / 0.5),
+      0 0 25px -5px hsl(152 56% 38% / 0.25),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.15);
+    border: 1px solid hsl(152 56% 50% / 0.3);
+    text-shadow: 0 1px 2px hsla(0,0%,0%,0.2);
+    letter-spacing: 0.02em;
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 
+      0 8px 35px -4px hsl(152 56% 38% / 0.7),
+      0 0 40px -8px hsl(152 56% 38% / 0.4),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.2);
+    transform: translateY(-2px);
+    border-color: hsl(152 56% 55% / 0.5);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 
+      0 2px 10px -2px hsl(152 56% 38% / 0.5),
+      inset 0 2px 4px hsla(0,0%,0%,0.15);
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsla(0,0%,100%,0.25), transparent);
+    animation: btn-shine 2.5s ease-in-out infinite;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, hsla(0,0%,100%,0.08) 0%, transparent 50%, hsla(0,0%,0%,0.05) 100%);
+    pointer-events: none;
+  }
+
+  .btn-accent {
+    @apply w-full rounded-2xl px-6 py-3 font-black text-base flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden;
+    background: linear-gradient(135deg, hsl(38 92% 45%), hsl(30 95% 55%), hsl(45 90% 55%), hsl(30 95% 55%), hsl(38 92% 45%));
+    background-size: 400% 400%;
+    animation: btn-shimmer 4s ease infinite;
+    color: hsl(var(--accent-foreground));
+    box-shadow: 
+      0 4px 15px -3px hsl(38 92% 50% / 0.5),
+      0 0 25px -5px hsl(38 92% 50% / 0.25),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.2);
+    border: 1px solid hsl(38 92% 60% / 0.3);
+    text-shadow: 0 1px 2px hsla(0,0%,0%,0.15);
+    letter-spacing: 0.02em;
+  }
+  .btn-accent:hover:not(:disabled) {
+    box-shadow: 
+      0 8px 35px -4px hsl(38 92% 50% / 0.7),
+      0 0 40px -8px hsl(38 92% 50% / 0.4),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.25);
+    transform: translateY(-2px);
+  }
+  .btn-accent:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+  }
+  .btn-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsla(0,0%,100%,0.3), transparent);
+    animation: btn-shine 2.5s ease-in-out infinite;
+  }
+  .btn-accent::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, hsla(0,0%,100%,0.12) 0%, transparent 50%, hsla(0,0%,0%,0.05) 100%);
+    pointer-events: none;
+  }
+
+  .btn-neon-pulse {
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  /* Royal Blue Login Button */
+  .login-btn-royal {
+    @apply w-full rounded-2xl px-6 py-3 font-black text-base flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden;
+    background: linear-gradient(135deg, hsl(210 100% 42%), hsl(220 95% 52%), hsl(230 85% 58%), hsl(220 95% 52%), hsl(210 100% 42%));
+    background-size: 400% 400%;
+    animation: btn-shimmer 3s ease infinite;
+    color: #fff;
+    box-shadow: 
+      0 4px 18px -3px hsl(220 95% 55% / 0.55),
+      0 0 30px -5px hsl(220 95% 55% / 0.3),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.2);
+    border: 1px solid hsl(220 90% 60% / 0.4);
+    text-shadow: 0 1px 3px hsla(0,0%,0%,0.3);
+    letter-spacing: 0.02em;
+  }
+  .login-btn-royal:hover:not(:disabled) {
+    box-shadow: 
+      0 8px 40px -4px hsl(220 95% 55% / 0.7),
+      0 0 50px -8px hsl(220 95% 55% / 0.4),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.25);
+    transform: translateY(-2px);
+  }
+  .login-btn-royal:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+  }
+  .login-btn-royal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsla(0,0%,100%,0.3), transparent);
+    animation: btn-shine 2s ease-in-out infinite;
+  }
+  .login-btn-royal::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, hsla(0,0%,100%,0.1) 0%, transparent 50%, hsla(0,0%,0%,0.08) 100%);
+    pointer-events: none;
+  }
+
+  /* Rose/Pink Register Button */
+  .register-btn-rose {
+    @apply w-full rounded-2xl px-6 py-3 font-black text-base flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden;
+    background: linear-gradient(135deg, hsl(340 80% 48%), hsl(350 85% 55%), hsl(0 80% 58%), hsl(350 85% 55%), hsl(340 80% 48%));
+    background-size: 400% 400%;
+    animation: btn-shimmer 3s ease infinite;
+    color: #fff;
+    box-shadow: 
+      0 4px 18px -3px hsl(340 80% 50% / 0.55),
+      0 0 30px -5px hsl(340 80% 50% / 0.3),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.2);
+    border: 1px solid hsl(340 80% 60% / 0.4);
+    text-shadow: 0 1px 3px hsla(0,0%,0%,0.3);
+    letter-spacing: 0.02em;
+  }
+  .register-btn-rose:hover:not(:disabled) {
+    box-shadow: 
+      0 8px 40px -4px hsl(340 80% 50% / 0.7),
+      0 0 50px -8px hsl(340 80% 50% / 0.4),
+      inset 0 1px 0 0 hsla(0,0%,100%,0.25);
+    transform: translateY(-2px);
+  }
+  .register-btn-rose:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+  }
+  .register-btn-rose::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsla(0,0%,100%,0.3), transparent);
+    animation: btn-shine 2s ease-in-out infinite;
+  }
+  .register-btn-rose::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, hsla(0,0%,100%,0.1) 0%, transparent 50%, hsla(0,0%,0%,0.08) 100%);
+    pointer-events: none;
+  }
+}
+
+@keyframes btn-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes btn-shine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 4px 15px -3px hsl(152 56% 38% / 0.5),
+      0 0 25px -5px hsl(152 56% 38% / 0.25);
+  }
+  50% {
+    box-shadow: 
+      0 4px 20px -3px hsl(152 56% 38% / 0.7),
+      0 0 40px -5px hsl(152 56% 38% / 0.4),
+      0 0 60px -10px hsl(152 56% 38% / 0.2);
+  }
+}
+
+@keyframes shimmer-text {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+@keyframes loading-bar {
+  0% { width: 10%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 10%; margin-left: 90%; }
 }

