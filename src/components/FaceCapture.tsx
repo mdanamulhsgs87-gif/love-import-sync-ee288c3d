@@ -73,7 +73,8 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
     return skin / (w * h);
   };
 
-  // Full-face detection: checks that skin is present in ALL zones (top/bottom/left/right)
+  // Full-face detection: keep it forgiving. The secure match happens server-side;
+  // this client check should only prevent blank/very bad captures.
   useEffect(() => {
     if (!cameraReady || capturedImage) return;
 
@@ -91,32 +92,35 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
       ctx.drawImage(video, 0, 0, 160, 120);
 
       // Face oval region in the center
-      const faceX = 45, faceY = 15, faceW = 70, faceH = 90;
+      const faceX = 38, faceY = 12, faceW = 84, faceH = 96;
 
       // Split face region into zones: top (forehead), bottom (chin), left cheek, right cheek, center
       const zoneH = Math.floor(faceH / 3);
       const zoneW = Math.floor(faceW / 3);
 
-      const topSkin = countSkinInRegion(ctx, faceX + zoneW, faceY, zoneW, zoneH); // forehead
-      const bottomSkin = countSkinInRegion(ctx, faceX + zoneW, faceY + zoneH * 2, zoneW, zoneH); // chin
+      const upperSkin = countSkinInRegion(ctx, faceX + zoneW, faceY, zoneW, zoneH); // upper face / forehead area
+      const bottomSkin = countSkinInRegion(ctx, faceX + zoneW, faceY + zoneH * 2, zoneW, zoneH); // mouth/chin area
       const leftSkin = countSkinInRegion(ctx, faceX, faceY + zoneH, zoneW, zoneH); // left cheek
       const rightSkin = countSkinInRegion(ctx, faceX + zoneW * 2, faceY + zoneH, zoneW, zoneH); // right cheek
       const centerSkin = countSkinInRegion(ctx, faceX + zoneW, faceY + zoneH, zoneW, zoneH); // nose area
+      const totalFaceSkin = countSkinInRegion(ctx, faceX, faceY, faceW, faceH);
 
-      const MIN_ZONE = 0.10; // each zone must have at least 10% skin
-      const MIN_CENTER = 0.20; // center must have more
+      const MIN_ZONE = 0.06;
+      const MIN_CENTER = 0.12;
+      const MIN_TOTAL = 0.14;
+      const visibleZones = [upperSkin, bottomSkin, leftSkin, rightSkin].filter((v) => v > MIN_ZONE).length;
 
-      const allZonesOk = centerSkin > MIN_CENTER && topSkin > MIN_ZONE && bottomSkin > MIN_ZONE && leftSkin > MIN_ZONE && rightSkin > MIN_ZONE;
+      const allZonesOk = centerSkin > MIN_CENTER && totalFaceSkin > MIN_TOTAL && visibleZones >= 3;
 
       // Generate warning message
       if (centerSkin < MIN_CENTER) {
         setFaceWarning("মুখ ফ্রেমের মাঝে রাখুন");
-      } else if (topSkin < MIN_ZONE) {
-        setFaceWarning("কপাল দেখা যাচ্ছে না — একটু নিচে নামান");
+      } else if (totalFaceSkin < MIN_TOTAL) {
+        setFaceWarning("আরেকটু আলোতে সোজা সামনে তাকান");
       } else if (bottomSkin < MIN_ZONE) {
-        setFaceWarning("থুতনি দেখা যাচ্ছে না — একটু উপরে তুলুন");
-      } else if (leftSkin < MIN_ZONE || rightSkin < MIN_ZONE) {
-        setFaceWarning("মুখ সোজা রাখুন — একদিকে কাত হয়ে আছে");
+        setFaceWarning("মুখটা একটু উপরে তুলুন");
+      } else if (visibleZones < 3) {
+        setFaceWarning("মুখটা ফ্রেমের মধ্যে সোজা রাখুন");
       } else {
         setFaceWarning(null);
       }
@@ -307,7 +311,7 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
             </button>
             <button
               onClick={takePhotoInternal}
-              disabled={!cameraReady || !faceDetecting}
+              disabled={!cameraReady}
               className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--cyan))] to-[hsl(var(--blue))] text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Camera className="w-4 h-4" /> ম্যানুয়াল ফটো
