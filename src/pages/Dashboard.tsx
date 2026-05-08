@@ -40,7 +40,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const [skipPostPrompt, setSkipPostPrompt] = useState(() => sessionStorage.getItem("skipPostPrompt") === "1");
+  const [skipPostPrompt, setSkipPostPrompt] = useState(() => localStorage.getItem("skipPostPrompt") === "1");
 
   // Active panel states (from 3-dot menu)
   const [activePanel, setActivePanel] = useState<"home" | "wallet" | "verified" | "request" | "settings">("home");
@@ -379,7 +379,7 @@ export default function Dashboard() {
                 <span className="relative z-10 flex items-center justify-center gap-2"><Sparkles className="w-5 h-5" /> নিউজ ফিডে যান</span>
               </motion.button>
               <button
-                onClick={() => { sessionStorage.setItem("skipPostPrompt", "1"); setSkipPostPrompt(true); }}
+                onClick={() => { localStorage.setItem("skipPostPrompt", "1"); setSkipPostPrompt(true); }}
                 className="w-full text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
               >
                 পরে করব
