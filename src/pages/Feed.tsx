@@ -1479,7 +1479,7 @@ export default function Feed() {
                   </div>
                 </div>
                 <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)}
-                  placeholder="কি মনে হচ্ছে?"
+                  placeholder="এখানে লিখুন..."
                   className="w-full bg-transparent text-gray-900 dark:text-foreground text-base resize-none border-none outline-none placeholder:text-gray-400 min-h-[120px]" autoFocus />
               </div>
 
