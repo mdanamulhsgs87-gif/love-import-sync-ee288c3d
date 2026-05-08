@@ -42,7 +42,6 @@ export function ReverifySection() {
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [capturedPhotoBase64, setCapturedPhotoBase64] = useState<string | null>(null);
-  const [popupRef, setPopupRef] = useState<Window | null>(null);
 
   // Auto-check whitelist when returning from GoodDollar
   useEffect(() => {
@@ -59,38 +58,6 @@ export function ReverifySection() {
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [matchedBinding, step]);
-
-  // Poll the popup — when it closes, auto-check whitelist
-  useEffect(() => {
-    if (!popupRef || step !== "verify_link") return;
-    const timer = setInterval(() => {
-      if (popupRef.closed) {
-        clearInterval(timer);
-        setPopupRef(null);
-        checkWhitelist();
-      }
-    }, 800);
-    return () => clearInterval(timer);
-  }, [popupRef, step]);
-
-  const openVerifyPopup = () => {
-    if (!verifyUrl) return;
-    const w = 440;
-    const h = 720;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    const ref = window.open(
-      verifyUrl,
-      "gd_face_verify",
-      `width=${w},height=${h},left=${left},top=${top},popup=yes`
-    );
-    if (!ref) {
-      // popup blocked — fallback to redirect tab
-      window.open(verifyUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-    setPopupRef(ref);
-  };
 
   const startReverify = () => {
     setStep("photo_capture");
@@ -256,8 +223,6 @@ export function ReverifySection() {
     setStep("idle");
     setStatusMessage(null);
     setCapturedPhotoBase64(null);
-    if (popupRef && !popupRef.closed) popupRef.close();
-    setPopupRef(null);
   };
 
   return (
@@ -371,14 +336,16 @@ export function ReverifySection() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={openVerifyPopup}
+            <a
+              href={verifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-primary-foreground text-sm font-black"
             >
-              <ExternalLink className="w-4 h-4" /> Face Verification খুলুন (Popup)
-            </button>
+              <ExternalLink className="w-4 h-4" /> Face Verification খুলুন
+            </a>
             <p className="text-[10px] text-muted-foreground text-center">
-              ছোট window এ verify হবে — শেষ হলে অটো চেক হবে
+              ভেরিফাই করে ফিরে আসলে অটো চেক হবে
             </p>
             <button
               onClick={checkWhitelist}
