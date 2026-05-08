@@ -595,6 +595,31 @@ export default function Dashboard() {
         {/* ========== HOME PANEL: Face Verification Only ========== */}
         {activePanel === "home" && (
           <>
+            {/* Verified Count - quick view */}
+            <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
+              onClick={() => setActivePanel("verified")}
+              className="cursor-pointer glass-card rounded-3xl border border-[hsl(var(--purple))]/30 relative overflow-hidden">
+              <motion.div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[hsl(var(--purple))]/10 via-[hsl(var(--cyan))]/8 to-[hsl(var(--emerald))]/10"
+                animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 4, repeat: Infinity }} />
+              <div className="relative z-10 p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/30 to-[hsl(var(--cyan))]/25 flex items-center justify-center border border-[hsl(var(--purple))]/30">
+                    <Shield className="w-5 h-5 text-[hsl(var(--purple))]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">✅ ভেরিফাইড কাউন্ট</p>
+                    <p className="text-[10px] text-muted-foreground">নতুন ভেরিফাই করলেই সাথে সাথে যোগ হবে</p>
+                  </div>
+                </div>
+                <motion.p key={user.key_count}
+                  initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                  className="text-4xl font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent drop-shadow-lg">
+                  {user.key_count || 0}
+                </motion.p>
+              </div>
+            </motion.div>
+
             {/* Re-verify Balance Card (compact) */}
             <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
               className="glass-card rounded-3xl border border-[hsl(var(--cyan))]/25 relative overflow-hidden">
