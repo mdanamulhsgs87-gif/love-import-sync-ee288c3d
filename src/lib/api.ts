@@ -19,6 +19,8 @@ export type User = {
   online_at?: string | null;
   request_password?: string | null;
   locked_target_guest_id?: string | null;
+  reverify_count?: number;
+  usdt_paid_count?: number;
 };
 
 export type Transaction = {
