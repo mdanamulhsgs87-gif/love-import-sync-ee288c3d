@@ -118,6 +118,12 @@ export default function AdminPanel() {
   const [paymentModeSetting, setPaymentModeSetting] = useState("off");
   const [paymentModeLoading, setPaymentModeLoading] = useState(false);
   const [minWithdrawSetting, setMinWithdrawSetting] = useState("50");
+  const [usdtEnabledSetting, setUsdtEnabledSetting] = useState("off");
+  const [usdtEnabledLoading, setUsdtEnabledLoading] = useState(false);
+  const [usdtRateSetting, setUsdtRateSetting] = useState("0.05");
+  const [usdtMinSetting, setUsdtMinSetting] = useState("0.5");
+  const [usdtFeeSetting, setUsdtFeeSetting] = useState("2");
+  const [usdtSaving, setUsdtSaving] = useState(false);
   const [withdrawLockUntilSetting, setWithdrawLockUntilSetting] = useState("");
   const [requestLockUntilSetting, setRequestLockUntilSetting] = useState("");
   const [resetHistorySearch, setResetHistorySearch] = useState("");
