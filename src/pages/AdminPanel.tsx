@@ -124,6 +124,8 @@ export default function AdminPanel() {
   const [usdtMinSetting, setUsdtMinSetting] = useState("0.5");
   const [usdtFeeSetting, setUsdtFeeSetting] = useState("2");
   const [usdtSaving, setUsdtSaving] = useState(false);
+  const [referralBonusSetting, setReferralBonusSetting] = useState("0.05");
+  const [referralSaving, setReferralSaving] = useState(false);
   const [withdrawLockUntilSetting, setWithdrawLockUntilSetting] = useState("");
   const [requestLockUntilSetting, setRequestLockUntilSetting] = useState("");
   const [resetHistorySearch, setResetHistorySearch] = useState("");
@@ -299,6 +301,7 @@ export default function AdminPanel() {
       setUsdtRateSetting(String(settingsData.usdtRatePerAccount ?? 0.05));
       setUsdtMinSetting(String(settingsData.usdtMinWithdraw ?? 0.5));
       setUsdtFeeSetting(String(settingsData.usdtFeePercent ?? 2));
+      setReferralBonusSetting(String((settingsData as any).referralBonusUsd ?? 0.05));
     }
   }, [settingsData]);
 
