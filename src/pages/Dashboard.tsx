@@ -745,7 +745,11 @@ export default function Dashboard() {
                     </div>
                   </>
                 )}
-                <WithdrawForm balance={user.balance || 0} onSystemChange={setWalletSystem} />
+                <WithdrawForm
+                  balance={user.balance || 0}
+                  onSystemChange={setWalletSystem}
+                  onFirstVerifyClick={() => setActivePanel("request")}
+                />
               </div>
             </div>
           </motion.div>
