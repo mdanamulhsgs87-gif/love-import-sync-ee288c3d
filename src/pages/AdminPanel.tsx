@@ -295,6 +295,10 @@ export default function AdminPanel() {
       setRechargeEnabledSetting(settingsData.rechargeEnabled || "on");
       setMaintenanceModeSetting(settingsData.maintenanceMode || "off");
       setMaintenanceNoticeSetting(settingsData.maintenanceNotice || "");
+      setUsdtEnabledSetting(settingsData.usdtPayoutEnabled || "off");
+      setUsdtRateSetting(String(settingsData.usdtRatePerAccount ?? 0.05));
+      setUsdtMinSetting(String(settingsData.usdtMinWithdraw ?? 0.5));
+      setUsdtFeeSetting(String(settingsData.usdtFeePercent ?? 2));
     }
   }, [settingsData]);
 
