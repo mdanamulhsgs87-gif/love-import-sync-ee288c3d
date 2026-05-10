@@ -4,7 +4,7 @@ import { requestWithdraw, getPublicSettings, requestUsdtPayout, getUser } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CreditCard, Zap, Clock, AlertTriangle, Coins } from "lucide-react";
+import { Loader2, CreditCard, Zap, Clock, AlertTriangle, Coins, Send, RefreshCw } from "lucide-react";
 
 const TetherLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -15,10 +15,17 @@ const TetherLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
     />
   </svg>
 );
+
+// Strip trailing zeros: 0.2000 → 0.2, 1.5000 → 1.5, 0 → 0
+const fmtUsdt = (n: number) => {
+  if (!isFinite(n)) return "0";
+  const s = n.toFixed(6);
+  return s.replace(/\.?0+$/, "") || "0";
+};
 import { motion } from "framer-motion";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 
-export function WithdrawForm({ balance, onSystemChange }: { balance: number; onSystemChange?: (s: "bdt" | "usdt") => void }) {
+export function WithdrawForm({ balance, onSystemChange, onFirstVerifyClick }: { balance: number; onSystemChange?: (s: "bdt" | "usdt") => void; onFirstVerifyClick?: () => void }) {
   const [system, setSystem] = useState<"bdt" | "usdt">("bdt");
   const [method, setMethod] = useState<"bkash" | "nagad">("bkash");
   const [number, setNumber] = useState("");
@@ -191,7 +198,7 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
               <p className="text-xs text-muted-foreground uppercase tracking-widest">USDT Balance</p>
             </div>
             <p className="text-5xl font-black text-[hsl(var(--emerald))] text-center">
-              {usdtBalance.toFixed(4)}<span className="text-lg ml-1">USDT</span>
+              {fmtUsdt(usdtBalance)}<span className="text-lg ml-1">USDT</span>
             </p>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
               Verified accounts: {availableCount} × {usdtRate} (first verify + re-verify)
@@ -259,6 +266,32 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
         </>
       ) : (
         <>
+          {/* Two distinct withdraw paths */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => onFirstVerifyClick?.()}
+              className="p-4 rounded-2xl border-2 border-[hsl(var(--blue))]/40 bg-[hsl(var(--blue))]/10 hover:bg-[hsl(var(--blue))]/15 transition-all text-left"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Send className="w-4 h-4 text-[hsl(var(--blue))]" />
+                <span className="font-black text-sm text-[hsl(var(--blue))]">First Verify</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-tight">অ্যাডমিনের কাছে রিকুয়েস্ট পাঠান</p>
+            </button>
+            <div className="p-4 rounded-2xl border-2 border-[hsl(var(--emerald))]/40 bg-[hsl(var(--emerald))]/10">
+              <div className="flex items-center gap-2 mb-1">
+                <RefreshCw className="w-4 h-4 text-[hsl(var(--emerald))]" />
+                <span className="font-black text-sm text-[hsl(var(--emerald))]">Re-Verify</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-tight">সরাসরি bKash/Nagad এ পান (নিচে ↓)</p>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-[11px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">↓ Re-Verify থেকে উইথড্র</p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
