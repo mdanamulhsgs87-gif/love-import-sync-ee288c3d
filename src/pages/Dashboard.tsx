@@ -44,6 +44,7 @@ export default function Dashboard() {
 
   // Active panel states (from 3-dot menu)
   const [activePanel, setActivePanel] = useState<"home" | "wallet" | "verified" | "request" | "settings">("home");
+  const [walletSystem, setWalletSystem] = useState<"bdt" | "usdt">("bdt");
 
   // Request system states
   const [requestTargetNumber, setRequestTargetNumber] = useState("");
