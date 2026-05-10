@@ -44,6 +44,7 @@ export default function Dashboard() {
 
   // Active panel states (from 3-dot menu)
   const [activePanel, setActivePanel] = useState<"home" | "wallet" | "verified" | "request" | "settings">("home");
+  const [walletSystem, setWalletSystem] = useState<"bdt" | "usdt">("bdt");
 
   // Request system states
   const [requestTargetNumber, setRequestTargetNumber] = useState("");
@@ -728,19 +729,23 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground">রি-ভেরিফাই আয় থেকে সরাসরি উইথড্র করুন</p>
                   </div>
                 </div>
-                <div className="text-center py-6 bg-gradient-to-br from-[hsl(var(--cyan))]/5 to-[hsl(var(--emerald))]/5 rounded-2xl border border-[hsl(var(--cyan))]/15 mb-5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">মোট ব্যালেন্স</p>
-                  <p className="text-6xl font-black bg-gradient-to-r from-[hsl(var(--cyan))] via-[hsl(var(--emerald))] to-primary bg-clip-text text-transparent">
-                    {user.balance || 0}<span className="text-xl ml-1">৳</span>
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-2">শুধুমাত্র রি-ভেরিফাই থেকে অর্জিত</p>
-                </div>
-                <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/20 rounded-xl p-3 mb-4">
-                  <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
-                    ⚠️ <b>প্রথম ভেরিফিকেশন</b> থেকে পেমেন্ট নিতে হলে নির্দিষ্ট অ্যাডমিনের কাছে রিকুয়েস্ট পাঠাতে হবে। শুধু <b>রি-ভেরিফাই</b> থেকে আয় সরাসরি উইথড্র করতে পারবেন।
-                  </p>
-                </div>
-                <WithdrawForm balance={user.balance || 0} />
+                {walletSystem === "bdt" && (
+                  <>
+                    <div className="text-center py-6 bg-gradient-to-br from-[hsl(var(--cyan))]/5 to-[hsl(var(--emerald))]/5 rounded-2xl border border-[hsl(var(--cyan))]/15 mb-5">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">মোট ব্যালেন্স</p>
+                      <p className="text-6xl font-black bg-gradient-to-r from-[hsl(var(--cyan))] via-[hsl(var(--emerald))] to-primary bg-clip-text text-transparent">
+                        {user.balance || 0}<span className="text-xl ml-1">৳</span>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-2">শুধুমাত্র রি-ভেরিফাই থেকে অর্জিত</p>
+                    </div>
+                    <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/20 rounded-xl p-3 mb-4">
+                      <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
+                        ⚠️ <b>প্রথম ভেরিফিকেশন</b> থেকে পেমেন্ট নিতে হলে নির্দিষ্ট অ্যাডমিনের কাছে রিকুয়েস্ট পাঠাতে হবে। শুধু <b>রি-ভেরিফাই</b> থেকে আয় সরাসরি উইথড্র করতে পারবেন।
+                      </p>
+                    </div>
+                  </>
+                )}
+                <WithdrawForm balance={user.balance || 0} onSystemChange={setWalletSystem} />
               </div>
             </div>
           </motion.div>

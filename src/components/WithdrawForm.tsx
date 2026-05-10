@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CreditCard, Zap, Clock, AlertTriangle, Coins } from "lucide-react";
+
+const TetherLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="16" fill="#26A17B" />
+    <path
+      fill="#fff"
+      d="M17.92 17.39v-.01c-.11.01-.66.04-1.91.04-1 0-1.7-.03-1.95-.04v.01c-3.84-.17-6.71-.84-6.71-1.64s2.87-1.47 6.71-1.64v2.61c.25.02.97.06 1.96.06 1.19 0 1.78-.05 1.9-.06v-2.61c3.83.17 6.69.84 6.69 1.64s-2.86 1.47-6.69 1.64m0-3.55v-2.34h5.36V7.93H8.73v3.57h5.36v2.34c-4.36.2-7.64 1.07-7.64 2.1s3.28 1.9 7.64 2.1v7.5h3.83v-7.5c4.35-.2 7.62-1.06 7.62-2.1s-3.27-1.9-7.62-2.1"
+    />
+  </svg>
+);
 import { motion } from "framer-motion";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 
-export function WithdrawForm({ balance }: { balance: number }) {
+export function WithdrawForm({ balance, onSystemChange }: { balance: number; onSystemChange?: (s: "bdt" | "usdt") => void }) {
   const [system, setSystem] = useState<"bdt" | "usdt">("bdt");
   const [method, setMethod] = useState<"bkash" | "nagad">("bkash");
   const [number, setNumber] = useState("");
@@ -56,6 +66,10 @@ export function WithdrawForm({ balance }: { balance: number }) {
   useEffect(() => {
     if (!usdtEnabled && system === "usdt") setSystem("bdt");
   }, [usdtEnabled, system]);
+
+  useEffect(() => {
+    onSystemChange?.(system);
+  }, [system, onSystemChange]);
 
   const { mutate: withdraw, isPending } = useMutation({
     mutationFn: async () => {
@@ -159,7 +173,7 @@ export function WithdrawForm({ balance }: { balance: number }) {
                 : "text-muted-foreground hover:bg-secondary"
             }`}
           >
-            <div className="flex items-center justify-center gap-1.5"><Zap className="w-3.5 h-3.5" /> USDT</div>
+            <div className="flex items-center justify-center gap-1.5"><TetherLogo className="w-4 h-4" /> USDT</div>
             <div className="text-[9px] opacity-80 mt-0.5 font-normal">⚡ Instant · Base network</div>
           </button>
         </div>
@@ -170,18 +184,18 @@ export function WithdrawForm({ balance }: { balance: number }) {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/10 p-4"
+            className="rounded-2xl border border-[hsl(var(--emerald))]/30 bg-gradient-to-br from-[hsl(var(--emerald))]/15 to-[hsl(var(--emerald))]/5 p-5"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3" /> USDT Balance</p>
-                <p className="text-2xl font-black text-[hsl(var(--emerald))]">{usdtBalance.toFixed(4)} <span className="text-sm">USDT</span></p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-muted-foreground">Verified accounts</p>
-                <p className="text-sm font-bold">{availableCount} × {usdtRate}</p>
-              </div>
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <TetherLogo className="w-5 h-5" />
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">USDT Balance</p>
             </div>
+            <p className="text-5xl font-black text-[hsl(var(--emerald))] text-center">
+              {usdtBalance.toFixed(4)}<span className="text-lg ml-1">USDT</span>
+            </p>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">
+              Verified accounts: {availableCount} × {usdtRate} (first verify + re-verify)
+            </p>
           </motion.div>
 
           <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
