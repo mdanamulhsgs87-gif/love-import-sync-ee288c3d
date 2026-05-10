@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowRight, Lock, User, Phone } from "lucide-react";
+import { Loader2, ArrowRight, Lock, User, Phone, Gift } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -28,9 +28,25 @@ export default function Register() {
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Pre-fill from ?ref=CODE or stored localStorage
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get("ref");
+      if (fromUrl) {
+        setReferralCode(fromUrl.toUpperCase());
+        localStorage.setItem("pendingReferralCode", fromUrl.toUpperCase());
+        return;
+      }
+      const saved = localStorage.getItem("pendingReferralCode");
+      if (saved) setReferralCode(saved);
+    } catch {}
+  }, []);
 
   const normalizePhone = (value: string) => {
     const digits = value.replace(/\D/g, "");
@@ -84,6 +100,7 @@ export default function Register() {
           data: {
             display_name: displayName.trim(),
             phone: normalizedPhone,
+            referral_code: referralCode.trim().toUpperCase() || undefined,
           },
         },
       });
@@ -97,6 +114,7 @@ export default function Register() {
 
       // Track this device account
       addDeviceAccount(normalizedPhone);
+      try { localStorage.removeItem("pendingReferralCode"); } catch {}
 
       if (deviceAccounts.length > 0) {
         toast({
@@ -220,8 +238,26 @@ export default function Register() {
                     placeholder="কমপক্ষে ৬ অক্ষর..." className="input-field text-lg py-4" autoFocus />
                 )}
                 {step === 3 && (
-                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                    placeholder="01XXXXXXXXX" className="input-field text-lg py-4" autoFocus />
+                  <>
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      placeholder="01XXXXXXXXX" className="input-field text-lg py-4" autoFocus />
+                    <div className="mt-4 rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/5 p-3">
+                      <label className="text-[11px] font-bold text-[hsl(var(--emerald))] flex items-center gap-1.5 mb-2 uppercase tracking-wider">
+                        <Gift className="w-3.5 h-3.5" /> Reffer code (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                        placeholder="ABCD1234"
+                        maxLength={12}
+                        className="input-field font-mono uppercase tracking-widest"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        Bondhur reffer code thakle din — verify korle she 0.05$ bonus paabe.
+                      </p>
+                    </div>
+                  </>
                 )}
               </motion.div>
             </AnimatePresence>

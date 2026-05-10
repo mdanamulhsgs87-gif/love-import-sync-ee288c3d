@@ -21,6 +21,9 @@ export type User = {
   locked_target_guest_id?: string | null;
   reverify_count?: number;
   usdt_paid_count?: number;
+  referral_code?: string | null;
+  referred_by_user_id?: number | null;
+  referral_usdt_earnings?: number;
 };
 
 export type Transaction = {
@@ -84,6 +87,7 @@ export type Settings = {
   usdtRatePerAccount: number;
   usdtMinWithdraw: number;
   usdtFeePercent: number;
+  referralBonusUsd: number;
 };
 
 // Auth / User APIs
@@ -147,6 +151,7 @@ export async function getPublicSettings(): Promise<Settings> {
     usdtRatePerAccount: 0.05,
     usdtMinWithdraw: 0.5,
     usdtFeePercent: 2,
+    referralBonusUsd: 0.05,
   };
 
   data?.forEach((s) => {
@@ -171,6 +176,7 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "usdtRatePerAccount") settings.usdtRatePerAccount = parseFloat(s.value) || 0.05;
     if (s.key === "usdtMinWithdraw") settings.usdtMinWithdraw = parseFloat(s.value) || 0.5;
     if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
+    if (s.key === "referralBonusUsd") settings.referralBonusUsd = parseFloat(s.value) || 0.05;
   });
 
   return settings;
@@ -184,6 +190,39 @@ export async function requestUsdtPayout(userId: number, recipient: string, amoun
   if (error) throw new Error(error.message);
   if (data?.error) throw new Error(data.error);
   return data as { success: boolean; tx_hash: string; received: number; fee: number; new_balance: number };
+}
+
+// Referral system
+export async function applyReferralCode(userId: number, code: string): Promise<void> {
+  const cleaned = code.trim().toUpperCase();
+  if (!cleaned) throw new Error("Reffer code dorkar");
+  // Make sure user is not yet referred and code is valid + not self
+  const me = await getUser(userId);
+  if (!me) throw new Error("User not found");
+  if (me.referred_by_user_id) throw new Error("Apni agei reffer code use korechen");
+  if (me.referral_code === cleaned) throw new Error("Nijer code use kora jabe na");
+  const { data: referrer } = await supabase
+    .from("users")
+    .select("id, referral_code")
+    .eq("referral_code", cleaned)
+    .maybeSingle();
+  if (!referrer) throw new Error("Reffer code thik na");
+  if (referrer.id === userId) throw new Error("Nijer code use kora jabe na");
+  const { error } = await supabase
+    .from("users")
+    .update({ referred_by_user_id: referrer.id })
+    .eq("id", userId);
+  if (error) throw error;
+}
+
+export async function getReferralStats(userId: number): Promise<{ count: number; verifiedAccounts: number }> {
+  const { data } = await supabase
+    .from("users")
+    .select("id, key_count")
+    .eq("referred_by_user_id", userId);
+  const list = data || [];
+  const verifiedAccounts = list.reduce((sum: number, u: any) => sum + (u.key_count || 0), 0);
+  return { count: list.length, verifiedAccounts };
 }
 
 export async function updateSetting(key: string, value: string) {

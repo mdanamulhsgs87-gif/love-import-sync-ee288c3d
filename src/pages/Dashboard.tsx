@@ -12,6 +12,7 @@ import { getPublicSettings, updateUserPaymentStatus } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { createUserTransferRequest, getIncomingTransferRequests, submitIncomingTransferRequests, cancelIncomingRequest } from "@/lib/user-requests";
 import { ReverifySection } from "@/components/ReverifySection";
+import { ReferralCard } from "@/components/ReferralCard";
 import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
@@ -709,6 +710,11 @@ export default function Dashboard() {
             <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible">
               <KeySubmitter />
             </motion.div>
+
+            {/* Referral / Reffer & Earn */}
+            <motion.div custom={2.5} variants={cardVariants} initial="hidden" animate="visible">
+              <ReferralCard />
+            </motion.div>
           </>
         )}
 
@@ -748,7 +754,6 @@ export default function Dashboard() {
                 <WithdrawForm
                   balance={user.balance || 0}
                   onSystemChange={setWalletSystem}
-                  onFirstVerifyClick={() => setActivePanel("request")}
                 />
               </div>
             </div>

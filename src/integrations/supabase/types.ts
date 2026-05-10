@@ -994,6 +994,9 @@ export type Database = {
           online_at: string | null
           payment_scheduled_at: string | null
           payment_status: string
+          referral_code: string | null
+          referral_usdt_earnings: number
+          referred_by_user_id: number | null
           request_password: string | null
           reverify_count: number
           usdt_paid_count: number
@@ -1017,6 +1020,9 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          referral_code?: string | null
+          referral_usdt_earnings?: number
+          referred_by_user_id?: number | null
           request_password?: string | null
           reverify_count?: number
           usdt_paid_count?: number
@@ -1040,6 +1046,9 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          referral_code?: string | null
+          referral_usdt_earnings?: number
+          referred_by_user_id?: number | null
           request_password?: string | null
           reverify_count?: number
           usdt_paid_count?: number

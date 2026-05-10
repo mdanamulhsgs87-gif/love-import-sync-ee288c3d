@@ -69,7 +69,9 @@ Deno.serve(async (req: Request) => {
     const totalCount = (user.key_count || 0) + (user.reverify_count || 0)
     const paidCount = user.usdt_paid_count || 0
     const availableCount = Math.max(0, totalCount - paidCount)
-    const usdtBalance = +(availableCount * settings.rate).toFixed(6)
+    const accountsUsdt = +(availableCount * settings.rate).toFixed(6)
+    const referralUsdt = Number(user.referral_usdt_earnings || 0)
+    const usdtBalance = +(accountsUsdt + referralUsdt).toFixed(6)
 
     if (amount > usdtBalance + 1e-9) {
       return json({ error: `Insufficient USDT balance (you have ${usdtBalance})` }, 400)
@@ -97,10 +99,20 @@ Deno.serve(async (req: Request) => {
     // Send tx
     const hash = await walletClient.sendTransaction({ to: USDT_BASE, data, value: 0n })
 
-    // Deduct count proportional to gross amount sent (including fee)
-    const countToDeduct = Math.ceil(amount / settings.rate)
+    // Deduct first from referral earnings, then from accounts pool
+    let remaining = amount
+    let newReferralEarnings = referralUsdt
+    if (remaining > 0 && newReferralEarnings > 0) {
+      const useFromReferral = Math.min(remaining, newReferralEarnings)
+      newReferralEarnings = +(newReferralEarnings - useFromReferral).toFixed(6)
+      remaining = +(remaining - useFromReferral).toFixed(6)
+    }
+    let newPaidCount = paidCount
+    if (remaining > 0) {
+      newPaidCount = paidCount + Math.ceil(remaining / settings.rate)
+    }
     await supabase.from('users')
-      .update({ usdt_paid_count: paidCount + countToDeduct })
+      .update({ usdt_paid_count: newPaidCount, referral_usdt_earnings: newReferralEarnings })
       .eq('id', user_id)
 
     // Record transaction (amount in USDT cents = amount*100 since column is integer)
