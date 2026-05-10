@@ -996,6 +996,7 @@ export type Database = {
           payment_status: string
           request_password: string | null
           reverify_count: number
+          usdt_paid_count: number
           watched_video_url: string | null
         }
         Insert: {
@@ -1018,6 +1019,7 @@ export type Database = {
           payment_status?: string
           request_password?: string | null
           reverify_count?: number
+          usdt_paid_count?: number
           watched_video_url?: string | null
         }
         Update: {
@@ -1040,6 +1042,7 @@ export type Database = {
           payment_status?: string
           request_password?: string | null
           reverify_count?: number
+          usdt_paid_count?: number
           watched_video_url?: string | null
         }
         Relationships: []
