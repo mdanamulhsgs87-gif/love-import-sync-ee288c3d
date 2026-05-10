@@ -21,6 +21,9 @@ export type User = {
   locked_target_guest_id?: string | null;
   reverify_count?: number;
   usdt_paid_count?: number;
+  referral_code?: string | null;
+  referred_by_user_id?: number | null;
+  referral_usdt_earnings?: number;
 };
 
 export type Transaction = {
@@ -84,6 +87,7 @@ export type Settings = {
   usdtRatePerAccount: number;
   usdtMinWithdraw: number;
   usdtFeePercent: number;
+  referralBonusUsd: number;
 };
 
 // Auth / User APIs
@@ -147,6 +151,7 @@ export async function getPublicSettings(): Promise<Settings> {
     usdtRatePerAccount: 0.05,
     usdtMinWithdraw: 0.5,
     usdtFeePercent: 2,
+    referralBonusUsd: 0.05,
   };
 
   data?.forEach((s) => {
@@ -171,6 +176,7 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "usdtRatePerAccount") settings.usdtRatePerAccount = parseFloat(s.value) || 0.05;
     if (s.key === "usdtMinWithdraw") settings.usdtMinWithdraw = parseFloat(s.value) || 0.5;
     if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
+    if (s.key === "referralBonusUsd") settings.referralBonusUsd = parseFloat(s.value) || 0.05;
   });
 
   return settings;
