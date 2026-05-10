@@ -972,6 +972,56 @@ export default function AdminPanel() {
           )}
         </div>
 
+        {/* Referral Bonus */}
+        <div className="glass-card p-5 rounded-2xl border-2 border-[hsl(var(--cyan))]/30">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-[hsl(var(--cyan))]/20">
+              <Zap className="w-5 h-5 text-[hsl(var(--cyan))]" />
+            </div>
+            <div>
+              <h3 className="font-bold">Reffer Bonus</h3>
+              <p className="text-[10px] text-muted-foreground">Referred user first-verify korle referrer ke koto USDT bonus debe (per account)</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Bonus per verified account (USDT)</label>
+              <input
+                type="number"
+                step="0.001"
+                value={referralBonusSetting}
+                onChange={(e) => setReferralBonusSetting(e.target.value)}
+                className="input-field text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                disabled={referralSaving}
+                onClick={async () => {
+                  setReferralSaving(true);
+                  try {
+                    await updateSetting("referralBonusUsd", String(parseFloat(referralBonusSetting) || 0.05));
+                    queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+                    queryClient.invalidateQueries({ queryKey: ["public-settings"] });
+                    toast({ title: "Reffer bonus সেভ হয়েছে" });
+                  } catch (err: any) {
+                    toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
+                  } finally {
+                    setReferralSaving(false);
+                  }
+                }}
+                className="btn-primary w-full text-sm py-2.5 bg-[hsl(var(--cyan))]"
+              >
+                {referralSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "সেভ"}
+              </button>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 mt-3 leading-relaxed">
+            💡 Reffer bonus user er USDT balance e jog hoy. Withdraw er somoy USDT pool theke katano hoy.
+          </p>
+        </div>
+
         {/* Pending Withdrawals */}
         <Section icon={Wallet} title="পেন্ডিং উইথড্র" count={pendingWithdrawals.length} color="orange">
           <div className="mt-4 space-y-3">
