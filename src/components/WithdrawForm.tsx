@@ -9,7 +9,8 @@ import { motion } from "framer-motion";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 
 export function WithdrawForm({ balance }: { balance: number }) {
-  const [method, setMethod] = useState<"usdt" | "bkash" | "nagad">("usdt");
+  const [system, setSystem] = useState<"bdt" | "usdt">("bdt");
+  const [method, setMethod] = useState<"bkash" | "nagad">("bkash");
   const [number, setNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [usdtAddress, setUsdtAddress] = useState("");
@@ -53,8 +54,8 @@ export function WithdrawForm({ balance }: { balance: number }) {
   }, []);
 
   useEffect(() => {
-    if (!usdtEnabled && method === "usdt") setMethod("bkash");
-  }, [usdtEnabled, method]);
+    if (!usdtEnabled && system === "usdt") setSystem("bdt");
+  }, [usdtEnabled, system]);
 
   const { mutate: withdraw, isPending } = useMutation({
     mutationFn: async () => {
@@ -105,7 +106,7 @@ export function WithdrawForm({ balance }: { balance: number }) {
       toast({ title: `উইথড্র সাময়িকভাবে বন্ধ — ${lockCountdownText} পরে আবার চেষ্টা করুন`, variant: "destructive" });
       return;
     }
-    if (method === "usdt") {
+    if (system === "usdt") {
       if (!usdtAddress || !usdtAmount) return;
       if (!/^0x[a-fA-F0-9]{40}$/.test(usdtAddress.trim())) {
         toast({ title: "ভুল ঠিকানা", description: "Base network এর সঠিক address দিন (0x...)", variant: "destructive" });
@@ -136,67 +137,53 @@ export function WithdrawForm({ balance }: { balance: number }) {
       )}
 
       {usdtEnabled && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/10 p-4"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3" /> USDT Balance</p>
-              <p className="text-2xl font-black text-[hsl(var(--emerald))]">{usdtBalance.toFixed(4)} <span className="text-sm">USDT</span></p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] text-muted-foreground">Verified accounts</p>
-              <p className="text-sm font-bold">{availableCount} × {usdtRate}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      <div className={`grid gap-3 ${usdtEnabled ? "grid-cols-3" : "grid-cols-2"}`}>
-        {usdtEnabled && (
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border">
           <button
             type="button"
-            onClick={() => setMethod("usdt")}
-            className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm ${
-              method === "usdt"
-                ? "border-[hsl(var(--emerald))] bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))]"
-                : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
+            onClick={() => setSystem("bdt")}
+            className={`py-3 rounded-xl font-bold text-sm transition-all ${
+              system === "bdt"
+                ? "bg-[hsl(var(--cyan))]/15 text-[hsl(var(--cyan))] border border-[hsl(var(--cyan))]/40 shadow-sm"
+                : "text-muted-foreground hover:bg-secondary"
             }`}
           >
-            <div className="flex items-center justify-center gap-1"><Zap className="w-3.5 h-3.5" /> USDT</div>
-            <div className="text-[9px] opacity-80 mt-0.5">⚡ Fast</div>
+            <div className="flex items-center justify-center gap-1.5">💵 টাকা (BDT)</div>
+            <div className="text-[9px] opacity-80 mt-0.5 font-normal">রি-ভেরিফাই → bKash/Nagad</div>
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setMethod("bkash")}
-          className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm ${
-            method === "bkash"
-              ? "border-[hsl(var(--pink))] bg-[hsl(var(--pink))]/10 text-[hsl(var(--pink))]"
-              : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          <div>bKash</div>
-          {usdtEnabled && <div className="text-[9px] opacity-80 mt-0.5">⏰ Late</div>}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMethod("nagad")}
-          className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm ${
-            method === "nagad"
-              ? "border-[hsl(var(--orange))] bg-[hsl(var(--orange))]/10 text-[hsl(var(--orange))]"
-              : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          <div>Nagad</div>
-          {usdtEnabled && <div className="text-[9px] opacity-80 mt-0.5">⏰ Late</div>}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setSystem("usdt")}
+            className={`py-3 rounded-xl font-bold text-sm transition-all ${
+              system === "usdt"
+                ? "bg-[hsl(var(--emerald))]/15 text-[hsl(var(--emerald))] border border-[hsl(var(--emerald))]/40 shadow-sm"
+                : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1.5"><Zap className="w-3.5 h-3.5" /> USDT</div>
+            <div className="text-[9px] opacity-80 mt-0.5 font-normal">⚡ Instant · Base network</div>
+          </button>
+        </div>
+      )}
 
-      {method === "usdt" ? (
+      {system === "usdt" ? (
         <>
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/10 p-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3" /> USDT Balance</p>
+                <p className="text-2xl font-black text-[hsl(var(--emerald))]">{usdtBalance.toFixed(4)} <span className="text-sm">USDT</span></p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground">Verified accounts</p>
+                <p className="text-sm font-bold">{availableCount} × {usdtRate}</p>
+              </div>
+            </div>
+          </motion.div>
+
           <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
             <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed text-destructive font-medium">
@@ -258,6 +245,31 @@ export function WithdrawForm({ balance }: { balance: number }) {
         </>
       ) : (
         <>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setMethod("bkash")}
+              className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm ${
+                method === "bkash"
+                  ? "border-[hsl(var(--pink))] bg-[hsl(var(--pink))]/10 text-[hsl(var(--pink))]"
+                  : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              bKash
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod("nagad")}
+              className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm ${
+                method === "nagad"
+                  ? "border-[hsl(var(--orange))] bg-[hsl(var(--orange))]/10 text-[hsl(var(--orange))]"
+                  : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              Nagad
+            </button>
+          </div>
+
           <div>
             <label className="block text-sm text-muted-foreground mb-2">একাউন্ট নাম্বার</label>
             <input type="tel" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="017xxxxxxxx" className="input-field" required />
