@@ -19,6 +19,8 @@ export type User = {
   online_at?: string | null;
   request_password?: string | null;
   locked_target_guest_id?: string | null;
+  reverify_count?: number;
+  usdt_paid_count?: number;
 };
 
 export type Transaction = {
@@ -78,6 +80,10 @@ export type Settings = {
   rechargeEnabled: string;
   maintenanceMode: string;
   maintenanceNotice: string;
+  usdtPayoutEnabled: string;
+  usdtRatePerAccount: number;
+  usdtMinWithdraw: number;
+  usdtFeePercent: number;
 };
 
 // Auth / User APIs
@@ -137,6 +143,10 @@ export async function getPublicSettings(): Promise<Settings> {
     rechargeEnabled: "on",
     maintenanceMode: "off",
     maintenanceNotice: "",
+    usdtPayoutEnabled: "off",
+    usdtRatePerAccount: 0.05,
+    usdtMinWithdraw: 0.5,
+    usdtFeePercent: 2,
   };
 
   data?.forEach((s) => {
@@ -157,9 +167,23 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "rechargeEnabled") settings.rechargeEnabled = s.value || "on";
     if (s.key === "maintenanceMode") settings.maintenanceMode = s.value || "off";
     if (s.key === "maintenanceNotice") settings.maintenanceNotice = s.value || "";
+    if (s.key === "usdtPayoutEnabled") settings.usdtPayoutEnabled = s.value || "off";
+    if (s.key === "usdtRatePerAccount") settings.usdtRatePerAccount = parseFloat(s.value) || 0.05;
+    if (s.key === "usdtMinWithdraw") settings.usdtMinWithdraw = parseFloat(s.value) || 0.5;
+    if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
   });
 
   return settings;
+}
+
+// USDT auto-payout (Base network)
+export async function requestUsdtPayout(userId: number, recipient: string, amount: number) {
+  const { data, error } = await supabase.functions.invoke("usdt-payout", {
+    body: { user_id: userId, recipient, amount },
+  });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
+  return data as { success: boolean; tx_hash: string; received: number; fee: number; new_balance: number };
 }
 
 export async function updateSetting(key: string, value: string) {

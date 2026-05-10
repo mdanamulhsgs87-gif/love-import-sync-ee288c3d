@@ -26,7 +26,7 @@ import {
   adminDismissTransferRequest,
   adminCancelTransferBatch,
 } from "@/lib/user-requests";
-import { ShieldCheck, UserX, UserCheck, CheckCircle, XCircle, Loader2, Coins, Key, Search, RefreshCcw, Copy, Users, ChevronDown, ChevronUp, Trash2, Bell, Send, History, Lock, Eye, EyeOff, ToggleLeft, ToggleRight, Wallet, Settings, FileText, CreditCard, Clock, Youtube, Pencil, AlertCircle, Camera, Smartphone, X, ZoomIn } from "lucide-react";
+import { ShieldCheck, UserX, UserCheck, CheckCircle, XCircle, Loader2, Coins, Key, Search, RefreshCcw, Copy, Users, ChevronDown, ChevronUp, Trash2, Bell, Send, History, Lock, Eye, EyeOff, ToggleLeft, ToggleRight, Wallet, Settings, FileText, CreditCard, Clock, Youtube, Pencil, AlertCircle, Camera, Smartphone, X, ZoomIn, Zap } from "lucide-react";
 import { AdminKeyVault } from "@/components/AdminKeyVault";
 import { ApiKeyManager } from "@/components/ApiKeyManager";
 import { motion } from "framer-motion";
@@ -118,6 +118,12 @@ export default function AdminPanel() {
   const [paymentModeSetting, setPaymentModeSetting] = useState("off");
   const [paymentModeLoading, setPaymentModeLoading] = useState(false);
   const [minWithdrawSetting, setMinWithdrawSetting] = useState("50");
+  const [usdtEnabledSetting, setUsdtEnabledSetting] = useState("off");
+  const [usdtEnabledLoading, setUsdtEnabledLoading] = useState(false);
+  const [usdtRateSetting, setUsdtRateSetting] = useState("0.05");
+  const [usdtMinSetting, setUsdtMinSetting] = useState("0.5");
+  const [usdtFeeSetting, setUsdtFeeSetting] = useState("2");
+  const [usdtSaving, setUsdtSaving] = useState(false);
   const [withdrawLockUntilSetting, setWithdrawLockUntilSetting] = useState("");
   const [requestLockUntilSetting, setRequestLockUntilSetting] = useState("");
   const [resetHistorySearch, setResetHistorySearch] = useState("");
@@ -289,6 +295,10 @@ export default function AdminPanel() {
       setRechargeEnabledSetting(settingsData.rechargeEnabled || "on");
       setMaintenanceModeSetting(settingsData.maintenanceMode || "off");
       setMaintenanceNoticeSetting(settingsData.maintenanceNotice || "");
+      setUsdtEnabledSetting(settingsData.usdtPayoutEnabled || "off");
+      setUsdtRateSetting(String(settingsData.usdtRatePerAccount ?? 0.05));
+      setUsdtMinSetting(String(settingsData.usdtMinWithdraw ?? 0.5));
+      setUsdtFeeSetting(String(settingsData.usdtFeePercent ?? 2));
     }
   }, [settingsData]);
 
@@ -872,6 +882,90 @@ export default function AdminPanel() {
               </div>
             </div>
             </>
+          )}
+        </div>
+
+        {/* USDT Auto-Payout (Base Network) */}
+        <div className="glass-card p-5 rounded-2xl border-2 border-[hsl(var(--emerald))]/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${usdtEnabledSetting === "on" ? "bg-[hsl(var(--emerald))]/20" : "bg-secondary"}`}>
+                <Zap className={`w-5 h-5 ${usdtEnabledSetting === "on" ? "text-[hsl(var(--emerald))]" : "text-muted-foreground"}`} />
+              </div>
+              <div>
+                <h3 className="font-bold">USDT Auto-Payout (Base)</h3>
+                <p className="text-[10px] text-muted-foreground">ON করলে ইউজার নিজেই USDT পাঠাতে পারবে</p>
+              </div>
+            </div>
+            <button
+              disabled={usdtEnabledLoading}
+              onClick={async () => {
+                const newMode = usdtEnabledSetting === "on" ? "off" : "on";
+                setUsdtEnabledLoading(true);
+                try {
+                  await updateSetting("usdtPayoutEnabled", newMode);
+                  setUsdtEnabledSetting(newMode);
+                  queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+                  queryClient.invalidateQueries({ queryKey: ["public-settings"] });
+                  toast({ title: `USDT Auto-Payout ${newMode === "on" ? "চালু" : "বন্ধ"}` });
+                } catch (err: any) {
+                  toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
+                } finally {
+                  setUsdtEnabledLoading(false);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all ${
+                usdtEnabledSetting === "on"
+                  ? "bg-[hsl(var(--emerald))] text-foreground shadow-lg shadow-[hsl(var(--emerald))]/30"
+                  : "bg-secondary text-muted-foreground border border-border"
+              }`}
+            >
+              {usdtEnabledLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : usdtEnabledSetting === "on" ? <><ToggleRight className="w-5 h-5" /> ON</> : <><ToggleLeft className="w-5 h-5" /> OFF</>}
+            </button>
+          </div>
+
+          {usdtEnabledSetting === "on" && (
+            <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">USDT per verified account</label>
+                <input type="number" step="0.001" value={usdtRateSetting} onChange={(e) => setUsdtRateSetting(e.target.value)} className="input-field text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">সর্বনিম্ন উইথড্র (USDT)</label>
+                <input type="number" step="0.01" value={usdtMinSetting} onChange={(e) => setUsdtMinSetting(e.target.value)} className="input-field text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Withdraw Fee (%)</label>
+                <input type="number" step="0.1" value={usdtFeeSetting} onChange={(e) => setUsdtFeeSetting(e.target.value)} className="input-field text-sm" />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  disabled={usdtSaving}
+                  onClick={async () => {
+                    setUsdtSaving(true);
+                    try {
+                      await updateSetting("usdtRatePerAccount", String(parseFloat(usdtRateSetting) || 0.05));
+                      await updateSetting("usdtMinWithdraw", String(parseFloat(usdtMinSetting) || 0.5));
+                      await updateSetting("usdtFeePercent", String(parseFloat(usdtFeeSetting) || 2));
+                      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+                      queryClient.invalidateQueries({ queryKey: ["public-settings"] });
+                      toast({ title: "USDT সেটিংস সেভ হয়েছে" });
+                    } catch (err: any) {
+                      toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
+                    } finally {
+                      setUsdtSaving(false);
+                    }
+                  }}
+                  className="btn-primary w-full text-sm py-2.5 bg-[hsl(var(--emerald))]"
+                >
+                  {usdtSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "সেভ"}
+                </button>
+              </div>
+              <div className="col-span-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 leading-relaxed">
+                💡 ইউজারের USDT balance = (verified count − already paid count) × rate। ফি আপনার hot wallet এ থাকবে।
+              </div>
+            </div>
           )}
         </div>
 
