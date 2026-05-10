@@ -748,7 +748,6 @@ export default function Dashboard() {
                 <WithdrawForm
                   balance={user.balance || 0}
                   onSystemChange={setWalletSystem}
-                  onFirstVerifyClick={() => setActivePanel("request")}
                 />
               </div>
             </div>
