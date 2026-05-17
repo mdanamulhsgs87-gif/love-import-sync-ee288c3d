@@ -88,6 +88,7 @@ export type Settings = {
   usdtMinWithdraw: number;
   usdtFeePercent: number;
   referralBonusUsd: number;
+  usdtToBdtRate: number;
 };
 
 // Auth / User APIs
@@ -152,6 +153,7 @@ export async function getPublicSettings(): Promise<Settings> {
     usdtMinWithdraw: 0.5,
     usdtFeePercent: 2,
     referralBonusUsd: 0.05,
+    usdtToBdtRate: 124,
   };
 
   data?.forEach((s) => {
@@ -177,6 +179,7 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "usdtMinWithdraw") settings.usdtMinWithdraw = parseFloat(s.value) || 0.5;
     if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
     if (s.key === "referralBonusUsd") settings.referralBonusUsd = parseFloat(s.value) || 0.05;
+    if (s.key === "usdtToBdtRate") settings.usdtToBdtRate = parseFloat(s.value) || 124;
   });
 
   return settings;

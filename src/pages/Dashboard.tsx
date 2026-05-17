@@ -550,10 +550,6 @@ export default function Dashboard() {
                 <Shield className="mr-3 h-5 w-5 text-[hsl(var(--purple))]" />
                 <span className="text-[15px] font-black text-foreground">🛡️ ভেরিফাইড কাউন্ট</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--blue))]/10" onClick={() => setActivePanel("request")}>
-                <Send className="mr-3 h-5 w-5 text-[hsl(var(--blue))]" />
-                <span className="text-[15px] font-black text-foreground">💸 পেমেন্ট রিকুয়েস্ট</span>
-              </DropdownMenuItem>
               <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/mobile-recharge")}>
                 <Smartphone className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
                 <span className="text-[15px] font-black text-foreground">📱 মোবাইল রিচার্জ</span>
@@ -776,7 +772,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h2 className="text-xl font-black">ভেরিফাইড কাউন্ট</h2>
-                    <p className="text-[10px] text-muted-foreground">প্রথম ভেরিফিকেশনের কাউন্ট — পেমেন্ট অ্যাডমিনের মাধ্যমে</p>
+                    <p className="text-[10px] text-muted-foreground">১ম ভেরিফিকেশনের কাউন্ট — Re-verify করলে Account Complete হবে</p>
                   </div>
                 </div>
                 <div className="relative text-center py-8 overflow-hidden">
@@ -817,15 +813,18 @@ export default function Dashboard() {
                 {/* Re-verify earnings in TK only, no count */}
                 {(user as any).reverify_count > 0 && (
                   <div className="mt-4 pt-4 border-t border-border/50 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">রি-ভেরিফাই আয়</p>
+                    <p className="text-xs text-muted-foreground mb-1">✅ Complete অ্যাকাউন্ট: {(user as any).reverify_count} টি · আয়</p>
                     <p className="text-3xl font-black bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] bg-clip-text text-transparent">
                       {user.balance || 0}<span className="text-lg ml-1">৳</span>
                     </p>
                   </div>
                 )}
-                <div className="mt-4 bg-primary/10 border border-primary/20 rounded-xl p-3">
-                  <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
-                    প্রথম ভেরিফিকেশনের পেমেন্ট নিতে <b>"💸 পেমেন্ট রিকুয়েস্ট"</b> মেনু থেকে অ্যাডমিনকে রিকুয়েস্ট পাঠান।
+                <div className="mt-4 bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--emerald))]/10 border border-[hsl(var(--amber))]/30 rounded-xl p-3 space-y-1.5">
+                  <p className="text-[12px] font-black text-[hsl(var(--amber))] text-center">
+                    📌 কীভাবে টাকা পাবেন?
+                  </p>
+                  <p className="text-[11px] text-foreground/80 leading-relaxed text-center">
+                    ১ম ভেরিফাই শুধু <b>গণনা</b> হয় — কোনো টাকা যোগ হয় না। ৩-৪ দিন পর ফেস স্ক্যান করে <b>Re-verify</b> করুন। তখনই ১টি অ্যাকাউন্ট <b>Complete</b> হবে ও Balance যোগ হবে। তারপর ওয়ালেট থেকে সরাসরি <b>টাকা / USDT</b> উইথড্র করতে পারবেন।
                   </p>
                 </div>
               </div>

@@ -164,7 +164,9 @@ export function ReverifySection() {
     try {
       // Get reward rate from settings
       const settings = await getPublicSettings();
-      const rewardRate = settings.rewardRate || 0;
+      // BDT add = usdtRatePerAccount × usdtToBdtRate (e.g. 0.05 × 124 = 6.2, floored)
+      const computedBdt = Math.floor((settings.usdtRatePerAccount || 0.05) * (settings.usdtToBdtRate || 124));
+      const rewardRate = computedBdt;
 
       // Upload the freshly captured face photo so the binding stores the
       // user's CURRENT appearance (handles aging, beard growth, etc).
@@ -205,9 +207,10 @@ export function ReverifySection() {
       queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
 
       const earnedTk = rewardRate;
+      const earnedUsdt = (settings.usdtRatePerAccount || 0.05);
       setStep("done_success");
-      setStatusMessage(`✅ রি-ভেরিফাই সফল! +${earnedTk} TK`);
-      toast({ title: `✅ রি-ভেরিফাই সম্পন্ন! +${earnedTk} TK যোগ হয়েছে` });
+      setStatusMessage(`🎉 অ্যাকাউন্ট Complete! +${earnedUsdt} USDT (≈ ৳${earnedTk}) যোগ হয়েছে`);
+      toast({ title: `🎉 ১টি অ্যাকাউন্ট সম্পন্ন! +${earnedUsdt} USDT (৳${earnedTk}) যোগ হয়েছে` });
       setTimeout(resetState, 4000);
     } catch (err: any) {
       toast({ title: "ব্যর্থ", description: err.message, variant: "destructive" });
@@ -253,9 +256,12 @@ export function ReverifySection() {
         </div>
 
         {/* Bengali reassuring text */}
-        <div className="bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/20 rounded-xl p-3">
-          <p className="text-[11px] text-foreground/80 leading-relaxed text-center">
-            🔒 ক্যামেরায় মুখ ধরলেই অটো স্ক্যান হয়ে আপনার ওয়ালেট খুঁজে বের করবে। দ্রুত, নিরাপদ ও সম্পূর্ণ এনক্রিপ্টেড।
+        <div className="bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--emerald))]/10 border border-[hsl(var(--amber))]/30 rounded-xl p-3 space-y-2">
+          <p className="text-[12px] font-black text-[hsl(var(--amber))] text-center">
+            📌 Re-verify করলেই ১টি অ্যাকাউন্ট Complete হয় এবং টাকা/USDT যোগ হয়
+          </p>
+          <p className="text-[10px] text-muted-foreground leading-relaxed text-center">
+            ১ম ভেরিফাই শুধু গণনা হয় — টাকা যোগ হয় না। ৩-৪ দিন পর ফেস স্ক্যান করে Re-verify করুন, তখনই Account Complete হবে এবং Balance যোগ হবে।
           </p>
         </div>
 

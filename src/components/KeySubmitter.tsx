@@ -131,8 +131,8 @@ export function KeySubmitter() {
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
       setStep("done_success");
-      setStatusMessage(`✅ ভেরিফাইড ও ফটো সেভ হয়েছে! কাউন্ট: ${data.newKeyCount}`);
-      toast({ title: "✅ সফল!", description: `কাউন্ট: ${data.newKeyCount}` });
+      setStatusMessage(`✅ ১ম ভেরিফাই হয়েছে! কাউন্ট: ${data.newKeyCount} · ৩-৪ দিন পর Re-verify করলে Account Complete হবে`);
+      toast({ title: "✅ ১ম ভেরিফাই সফল!", description: `কাউন্ট: ${data.newKeyCount} — Re-verify বাকি` });
       setTimeout(() => { resetUI(); setStatusMessage(null); }, 4000);
     } catch (err: any) {
       console.error("Check error:", err);

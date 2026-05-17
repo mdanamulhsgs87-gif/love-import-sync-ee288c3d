@@ -56,12 +56,18 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const usdtRate = publicSettings?.usdtRatePerAccount || 0.05;
   const usdtMin = publicSettings?.usdtMinWithdraw || 0.5;
   const usdtFeePct = publicSettings?.usdtFeePercent || 2;
-  const verifiedTotal = (userRow?.key_count || 0) + (userRow?.reverify_count || 0);
+  const usdtToBdt = publicSettings?.usdtToBdtRate || 124;
+  // ⚠️ Only RE-VERIFIED accounts produce balance. 1st verify শুধু গণনা।
+  const completedAccounts = (userRow?.reverify_count || 0);
   const usdtPaidCount = userRow?.usdt_paid_count || 0;
-  const availableCount = Math.max(0, verifiedTotal - usdtPaidCount);
+  const availableCount = Math.max(0, completedAccounts - usdtPaidCount);
   const referralEarnings = Number((userRow as any)?.referral_usdt_earnings || 0);
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
+  // BDT computed: same USDT × usdtToBdt rate
+  const computedBdtBalance = Math.floor(usdtBalance * usdtToBdt);
+  const effectiveBdtBalance = Math.min(balance, computedBdtBalance);
+  const pendingFirstVerify = (userRow?.key_count || 0);
 
   const withdrawLockRemainingMs = getRemainingMilliseconds(publicSettings?.withdrawLockUntil, nowMs);
   const isWithdrawLocked = withdrawLockRemainingMs > 0;
@@ -203,8 +209,13 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
               {fmtUsdt(usdtBalance)}<span className="text-lg ml-1">USDT</span>
             </p>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              Accounts: {availableCount} × {usdtRate} = {fmtUsdt(accountsUsdt)}{referralEarnings > 0 ? ` · Reffer: ${fmtUsdt(referralEarnings)}` : ""}
+              {availableCount} টি Complete × {usdtRate} = {fmtUsdt(accountsUsdt)} USDT{referralEarnings > 0 ? ` · Reffer: ${fmtUsdt(referralEarnings)}` : ""} (≈ ৳{Math.floor(usdtBalance * usdtToBdt)})
             </p>
+            {pendingFirstVerify > 0 && (
+              <p className="text-[10px] text-[hsl(var(--amber))] text-center mt-1 font-bold">
+                ⏳ {pendingFirstVerify} টি ১ম ভেরিফাই অপেক্ষমাণ — Re-verify করুন
+              </p>
+            )}
           </motion.div>
 
           <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
@@ -268,6 +279,25 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
         </>
       ) : (
         <>
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[hsl(var(--cyan))]/30 bg-gradient-to-br from-[hsl(var(--cyan))]/15 to-[hsl(var(--cyan))]/5 p-5"
+          >
+            <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-1">টাকা ব্যালেন্স</p>
+            <p className="text-5xl font-black text-[hsl(var(--cyan))] text-center">
+              ৳{effectiveBdtBalance}
+            </p>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">
+              {availableCount} টি Complete Account × {usdtRate} USDT × {usdtToBdt}৳ = {fmtUsdt(usdtBalance)} USDT
+            </p>
+            {pendingFirstVerify > 0 && (
+              <p className="text-[10px] text-[hsl(var(--amber))] text-center mt-1 font-bold">
+                ⏳ {pendingFirstVerify} টি ১ম ভেরিফাই অপেক্ষমাণ — Re-verify করলেই টাকা যোগ হবে
+              </p>
+            )}
+          </motion.div>
+
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -302,11 +332,11 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
             <label className="block text-sm text-muted-foreground mb-2">পরিমাণ (কমপক্ষে {minWithdraw} টাকা)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">৳</span>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" min={minWithdraw} max={balance} className="input-field pl-8" required />
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" min={minWithdraw} max={effectiveBdtBalance} className="input-field pl-8" required />
             </div>
           </div>
 
-          <button type="submit" disabled={isPending || isWithdrawLocked || !number || !amount || Number(amount) > balance} className="btn-primary mt-2">
+          <button type="submit" disabled={isPending || isWithdrawLocked || !number || !amount || Number(amount) > effectiveBdtBalance || availableCount === 0} className="btn-primary mt-2">
             {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>উইথড্র রিকোয়েস্ট পাঠান</span><CreditCard className="w-5 h-5" /></>}
           </button>
 
