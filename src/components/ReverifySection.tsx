@@ -164,7 +164,9 @@ export function ReverifySection() {
     try {
       // Get reward rate from settings
       const settings = await getPublicSettings();
-      const rewardRate = settings.rewardRate || 0;
+      // BDT add = usdtRatePerAccount × usdtToBdtRate (e.g. 0.05 × 124 = 6.2, floored)
+      const computedBdt = Math.floor((settings.usdtRatePerAccount || 0.05) * (settings.usdtToBdtRate || 124));
+      const rewardRate = computedBdt;
 
       // Upload the freshly captured face photo so the binding stores the
       // user's CURRENT appearance (handles aging, beard growth, etc).
@@ -205,9 +207,10 @@ export function ReverifySection() {
       queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
 
       const earnedTk = rewardRate;
+      const earnedUsdt = (settings.usdtRatePerAccount || 0.05);
       setStep("done_success");
-      setStatusMessage(`✅ রি-ভেরিফাই সফল! +${earnedTk} TK`);
-      toast({ title: `✅ রি-ভেরিফাই সম্পন্ন! +${earnedTk} TK যোগ হয়েছে` });
+      setStatusMessage(`🎉 অ্যাকাউন্ট Complete! +${earnedUsdt} USDT (≈ ৳${earnedTk}) যোগ হয়েছে`);
+      toast({ title: `🎉 ১টি অ্যাকাউন্ট সম্পন্ন! +${earnedUsdt} USDT (৳${earnedTk}) যোগ হয়েছে` });
       setTimeout(resetState, 4000);
     } catch (err: any) {
       toast({ title: "ব্যর্থ", description: err.message, variant: "destructive" });
