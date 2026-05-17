@@ -1,137 +1,75 @@
-# Base USDT Auto-Payout System
+## পরিবর্তন সারাংশ
 
-## Ki banabo (summary)
-
-1. **Admin toggle** — USDT auto-payout system on/off
-2. **OFF state (default):** ekhon jemne ache temni — user bKash/Nagad e request dibe, admin manually pay korbe
-3. **ON state:** user er kache extra option ashbe — USDT (Base network) select korle **instant auto-payout** hobe wallet theke
-4. **Per-account USDT rate** admin set korbe → verified count × rate = user er USDT balance
-5. **bKash/Nagad** option o thakbe USDT mode e, kintu "late hobe" note sho hobe; USDT te "fast" note + recommended
-6. **2% withdraw fee** user theke kete nibo
-7. **Min withdraw 0.5 USDT**
-8. **Network select** mandatory + Base address warning (Bangla)
+আপনার নতুন logic:
+- **1st verify** = শুধু count হবে, কোনো টাকা/USDT add হবে না, কোনো request system o nei
+- **Re-verify** (3-4 দিন পর) = তখনই account "complete" hobe → balance (TK + USDT) add hobe
+- Admin panel এ **USDT rate per account** boshabo (ex: 0.05$)
+- TK = USDT × 124 (admin-configurable rate) hisab e show হবে
+- User TK ba USDT — দুটোই withdraw করতে parbe, kintu শুধু re-verified accounts er against e
 
 ---
 
-## Admin Panel e notun jinish
+## 1. Backend / Data model
 
-- **Toggle:** "USDT Auto-Payout System" (ON/OFF)
-- **USDT rate per verified account** (e.g., 0.05 USDT per account)
-- **Min withdraw** (default 0.5)
-- **Fee %** (default 2)
-- **Hot wallet address** display + balance check
-- **Payout history** table (tx hash, status, recipient)
+### `users` table এর জন্য নতুন hisab
+- `key_count` = total 1st verified (just counter, no money)
+- `reverify_count` = completed accounts (money এর base)
+- `usdt_paid_count` = already withdrawn as USDT
 
-Settings table e store hobe new keys:
-- `usdtPayoutEnabled` (true/false)
-- `usdtRatePerAccount` (e.g., "0.05")
-- `usdtMinWithdraw` (e.g., "0.5")
-- `usdtFeePercent` (e.g., "2")
+**Available balance source = `reverify_count` only** (1st verify count থেকে কোনো balance হবে না)
 
----
+### Settings (admin panel এ editable)
+- `usdtRatePerAccount` → per re-verified account USDT amount (default 0.05)
+- `usdtToBdtRate` → 1 USDT = কত TK (default 124) **[নতুন]**
+- `referralBonusUsd` → already আছে, admin থেকে set হবে
 
-## User Withdraw Form (notun flow)
-
-**Yokhon toggle OFF:** ekhon jemne ache — bKash/Nagad tabs + amount input + "request paathao" button (unchanged)
-
-**Yokhon toggle ON:** 
-
-```
-┌──────────────────────────────────────┐
-│ Apnar USDT Balance: 2.45 USDT        │
-│ (Verified accounts: 49 × 0.05)       │
-└──────────────────────────────────────┘
-
-Network select korun:
-[ USDT — Base ⚡ Fast (Recommended) ]
-[ bKash — ⏰ 24 ghonta lagbe ]
-[ Nagad — ⏰ 24 ghonta lagbe ]
-
-→ USDT select korle:
-  - Base network er wallet address input
-  - Amount (min 0.5 USDT)
-  - Warning box (lal): "⚠️ Sotorko thakun! Shudhu BASE network er 
-    USDT address din. Onno network (TRC20/BEP20/ERC20) er address 
-    dile apnar USDT chiro-tore harie jabe. Wrong address er jonno
-    amra dayi noi."
-  - Fee preview: "Fee 2% = 0.05 USDT, apni paben 2.45 USDT"
-  - [Send Now] button → instant on-chain transfer
-
-→ bKash/Nagad select korle:
-  - Number + amount (BDT) → request submit (old flow)
-  - Note: "Payment 24 ghonta er moddhe pathano hobe"
-```
+### `recalculate_all_balances` function update
+Ekhon `key_count + reverify_count` use kore. Change kore শুধু `reverify_count × rate` use korbe (BDT side).
 
 ---
 
-## Backend (edge function)
+## 2. Frontend changes
 
-**Notun edge function:** `usdt-payout`
-- Validates: enabled flag, user balance, min amount, valid Base address (0x... regex + checksum)
-- Calculates fee: `userAmount = amount - (amount * 0.02)` → user paaye, 2% wallet e thake
-- Signs & broadcasts USDT transfer on Base using `viem`
-- USDT contract on Base: `0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2`
-- RPC: public Base RPC (`https://mainnet.base.org`)
-- Records tx in `transactions` table (type=`usdt_payout`, details=tx_hash)
-- Decrements user verified_count (or stores separate `usdt_paid_count` ke track korte hobe — niche dekho)
-- Telegram notification pathay
+### Dashboard / Header
+- USDT balance card: `reverify_count × usdtRate + referralEarnings`
+- BDT balance card: `(reverify_count × usdtRate × 124) − pendingWithdrawals` (referral o convert)
+- 1st verify count আলাদা ভাবে দেখাবে "অপেক্ষমাণ — re-verify দরকার" tag দিয়ে
 
-**Balance hisab:**
-- USDT balance = `(key_count + reverify_count - usdt_paid_count) × ratePerAccount`
-- Notun column dorkar `users.usdt_paid_count` (integer default 0) — payout hole increment hobe
-- Ekta utility view ba RPC: `get_user_usdt_balance(user_id)`
+### "Account complete" বুঝানোর UI
+Verified Keys section এ প্রতিটা key এর status:
+- 🟡 **"১ম ভেরিফাই সম্পন্ন — ৩-৪ দিন পর re-verify করুন"** (pending)
+- 🟢 **"Account সম্পন্ন ✓ — ব্যালেন্স যুক্ত হয়েছে"** (re-verified)
 
----
+Plus একটা info banner top এ:
+> 📌 শুধু re-verify শেষ হলেই একটা account complete হয় এবং টাকা যোগ হয়। ১ম ভেরিফাই শুধু গণনা হয়, টাকা যোগ হয় না।
 
-## Secrets dorkar (user theke nibo)
+### WithdrawForm
+- 1st verify count আর কোথাও balance hisab e ashbe na
+- "User request" system সরানো (যেটা 1st verify er against e onno user er kache request dito)
+- শুধু **direct withdraw**: TK (bKash/Nagad) ও USDT
+- Available = `reverify_count × usdtRate` (+ referral USDT)
+- TK option e: ওই same USDT × 124 = TK
+- Disabled message: "Re-verify সম্পন্ন না হলে withdraw করা যাবে না"
 
-1. `BASE_WALLET_PRIVATE_KEY` — apnar hot wallet er private key (Base network)
-2. `BASE_RPC_URL` (optional, default public RPC use korbo)
+### User request / transfer system সরানো
+- `UserAuditCard`, `user-requests.ts`, related Dashboard sections — 1st verify based request flow সরাবো
+- Admin panel এর "User Requests" tab — যদি শুধু এই purpose এর জন্য থাকে, সরাবো (নাকি রাখবো সেটা confirm করবেন)
 
----
+### Admin Panel
+- নতুন setting field: **"USDT → BDT Rate (1 USDT = ? টাকা)"** default 124
+- USDT rate & referral bonus field গুলো একই section এ গুছিয়ে দেবো
 
-## Schema changes (migration)
-
-```sql
-ALTER TABLE users ADD COLUMN usdt_paid_count integer NOT NULL DEFAULT 0;
-
-INSERT INTO settings (key, value) VALUES
-  ('usdtPayoutEnabled', 'false'),
-  ('usdtRatePerAccount', '0.05'),
-  ('usdtMinWithdraw', '0.5'),
-  ('usdtFeePercent', '2')
-ON CONFLICT (key) DO NOTHING;
-```
+### Referral
+- Bug check: `award_referral_on_first_verify` trigger `key_count` change এ trigger হয় — eta thik ache (1st verify হলেই referral pawa uchit, naki re-verify hole?)
+  - **আপনার comment অনুযায়ী**: "she account verify korbe" — পুরাতন decision ছিল first verify এ। এখন logic বদলেছে — referral কখন award হবে?
+- Admin rate change → existing balances retroactive update korbo na (ekhon থেকে যা hobe सেটাই)
 
 ---
 
-## Files change/create
+## প্রশ্ন আপনার কাছে
 
-**New:**
-- `supabase/functions/usdt-payout/index.ts` — auto-send USDT on Base
-- `supabase/migrations/...` — settings + column
+1. **Referral bonus কখন award হবে** — referred user 1st verify করলে, নাকি re-verify (complete) করলে?
+2. **User request/transfer system** — পুরোপুরি সরাবো নাকি admin panel এ history দেখার জন্য রাখবো?
+3. **পুরাতন user দের 1st verify count এর জন্য balance** — যেটা আগেই যোগ হয়ে গেছে সেটা থাকবে, নাকি reset করবো?
 
-**Edit:**
-- `src/components/WithdrawForm.tsx` — conditional USDT UI when enabled
-- `src/lib/api.ts` — `getPublicSettings` e USDT fields add, `requestUsdtPayout` function
-- `src/pages/AdminPanel.tsx` — toggle + rate inputs section
-- `supabase/functions/public-api/index.ts` — expose USDT settings to client
-
----
-
-## Implementation order
-
-1. Migration (settings + column)
-2. `usdt-payout` edge function with viem
-3. Admin toggle UI + rate inputs
-4. WithdrawForm conditional rendering (Bangla warnings + fee preview)
-5. Test: toggle OFF → old flow intact; toggle ON → USDT option visible + works
-
----
-
-## Confirm korar age 2 ta question:
-
-1. **Wallet e USDT na USDC?** — Base e USDC beshi popular & liquid. User "USDT" boleche. Ami **USDT on Base** (`0xfde4...`) use korbo, but apni chaile USDC korte pari. Konta?
-2. **Private key amake dite raji?** — Edge function e secret hisabe rakhbo, code e kokhono show hobe na. Confirm korle `add_secret` request pathabo.
-
-Egulor uttor dile build shuru kori.
+উত্তর দিলে আমি implement করবো।
