@@ -56,12 +56,18 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const usdtRate = publicSettings?.usdtRatePerAccount || 0.05;
   const usdtMin = publicSettings?.usdtMinWithdraw || 0.5;
   const usdtFeePct = publicSettings?.usdtFeePercent || 2;
-  const verifiedTotal = (userRow?.key_count || 0) + (userRow?.reverify_count || 0);
+  const usdtToBdt = publicSettings?.usdtToBdtRate || 124;
+  // ⚠️ Only RE-VERIFIED accounts produce balance. 1st verify শুধু গণনা।
+  const completedAccounts = (userRow?.reverify_count || 0);
   const usdtPaidCount = userRow?.usdt_paid_count || 0;
-  const availableCount = Math.max(0, verifiedTotal - usdtPaidCount);
+  const availableCount = Math.max(0, completedAccounts - usdtPaidCount);
   const referralEarnings = Number((userRow as any)?.referral_usdt_earnings || 0);
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
+  // BDT computed: same USDT × usdtToBdt rate
+  const computedBdtBalance = Math.floor(usdtBalance * usdtToBdt);
+  const effectiveBdtBalance = Math.min(balance, computedBdtBalance);
+  const pendingFirstVerify = (userRow?.key_count || 0);
 
   const withdrawLockRemainingMs = getRemainingMilliseconds(publicSettings?.withdrawLockUntil, nowMs);
   const isWithdrawLocked = withdrawLockRemainingMs > 0;
