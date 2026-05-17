@@ -53,6 +53,16 @@ export function AdminKeyVault() {
   });
 
   const completedReverify = reverifyQueue.filter((r: any) => r.status === "completed");
+  const pendingReverifyAddrs = new Set(
+    reverifyQueue.filter((r: any) => r.status === "pending").map((r: any) => r.wallet_address)
+  );
+  const notWLAddrs = new Set([
+    ...pendingReverifyAddrs,
+    ...notWhitelistedKeys.map((b: any) => b.wallet_address),
+  ]);
+  const verifiedBindings = faceBindings.filter(
+    (b: any) => !notWLAddrs.has(b.wallet_address)
+  );
 
   const handleUnlock = () => {
     if (password === VAULT_PASSWORD) {
@@ -139,7 +149,7 @@ export function AdminKeyVault() {
   }
 
   const tabs: { key: Tab; label: string; count: number; color: string }[] = [
-    { key: "verified", label: "✅ Verified Keys", count: faceBindings.length, color: "emerald" },
+            { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
     { key: "not_whitelist", label: "⚠️ Not Whitelist", count: notWhitelistedKeys.length, color: "amber" },
     { key: "reverified", label: "🔄 Re-verified", count: completedReverify.length, color: "cyan" },
   ];
@@ -154,7 +164,7 @@ export function AdminKeyVault() {
           </div>
           <div>
             <h2 className="text-lg font-bold">🔐 Key Vault</h2>
-            <p className="text-[10px] text-muted-foreground">মোট {faceBindings.length} টি ভেরিফাইড কী</p>
+            <p className="text-[10px] text-muted-foreground">মোট {verifiedBindings.length} টি ভেরিফাইড কী</p>
           </div>
         </div>
         <button
@@ -194,30 +204,30 @@ export function AdminKeyVault() {
         {/* ═══ Verified Keys Tab ═══ */}
         {activeTab === "verified" && (
           <div className="space-y-3">
-            {faceBindings.length > 0 && (
+            {verifiedBindings.length > 0 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const allKeys = faceBindings.map((b: any) => b.private_key).join("\n");
+                    const allKeys = verifiedBindings.map((b: any) => b.private_key).join("\n");
                     copyText(allKeys);
-                    toast({ title: `${faceBindings.length} টি কী কপি হয়েছে` });
+                    toast({ title: `${verifiedBindings.length} টি কী কপি হয়েছে` });
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] text-xs font-bold rounded-xl"
                 >
-                  <Copy className="w-4 h-4" /> সব কী কপি করুন ({faceBindings.length})
+                  <Copy className="w-4 h-4" /> সব কী কপি করুন ({verifiedBindings.length})
                 </button>
               </div>
             )}
 
-            {faceBindings.length > 0 ? (
+            {verifiedBindings.length > 0 ? (
               <div className="bg-secondary/60 rounded-xl p-3 border border-border/50">
                 <textarea
                   readOnly
-                  value={faceBindings.map((b: any) => b.private_key).join("\n")}
+                  value={verifiedBindings.map((b: any) => b.private_key).join("\n")}
                   className="w-full bg-background/80 border border-border rounded-lg px-3 py-2 text-[10px] font-mono h-40 resize-none"
                 />
                 <div className="mt-2 max-h-60 overflow-y-auto space-y-1.5">
-                  {faceBindings.map((b: any, idx: number) => (
+                  {verifiedBindings.map((b: any, idx: number) => (
                     <div key={b.id} className="flex items-center gap-2 p-2 bg-background/60 rounded-lg">
                       <img src={b.face_photo_url} alt="" className="w-8 h-8 rounded-lg object-cover border border-border cursor-pointer hover:ring-2 hover:ring-[hsl(var(--primary))]" onClick={() => setLightboxUrl(b.face_photo_url)} />
                       <div className="flex-1 min-w-0">
