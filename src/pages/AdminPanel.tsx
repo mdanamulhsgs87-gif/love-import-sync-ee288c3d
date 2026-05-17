@@ -943,6 +943,10 @@ export default function AdminPanel() {
                 <label className="text-xs text-muted-foreground mb-1 block">Withdraw Fee (%)</label>
                 <input type="number" step="0.1" value={usdtFeeSetting} onChange={(e) => setUsdtFeeSetting(e.target.value)} className="input-field text-sm" />
               </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">1 USDT = কত টাকা (BDT)</label>
+                <input type="number" step="1" value={usdtToBdtSetting} onChange={(e) => setUsdtToBdtSetting(e.target.value)} className="input-field text-sm" />
+              </div>
               <div className="flex items-end">
                 <button
                   type="button"
@@ -953,6 +957,7 @@ export default function AdminPanel() {
                       await updateSetting("usdtRatePerAccount", String(parseFloat(usdtRateSetting) || 0.05));
                       await updateSetting("usdtMinWithdraw", String(parseFloat(usdtMinSetting) || 0.5));
                       await updateSetting("usdtFeePercent", String(parseFloat(usdtFeeSetting) || 2));
+                      await updateSetting("usdtToBdtRate", String(parseFloat(usdtToBdtSetting) || 124));
                       queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
                       queryClient.invalidateQueries({ queryKey: ["public-settings"] });
                       toast({ title: "USDT সেটিংস সেভ হয়েছে" });
@@ -968,7 +973,7 @@ export default function AdminPanel() {
                 </button>
               </div>
               <div className="col-span-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 leading-relaxed">
-                💡 ইউজারের USDT balance = (verified count − already paid count) × rate। ফি আপনার hot wallet এ থাকবে।
+                💡 ব্যালেন্স = Re-verified (Complete) accounts × USDT rate। BDT = USDT × {usdtToBdtSetting || 124}। ১ম verify শুধু গণনা হয়, balance যোগ হয় না।
               </div>
             </div>
           )}
@@ -982,7 +987,7 @@ export default function AdminPanel() {
             </div>
             <div>
               <h3 className="font-bold">Reffer Bonus</h3>
-              <p className="text-[10px] text-muted-foreground">Referred user first-verify korle referrer ke koto USDT bonus debe (per account)</p>
+              <p className="text-[10px] text-muted-foreground">Referred user Re-verify (Account Complete) korle referrer ke per account koto USDT bonus debe</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
