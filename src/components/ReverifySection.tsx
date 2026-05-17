@@ -256,9 +256,12 @@ export function ReverifySection() {
         </div>
 
         {/* Bengali reassuring text */}
-        <div className="bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/20 rounded-xl p-3">
-          <p className="text-[11px] text-foreground/80 leading-relaxed text-center">
-            🔒 ক্যামেরায় মুখ ধরলেই অটো স্ক্যান হয়ে আপনার ওয়ালেট খুঁজে বের করবে। দ্রুত, নিরাপদ ও সম্পূর্ণ এনক্রিপ্টেড।
+        <div className="bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--emerald))]/10 border border-[hsl(var(--amber))]/30 rounded-xl p-3 space-y-2">
+          <p className="text-[12px] font-black text-[hsl(var(--amber))] text-center">
+            📌 Re-verify করলেই ১টি অ্যাকাউন্ট Complete হয় এবং টাকা/USDT যোগ হয়
+          </p>
+          <p className="text-[10px] text-muted-foreground leading-relaxed text-center">
+            ১ম ভেরিফাই শুধু গণনা হয় — টাকা যোগ হয় না। ৩-৪ দিন পর ফেস স্ক্যান করে Re-verify করুন, তখনই Account Complete হবে এবং Balance যোগ হবে।
           </p>
         </div>
 
