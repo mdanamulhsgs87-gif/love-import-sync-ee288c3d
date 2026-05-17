@@ -209,8 +209,13 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
               {fmtUsdt(usdtBalance)}<span className="text-lg ml-1">USDT</span>
             </p>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              Accounts: {availableCount} × {usdtRate} = {fmtUsdt(accountsUsdt)}{referralEarnings > 0 ? ` · Reffer: ${fmtUsdt(referralEarnings)}` : ""}
+              {availableCount} টি Complete × {usdtRate} = {fmtUsdt(accountsUsdt)} USDT{referralEarnings > 0 ? ` · Reffer: ${fmtUsdt(referralEarnings)}` : ""} (≈ ৳{Math.floor(usdtBalance * usdtToBdt)})
             </p>
+            {pendingFirstVerify > 0 && (
+              <p className="text-[10px] text-[hsl(var(--amber))] text-center mt-1 font-bold">
+                ⏳ {pendingFirstVerify} টি ১ম ভেরিফাই অপেক্ষমাণ — Re-verify করুন
+              </p>
+            )}
           </motion.div>
 
           <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
