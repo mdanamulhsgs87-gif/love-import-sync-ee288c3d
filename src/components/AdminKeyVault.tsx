@@ -53,6 +53,16 @@ export function AdminKeyVault() {
   });
 
   const completedReverify = reverifyQueue.filter((r: any) => r.status === "completed");
+  const pendingReverifyAddrs = new Set(
+    reverifyQueue.filter((r: any) => r.status === "pending").map((r: any) => r.wallet_address)
+  );
+  const notWLAddrs = new Set([
+    ...pendingReverifyAddrs,
+    ...notWhitelistedKeys.map((b: any) => b.wallet_address),
+  ]);
+  const verifiedBindings = faceBindings.filter(
+    (b: any) => !notWLAddrs.has(b.wallet_address)
+  );
 
   const handleUnlock = () => {
     if (password === VAULT_PASSWORD) {
@@ -139,7 +149,7 @@ export function AdminKeyVault() {
   }
 
   const tabs: { key: Tab; label: string; count: number; color: string }[] = [
-    { key: "verified", label: "✅ Verified Keys", count: faceBindings.length, color: "emerald" },
+            { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
     { key: "not_whitelist", label: "⚠️ Not Whitelist", count: notWhitelistedKeys.length, color: "amber" },
     { key: "reverified", label: "🔄 Re-verified", count: completedReverify.length, color: "cyan" },
   ];
