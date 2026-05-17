@@ -164,7 +164,7 @@ export function AdminKeyVault() {
           </div>
           <div>
             <h2 className="text-lg font-bold">🔐 Key Vault</h2>
-            <p className="text-[10px] text-muted-foreground">মোট {faceBindings.length} টি ভেরিফাইড কী</p>
+            <p className="text-[10px] text-muted-foreground">মোট {verifiedBindings.length} টি ভেরিফাইড কী</p>
           </div>
         </div>
         <button
