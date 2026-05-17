@@ -274,6 +274,25 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
         </>
       ) : (
         <>
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[hsl(var(--cyan))]/30 bg-gradient-to-br from-[hsl(var(--cyan))]/15 to-[hsl(var(--cyan))]/5 p-5"
+          >
+            <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-1">টাকা ব্যালেন্স</p>
+            <p className="text-5xl font-black text-[hsl(var(--cyan))] text-center">
+              ৳{effectiveBdtBalance}
+            </p>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">
+              {availableCount} টি Complete Account × {usdtRate} USDT × {usdtToBdt}৳ = {fmtUsdt(usdtBalance)} USDT
+            </p>
+            {pendingFirstVerify > 0 && (
+              <p className="text-[10px] text-[hsl(var(--amber))] text-center mt-1 font-bold">
+                ⏳ {pendingFirstVerify} টি ১ম ভেরিফাই অপেক্ষমাণ — Re-verify করলেই টাকা যোগ হবে
+              </p>
+            )}
+          </motion.div>
+
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -308,11 +327,11 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
             <label className="block text-sm text-muted-foreground mb-2">পরিমাণ (কমপক্ষে {minWithdraw} টাকা)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">৳</span>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" min={minWithdraw} max={balance} className="input-field pl-8" required />
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" min={minWithdraw} max={effectiveBdtBalance} className="input-field pl-8" required />
             </div>
           </div>
 
-          <button type="submit" disabled={isPending || isWithdrawLocked || !number || !amount || Number(amount) > balance} className="btn-primary mt-2">
+          <button type="submit" disabled={isPending || isWithdrawLocked || !number || !amount || Number(amount) > effectiveBdtBalance || availableCount === 0} className="btn-primary mt-2">
             {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>উইথড্র রিকোয়েস্ট পাঠান</span><CreditCard className="w-5 h-5" /></>}
           </button>
 
