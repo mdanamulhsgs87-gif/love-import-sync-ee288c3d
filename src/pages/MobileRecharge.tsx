@@ -75,7 +75,7 @@ export default function MobileRecharge() {
     try {
       // Key deduction now happens server-side in edge function
 
-      const beforeKeys = user.key_count || 0;
+      const beforeKeys = user.reverify_count || 0;
       const afterKeys = beforeKeys - keysNeeded;
 
       const { data: txData } = await supabase
@@ -84,7 +84,7 @@ export default function MobileRecharge() {
           user_id: user.id,
           type: "recharge",
           amount: finalAmount,
-          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK (${keysNeeded} কী ব্যবহৃত) | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
+          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK (${keysNeeded} Re-verify ব্যবহৃত) | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
           status: "processing",
         })
         .select("id")
