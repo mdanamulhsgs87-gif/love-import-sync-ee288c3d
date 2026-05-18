@@ -1760,7 +1760,13 @@ export default function AdminPanel() {
                           ) : (
                             <span className="text-[9px] bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] px-1.5 py-0.5 rounded font-bold shrink-0">READY</span>
                           )}
-                          <p className="text-xs font-mono truncate">{item.verify_url?.slice(0, 30) || "—"}...</p>
+                          <p className="text-xs font-mono truncate flex-1">{item.verify_url?.slice(0, 30) || "—"}...</p>
+                          {item.verify_url && (
+                            <button onClick={(e) => { e.stopPropagation(); copyText(item.verify_url); toast({ title: "🔗 ভেরিফিকেশন লিঙ্ক কপি হয়েছে" }); }}
+                              className="text-[hsl(var(--cyan))] hover:text-[hsl(var(--cyan))]/80 shrink-0" title="Verification link কপি">
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span className="text-[9px] font-mono text-muted-foreground truncate max-w-[180px]">🔑 {item.private_key?.slice(0, 10)}...{item.private_key?.slice(-6)}</span>
