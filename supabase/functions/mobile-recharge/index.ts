@@ -113,10 +113,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch current key_count from DB (server-side truth)
+    // Fetch current reverify_count from DB (server-side truth)
+    // Recharge now uses re-verify based balance only — 1st verify count is NOT spendable.
     const { data: userData, error: userError } = await adminClient
       .from("users")
-      .select("key_count, display_name")
+      .select("reverify_count, display_name")
       .eq("id", userId)
       .single();
 
@@ -126,21 +127,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (userData.key_count < keysNeeded) {
-      console.error(`BLOCKED: User ${userId} (${userData.display_name}) tried recharge ${amount} TK but only has ${userData.key_count} keys (needs ${keysNeeded})`);
-      return new Response(JSON.stringify({ 
-        error: `আপনার কাউন্ট পর্যাপ্ত নয়। প্রয়োজন: ${keysNeeded}, আছে: ${userData.key_count}` 
+    if (userData.reverify_count < keysNeeded) {
+      console.error(`BLOCKED: User ${userId} (${userData.display_name}) tried recharge ${amount} TK but only has ${userData.reverify_count} re-verifies (needs ${keysNeeded})`);
+      return new Response(JSON.stringify({
+        error: `Re-verify সম্পন্ন না হলে রিচার্জ করা যাবে না। প্রয়োজন: ${keysNeeded}, আছে: ${userData.reverify_count}`
       }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Deduct keys ATOMICALLY on server side (not client)
+    // Deduct re-verify count ATOMICALLY on server side (not client)
     const { error: deductErr } = await adminClient
       .from("users")
-      .update({ key_count: userData.key_count - keysNeeded })
+      .update({ reverify_count: userData.reverify_count - keysNeeded })
       .eq("id", userId)
-      .eq("key_count", userData.key_count); // optimistic lock: only deduct if count hasn't changed
+      .eq("reverify_count", userData.reverify_count); // optimistic lock
 
     if (deductErr) {
       return new Response(JSON.stringify({ error: "কাউন্ট আপডেট ব্যর্থ, আবার চেষ্টা করুন" }), {
@@ -170,10 +171,10 @@ Deno.serve(async (req) => {
     if (topupData.result === true) {
       // Success - mark transaction completed with before/after counts
       if (transactionId) {
-        const afterKeys = userData.key_count - keysNeeded;
+        const afterKeys = userData.reverify_count - keysNeeded;
         await adminClient.from("transactions").update({
           status: "completed",
-          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ সফল: ${phone} | ${amount} TK | TrxID: ${trxid} | আগে: ${userData.key_count} → পরে: ${afterKeys}`,
+          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ সফল: ${phone} | ${amount} TK | TrxID: ${trxid} | Re-verify: ${userData.reverify_count} → ${afterKeys}`,
         }).eq("id", transactionId);
       }
 
@@ -185,17 +186,17 @@ Deno.serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Failed - refund keys (already deducted server-side)
-      const { data: currentUser } = await adminClient.from("users").select("key_count").eq("id", userId).single();
+      // Failed - refund re-verify count (already deducted server-side)
+      const { data: currentUser } = await adminClient.from("users").select("reverify_count").eq("id", userId).single();
       if (currentUser) {
-        await adminClient.from("users").update({ key_count: currentUser.key_count + keysNeeded }).eq("id", userId);
+        await adminClient.from("users").update({ reverify_count: currentUser.reverify_count + keysNeeded }).eq("id", userId);
       }
 
       // Mark transaction failed
       if (transactionId) {
         await adminClient.from("transactions").update({
           status: "failed",
-          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ ব্যর্থ: ${phone} | ${amount} TK | ${topupData.message || "Unknown error"} | কী রিফান্ড হয়েছে`,
+          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ ব্যর্থ: ${phone} | ${amount} TK | ${topupData.message || "Unknown error"} | Re-verify রিফান্ড হয়েছে`,
         }).eq("id", transactionId);
       }
 
