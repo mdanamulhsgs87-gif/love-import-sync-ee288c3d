@@ -605,8 +605,8 @@ export default function Dashboard() {
                     <Shield className="w-5 h-5 text-[hsl(var(--purple))]" />
                   </div>
                   <div>
-                    <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">✅ ভেরিফাইড কাউন্ট</p>
-                    <p className="text-[10px] text-muted-foreground">নতুন ভেরিফাই করলেই সাথে সাথে যোগ হবে</p>
+                    <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">✅ ১ম ভেরিফাইড কাউন্ট</p>
+                    <p className="text-[10px] text-[hsl(var(--amber))] font-bold">⏳ Pending — Re-verify করলে Complete হবে</p>
                   </div>
                 </div>
                 <motion.p key={user.key_count}
@@ -642,7 +642,7 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 text-center bg-gradient-to-r from-[hsl(var(--cyan))]/10 via-[hsl(var(--emerald))]/10 to-[hsl(var(--amber))]/10 rounded-xl py-2 px-3 border border-[hsl(var(--cyan))]/20">
                   <p className="text-[11px] font-bold text-foreground/80">
-                    ℹ️ রি-ভেরিফাই থেকে অর্জিত টাকা সরাসরি উইথড্র করা যাবে • প্রথম ভেরিফাই = অ্যাডমিনের মাধ্যমে পেমেন্ট
+                    ✅ শুধুমাত্র Re-verify সম্পন্ন হলে Account Complete হয় এবং Balance যোগ হয় — সরাসরি Withdraw বা Mobile Recharge করা যাবে
                   </p>
                 </div>
               </div>
@@ -670,7 +670,7 @@ export default function Dashboard() {
                       কোনো অ্যাডমিনের অনুমোদনের দরকার নেই! মাত্র <span className="text-[hsl(var(--emerald))] font-black">২ সেকেন্ডে</span> আপনার রিচার্জ সফল হবে ✅
                     </p>
                     <p className="text-[11px] text-[hsl(var(--amber))] font-bold mt-1">
-                      💡 ১ ভেরিফাইড কাউন্ট = ২০ টাকা রিচার্জ
+                      💡 ১ Re-verify সম্পন্ন Account = ২০ টাকা রিচার্জ
                     </p>
                   </div>
                 </div>
