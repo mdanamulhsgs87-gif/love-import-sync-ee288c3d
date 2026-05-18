@@ -60,7 +60,8 @@ export default function MobileRecharge() {
     checkBalance();
   }, []);
 
-  const currentKeys = user?.key_count || 0;
+  // Recharge balance এখন শুধু Re-verify সম্পন্ন account থেকে আসে — ১ম ভেরিফাই গণনা শুধু count
+  const currentKeys = user?.reverify_count || 0;
   const maxRecharge = currentKeys * RATE;
   const finalAmount = amount || (customAmount ? parseInt(customAmount) : 0);
   const keysNeeded = finalAmount > 0 ? Math.ceil(finalAmount / RATE) : 0;
@@ -188,7 +189,7 @@ export default function MobileRecharge() {
                     className="text-4xl font-black bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] bg-clip-text text-transparent">
                     {currentKeys}
                   </motion.span>
-                  <span className="text-sm font-bold text-muted-foreground">কাউন্ট</span>
+                  <span className="text-sm font-bold text-muted-foreground">Re-verify</span>
                 </div>
               </div>
               <div className="text-right">
@@ -198,7 +199,7 @@ export default function MobileRecharge() {
                     সর্বোচ্চ {maxRecharge}৳
                   </span>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">১ কাউন্ট = {RATE}৳</p>
+                <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">১ Re-verify = {RATE}৳</p>
               </div>
             </div>
           </div>
@@ -227,8 +228,8 @@ export default function MobileRecharge() {
         {currentKeys === 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="rounded-2xl bg-destructive/8 border border-destructive/20 p-4 text-center">
-            <p className="text-sm font-black text-destructive">⚠️ আপনার কোনো কাউন্ট নেই!</p>
-            <p className="text-[11px] text-muted-foreground mt-1">প্রথমে ভেরিফাই করুন</p>
+            <p className="text-sm font-black text-destructive">⚠️ আপনার কোনো Re-verify সম্পন্ন Account নেই!</p>
+            <p className="text-[11px] text-muted-foreground mt-1">প্রথমে Re-verify করে account complete করুন</p>
           </motion.div>
         )}
 
@@ -317,7 +318,7 @@ export default function MobileRecharge() {
                   <span className={`text-[9px] font-bold block mt-0.5 ${
                     amount === a ? "text-[hsl(var(--cyan))]" : "text-muted-foreground"
                   }`}>
-                    {keys} কাউন্ট
+                    {keys} Re-verify
                   </span>
                   {amount === a && (
                     <motion.div layoutId="amount-check" initial={{ scale: 0 }} animate={{ scale: 1 }}
