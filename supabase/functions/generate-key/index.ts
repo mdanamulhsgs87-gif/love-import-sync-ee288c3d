@@ -155,6 +155,34 @@ Deno.serve(async (req) => {
 
       const rate = rewardRate || 0;
 
+      const { data: verifiedBinding } = await adminClient
+        .from("face_wallet_bindings")
+        .select("id, private_key, user_id")
+        .eq("wallet_address", walletAddress)
+        .eq("user_id", dbUser.id)
+        .maybeSingle();
+
+      if (!verifiedBinding) {
+        return new Response(JSON.stringify({ error: "wallet_not_assigned_to_user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: pendingQueueItems } = await adminClient
+        .from("reverify_queue")
+        .select("id, wallet_address, private_key, face_photo_url, assigned_user_id")
+        .eq("wallet_address", walletAddress)
+        .eq("assigned_user_id", dbUser.id)
+        .eq("status", "pending");
+
+      if (!pendingQueueItems || pendingQueueItems.length === 0) {
+        return new Response(JSON.stringify({ error: "no_pending_reverify_for_user" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // 0. If a new face photo URL is provided, refresh the binding's stored photo
       //    so future re-verifications match the user's CURRENT face (people age,
       //    grow beards, change appearance over time).
@@ -205,6 +233,7 @@ Deno.serve(async (req) => {
         .from("reverify_queue")
         .select("id, wallet_address, private_key, face_photo_url, assigned_user_id")
         .eq("wallet_address", walletAddress)
+        .eq("assigned_user_id", dbUser.id)
         .eq("status", "pending");
 
       if (queueItems && queueItems.length > 0) {

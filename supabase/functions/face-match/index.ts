@@ -18,7 +18,7 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
-const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.95;
+const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.99;
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -80,30 +80,66 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // For re-verify, restrict matching to the CURRENT user's own bindings
-    // so we never accidentally match someone else's face/wallet.
+    // For re-verify, fail closed: only the logged-in user's own pending
+    // re-verify wallets may be checked. Never fall back to searching everyone.
     let currentUserId: number | null = null;
     if (source === "reverify") {
       const authHeader = req.headers.get("Authorization");
-      if (authHeader) {
-        const token = authHeader.replace("Bearer ", "");
-        const { data: userData } = await supabase.auth.getUser(token);
-        if (userData?.user) {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("id")
-            .eq("auth_id", userData.user.id)
-            .maybeSingle();
-          if (profile) currentUserId = profile.id;
-        }
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "login_required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !userData?.user) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "invalid_login" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", userData.user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "user_profile_not_found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      currentUserId = profile.id;
+    }
+
+    let allowedPendingWallets: string[] | null = null;
+    if (source === "reverify" && currentUserId !== null) {
+      const { data: queueItems, error: queueErr } = await supabase
+        .from("reverify_queue")
+        .select("wallet_address")
+        .eq("assigned_user_id", currentUserId)
+        .eq("status", "pending");
+      if (queueErr) throw queueErr;
+
+      allowedPendingWallets = [...new Set((queueItems || []).map((q: any) => q.wallet_address).filter(Boolean))];
+      if (allowedPendingWallets.length === 0) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "no_pending_reverify_for_user" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
     let bindingsQuery = supabase
       .from("face_wallet_bindings")
       .select("id, wallet_address, private_key, face_photo_url, user_id");
-    if (source === "reverify" && currentUserId !== null) {
-      bindingsQuery = bindingsQuery.eq("user_id", currentUserId);
+    if (source === "reverify" && currentUserId !== null && allowedPendingWallets) {
+      bindingsQuery = bindingsQuery.eq("user_id", currentUserId).in("wallet_address", allowedPendingWallets);
     }
     const { data: bindings, error: bindErr } = await bindingsQuery;
 
@@ -165,7 +201,8 @@ CRITICAL RULES:
 - Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
 - Same shirt color or same background is NOT evidence of a match.
 - If facial features are not clearly the same person, return no duplicate.
-- Do not guess. Only match when you are highly confident from facial structure.
+- Do not guess. Only match when you are near-certain from facial structure.
+- If there is any doubt at all, return no duplicate.
 
 Existing photo IDs:
 ${bindingsWithPhotos.map((b, i) => `EXISTING_${i + 1}: ID="${b.id}"`).join("\n")}
@@ -183,7 +220,8 @@ CRITICAL RULES:
 - Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
 - Same shirt color or same background is NOT evidence of a match.
 - If facial features are not clearly the same person, return null.
-- Do not guess. Only match when you are highly confident from facial structure.
+- Do not guess. Only match when you are near-certain from facial structure.
+- If there is any doubt at all, return null. Wrong matches are worse than no matches.
 
 Reference photo IDs:
 ${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}
