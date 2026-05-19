@@ -737,15 +737,6 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground">রি-ভেরিফাই আয় থেকে সরাসরি উইথড্র করুন</p>
                   </div>
                 </div>
-                {walletSystem === "bdt" && (
-                  <>
-                    <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/20 rounded-xl p-3 mb-4">
-                      <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
-                        ⚠️ <b>প্রথম ভেরিফিকেশন</b> থেকে পেমেন্ট নিতে হলে নির্দিষ্ট অ্যাডমিনের কাছে রিকুয়েস্ট পাঠাতে হবে। শুধু <b>রি-ভেরিফাই</b> থেকে আয় সরাসরি উইথড্র করতে পারবেন।
-                      </p>
-                    </div>
-                  </>
-                )}
                 <WithdrawForm
                   balance={computedBdtBalance}
                   onSystemChange={setWalletSystem}
