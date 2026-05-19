@@ -70,7 +70,7 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const computedBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
   // Use computed balance directly — server `balance` may lag behind reverify_count updates
   const effectiveBdtBalance = computedBdtBalance;
-  const pendingFirstVerify = (userRow?.key_count || 0);
+  const pendingFirstVerify = Math.max(0, (userRow?.key_count || 0) - (userRow?.reverify_count || 0));
 
   const withdrawLockRemainingMs = getRemainingMilliseconds(publicSettings?.withdrawLockUntil, nowMs);
   const isWithdrawLocked = withdrawLockRemainingMs > 0;
