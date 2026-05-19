@@ -66,8 +66,8 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const referralEarnings = Number((userRow as any)?.referral_usdt_earnings || 0);
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
-  // BDT computed: same USDT × usdtToBdt rate
-  const computedBdtBalance = Math.floor(usdtBalance * usdtToBdt);
+  // BDT computed: exact = accounts × rewardRate (+ referral converted)
+  const computedBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
   const effectiveBdtBalance = Math.min(balance, computedBdtBalance);
   const pendingFirstVerify = (userRow?.key_count || 0);
 
@@ -153,6 +153,10 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const usdtAmountNum = Number(usdtAmount) || 0;
   const usdtFee = +(usdtAmountNum * usdtFeePct / 100).toFixed(4);
   const usdtReceive = Math.max(0, +(usdtAmountNum - usdtFee).toFixed(4));
+
+  const bdtAmountNum = Number(amount) || 0;
+  const bdtFee = bdtAmountNum > 0 ? (bdtAmountNum < 100 ? 20 : 10) : 0;
+  const bdtReceive = Math.max(0, bdtAmountNum - bdtFee);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -336,6 +340,17 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">৳</span>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" min={minWithdraw} max={effectiveBdtBalance} className="input-field pl-8" required />
             </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/50 p-3 text-xs space-y-1">
+            <div className="flex justify-between"><span className="text-muted-foreground">ফি নিয়ম</span><span className="font-mono">&lt;৳100 = ৳20 · ≥৳100 = ৳10</span></div>
+            {bdtAmountNum > 0 && (
+              <>
+                <div className="flex justify-between"><span className="text-muted-foreground">পরিমাণ</span><span className="font-mono">৳{bdtAmountNum}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">ফি</span><span className="font-mono text-destructive">−৳{bdtFee}</span></div>
+                <div className="flex justify-between pt-1 border-t border-border"><span className="font-bold">আপনি পাবেন</span><span className="font-mono font-black text-[hsl(var(--cyan))]">৳{bdtReceive}</span></div>
+              </>
+            )}
           </div>
 
           <button type="submit" disabled={isPending || isWithdrawLocked || !number || !amount || Number(amount) > effectiveBdtBalance || availableCount === 0} className="btn-primary mt-2">
