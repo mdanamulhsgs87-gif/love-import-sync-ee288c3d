@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserTransactions } from "@/lib/api";
+import { getUserTransactions, getUser } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowUpRight, History, CheckCircle2, Clock, XCircle, ShieldCheck, Hourglass, Sparkles, TrendingUp, RefreshCcw, Wallet, Coins } from "lucide-react";
 import { format } from "date-fns";
@@ -11,6 +11,12 @@ export function TransactionList() {
     queryKey: ["transactions", user?.id],
     queryFn: () => getUserTransactions(user!.id),
     enabled: !!user,
+  });
+  const { data: dbUser } = useQuery({
+    queryKey: ["me-balance", user?.id],
+    queryFn: () => getUser(user!.id),
+    enabled: !!user,
+    refetchInterval: 8000,
   });
 
   if (isLoading) {
@@ -57,7 +63,13 @@ export function TransactionList() {
   const reverifyCompleted = visible.filter((t: any) => isReverifyEarning(t) && t.status !== "pending" && t.status !== "rejected");
   const usdtPayouts = visible.filter(isUsdtPayout);
   const withdrawalsList = visible.filter(isWithdrawal);
-  const totalEarned = reverifyCompleted.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
+  // True total earned = current balance + all non-rejected withdrawals.
+  // This matches reality even if reward-rate changed historically.
+  const withdrawnSum = withdrawalsList
+    .filter((t: any) => t.status !== "rejected")
+    .reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
+  const currentBalance = Number(dbUser?.balance || 0);
+  const totalEarned = currentBalance + withdrawnSum;
   const totalUsdt = usdtPayouts.reduce((s: number, t: any) => s + (Number(t.amount) || 0) / 100, 0);
 
   return (
