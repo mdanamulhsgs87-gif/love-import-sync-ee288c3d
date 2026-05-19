@@ -690,7 +690,20 @@ export default function Dashboard() {
                 {pendingCount > 0 && (
                   <motion.button
                     onClick={() => {
-                      document.getElementById("reverify-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      const section = document.getElementById("reverify-section");
+                      section?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      // Highlight the re-verify start button to nudge the user
+                      setTimeout(() => {
+                        const btn = document.getElementById("reverify-start-btn");
+                        if (btn) {
+                          btn.classList.add("reverify-pulse-attention");
+                          setTimeout(() => btn.classList.remove("reverify-pulse-attention"), 4200);
+                        }
+                        toast({
+                          title: "👇 এই বাটনে ক্লিক করুন",
+                          description: "ফেস স্ক্যান করে রি-ভেরিফাই শুরু করুন — Account Complete হবে ও টাকা যোগ হবে।",
+                        });
+                      }, 600);
                     }}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="relative w-full overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--orange))] to-[hsl(var(--amber))] shadow-[0_0_24px_hsl(var(--amber)/0.45)]">
