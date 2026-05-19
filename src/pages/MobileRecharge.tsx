@@ -382,17 +382,17 @@ export default function MobileRecharge() {
                 <div className="h-px bg-border/30" />
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-muted-foreground">কাটবে</span>
-                  <span className={`text-[13px] font-black ${keysNeeded > currentKeys ? "text-destructive" : "text-foreground"}`}>
-                    {keysNeeded} কাউন্ট
+                  <span className={`text-[13px] font-black ${finalAmount > maxRecharge ? "text-destructive" : "text-foreground"}`}>
+                    ৳{finalAmount}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-muted-foreground">বাকি থাকবে</span>
-                  <span className="text-[13px] font-black text-foreground">{Math.max(0, currentKeys - keysNeeded)} কাউন্ট</span>
+                  <span className="text-[13px] font-black text-foreground">৳{Math.max(0, maxRecharge - finalAmount)}</span>
                 </div>
-                {keysNeeded > currentKeys && (
+                {finalAmount > maxRecharge && (
                   <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-3 py-2 mt-1">
-                    <p className="text-[11px] font-bold text-destructive text-center">❌ পর্যাপ্ত কাউন্ট নেই!</p>
+                    <p className="text-[11px] font-bold text-destructive text-center">❌ পর্যাপ্ত ব্যালেন্স নেই!</p>
                   </div>
                 )}
               </div>
