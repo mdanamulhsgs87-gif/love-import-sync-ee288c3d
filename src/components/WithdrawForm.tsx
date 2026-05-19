@@ -68,7 +68,8 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
   // BDT computed: exact = accounts × rewardRate (+ referral converted)
   const computedBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
-  const effectiveBdtBalance = Math.min(balance, computedBdtBalance);
+  // Use computed balance directly — server `balance` may lag behind reverify_count updates
+  const effectiveBdtBalance = computedBdtBalance;
   const pendingFirstVerify = (userRow?.key_count || 0);
 
   const withdrawLockRemainingMs = getRemainingMilliseconds(publicSettings?.withdrawLockUntil, nowMs);
