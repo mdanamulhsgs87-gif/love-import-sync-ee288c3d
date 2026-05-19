@@ -552,10 +552,6 @@ export default function Dashboard() {
                 <Wallet className="mr-3 h-5 w-5 text-[hsl(var(--cyan))]" />
                 <span className="text-[15px] font-black text-foreground">💰 ওয়ালেট ও উইথড্র</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--purple))]/10" onClick={() => setActivePanel("verified")}>
-                <Shield className="mr-3 h-5 w-5 text-[hsl(var(--purple))]" />
-                <span className="text-[15px] font-black text-foreground">🛡️ ভেরিফাইড কাউন্ট</span>
-              </DropdownMenuItem>
               <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/mobile-recharge")}>
                 <Smartphone className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
                 <span className="text-[15px] font-black text-foreground">📱 মোবাইল রিচার্জ</span>
