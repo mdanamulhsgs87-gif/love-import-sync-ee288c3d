@@ -934,9 +934,9 @@ export default function AdminPanel() {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">USDT per account (auto)</label>
                 <div className="input-field text-sm flex items-center bg-secondary/40 text-[hsl(var(--emerald))] font-mono font-bold">
-                  {((parseFloat(rewardRateSetting) || 40) / (parseFloat(usdtToBdtSetting) || 124)).toFixed(4)} USDT
+                  {((parseFloat(rewardRate) || 40) / (parseFloat(usdtToBdtSetting) || 124)).toFixed(4)} USDT
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">= ৳{rewardRateSetting || 40} ÷ {usdtToBdtSetting || 124}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">= ৳{rewardRate || 40} ÷ {usdtToBdtSetting || 124}</p>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">সর্বনিম্ন উইথড্র (USDT)</label>
