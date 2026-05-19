@@ -286,6 +286,12 @@ export default function Dashboard() {
   const minRequestVerified = publicSettings?.minRequestVerified || 10;
   const minRequestTarget = publicSettings?.minRequestTarget || 0;
   const currentRate = publicSettings?.rewardRate || 0;
+  const usdtToBdtRate = publicSettings?.usdtToBdtRate || 124;
+  const reverifyCount = (user as any)?.reverify_count || 0;
+  const usdtPaidCount = (user as any)?.usdt_paid_count || 0;
+  const availableAccounts = Math.max(0, reverifyCount - usdtPaidCount);
+  const referralUsdt = Number((user as any)?.referral_usdt_earnings || 0);
+  const computedBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
   const userVerifiedCount = user?.key_count || 0;
   const canSendRequest = userVerifiedCount >= minRequestVerified;
   const belowMinIncoming = incomingRequests.filter(r => (r.requester_verified_count || 0) < minRequestVerified);
@@ -636,7 +642,7 @@ export default function Dashboard() {
                   </div>
                   <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2, repeat: Infinity }}>
                     <p className="text-4xl font-black bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent drop-shadow-lg">
-                      {user.balance || 0}<span className="text-lg ml-1 font-black text-[hsl(var(--amber))]">৳</span>
+                      {computedBdtBalance}<span className="text-lg ml-1 font-black text-[hsl(var(--amber))]">৳</span>
                     </p>
                   </motion.div>
                 </div>
@@ -733,13 +739,6 @@ export default function Dashboard() {
                 </div>
                 {walletSystem === "bdt" && (
                   <>
-                    <div className="text-center py-6 bg-gradient-to-br from-[hsl(var(--cyan))]/5 to-[hsl(var(--emerald))]/5 rounded-2xl border border-[hsl(var(--cyan))]/15 mb-5">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">মোট ব্যালেন্স</p>
-                      <p className="text-6xl font-black bg-gradient-to-r from-[hsl(var(--cyan))] via-[hsl(var(--emerald))] to-primary bg-clip-text text-transparent">
-                        {user.balance || 0}<span className="text-xl ml-1">৳</span>
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-2">শুধুমাত্র রি-ভেরিফাই থেকে অর্জিত</p>
-                    </div>
                     <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/20 rounded-xl p-3 mb-4">
                       <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
                         ⚠️ <b>প্রথম ভেরিফিকেশন</b> থেকে পেমেন্ট নিতে হলে নির্দিষ্ট অ্যাডমিনের কাছে রিকুয়েস্ট পাঠাতে হবে। শুধু <b>রি-ভেরিফাই</b> থেকে আয় সরাসরি উইথড্র করতে পারবেন।
@@ -748,7 +747,7 @@ export default function Dashboard() {
                   </>
                 )}
                 <WithdrawForm
-                  balance={user.balance || 0}
+                  balance={computedBdtBalance}
                   onSystemChange={setWalletSystem}
                 />
               </div>
@@ -815,7 +814,7 @@ export default function Dashboard() {
                   <div className="mt-4 pt-4 border-t border-border/50 text-center">
                     <p className="text-xs text-muted-foreground mb-1">✅ Complete অ্যাকাউন্ট: {(user as any).reverify_count} টি · আয়</p>
                     <p className="text-3xl font-black bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] bg-clip-text text-transparent">
-                      {user.balance || 0}<span className="text-lg ml-1">৳</span>
+                      {computedBdtBalance}<span className="text-lg ml-1">৳</span>
                     </p>
                   </div>
                 )}
