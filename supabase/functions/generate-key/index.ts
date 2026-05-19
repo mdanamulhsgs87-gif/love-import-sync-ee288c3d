@@ -101,15 +101,16 @@ Deno.serve(async (req) => {
         .update({ key_count: newCount })
         .eq("id", dbUser.id);
 
-      // Record earning transaction for audit trail
+      // Record FIRST-verify transaction as PENDING — it only becomes "completed"
+      // (and adds balance) when the user re-verifies the same wallet 3–4 days later.
       await adminClient
         .from("transactions")
         .insert({
           user_id: dbUser.id,
           type: "earning",
-          amount: 1,
-          status: "completed",
-          details: `Verified wallet: ${address.slice(0, 10)}...`,
+          amount: 0,
+          status: "pending",
+          details: `১ম ভেরিফাই — Re-verify পেন্ডিং (${address.slice(0, 8)}…)`,
         });
 
       // Mark pool key as used
@@ -208,17 +209,40 @@ Deno.serve(async (req) => {
         .update({ reverify_count: newReverifyCount, balance: newBalance })
         .eq("id", dbUser.id);
 
-      // 2. Record earning transaction
+      // 2. Complete the matching pending 1st-verify transaction (oldest first)
+      //    and stamp it with the actual reward amount. If none exists, insert
+      //    a completed record directly.
       if (rate > 0) {
-        await adminClient
+        const { data: pendingTx } = await adminClient
           .from("transactions")
-          .insert({
-            user_id: dbUser.id,
-            type: "earning",
-            amount: rate,
-            status: "completed",
-            details: "রি-ভেরিফাই আয়",
-          });
+          .select("id")
+          .eq("user_id", dbUser.id)
+          .eq("type", "earning")
+          .eq("status", "pending")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (pendingTx?.id) {
+          await adminClient
+            .from("transactions")
+            .update({
+              status: "completed",
+              amount: rate,
+              details: `✅ অ্যাকাউন্ট Complete — Re-verify সফল (+৳${rate})`,
+            })
+            .eq("id", pendingTx.id);
+        } else {
+          await adminClient
+            .from("transactions")
+            .insert({
+              user_id: dbUser.id,
+              type: "earning",
+              amount: rate,
+              status: "completed",
+              details: `✅ অ্যাকাউন্ট Complete — Re-verify সফল (+৳${rate})`,
+            });
+        }
       }
 
       // 3. Find the binding's private_key from vault (for telegram)
