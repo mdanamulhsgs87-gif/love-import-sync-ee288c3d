@@ -312,37 +312,8 @@ export default function Profile() {
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: "spring", damping: 15, delay: 0.2 }}
-            className="relative rounded-2xl p-5 text-center space-y-1.5 overflow-hidden"
-          >
-            <motion.div
-              className="absolute -inset-[1px] rounded-2xl z-0"
-              style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.6), hsl(var(--cyan) / 0.3), hsl(var(--primary) / 0.6))", backgroundSize: "200% 200%" }}
-              animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            />
-            <div className="relative z-10 bg-card rounded-2xl p-5 space-y-1.5">
-              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>
-                <Key className="w-7 h-7 text-primary mx-auto" />
-              </motion.div>
-              <motion.p
-                className="text-3xl font-black text-primary"
-                key={user.key_count}
-                initial={{ scale: 1.3, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring" }}
-              >
-                {user.key_count || 0}
-              </motion.p>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">ভেরিফাইড কি</p>
-            </div>
-          </motion.div>
-
+        {/* Stats — Join date only (verify count removed) */}
+        <div className="grid grid-cols-1 gap-3">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
