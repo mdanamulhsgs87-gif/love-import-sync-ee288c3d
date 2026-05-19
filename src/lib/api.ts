@@ -315,12 +315,16 @@ export async function requestWithdraw(userId: number, method: string, number: st
   const minW = settings.minWithdraw || 50;
   if (amount < minW) throw new Error(`সর্বনিম্ন উইথড্র ${minW} TK`);
 
+  const fee = amount < 100 ? 20 : 10;
+  const receive = amount - fee;
+  if (receive <= 0) throw new Error("ফি কাটার পর পরিমাণ ০ এর কম");
+
   await supabase.from("users").update({ balance: user.balance - amount }).eq("id", userId);
   await createTransaction({
     user_id: userId,
     type: "withdrawal",
     amount,
-    details: `${method.toUpperCase()}: ${number}`,
+    details: `${method.toUpperCase()}: ${number} · ফি ৳${fee} · পাবেন ৳${receive}`,
     status: "pending",
   });
 
