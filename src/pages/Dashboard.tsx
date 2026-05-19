@@ -330,7 +330,12 @@ export default function Dashboard() {
   const usdtPaidCount = (user as any)?.usdt_paid_count || 0;
   const availableAccounts = Math.max(0, reverifyCount - usdtPaidCount);
   const referralUsdt = Number((user as any)?.referral_usdt_earnings || 0);
-  const computedBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
+  // Subtract withdrawals (pending + completed) so balance reflects what's withdrawn.
+  const withdrawnSum = (userTransactions as any[])
+    .filter((t) => t.type === "withdrawal" && (t.status === "pending" || t.status === "completed"))
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const rawBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
+  const computedBdtBalance = Math.max(0, rawBdtBalance - withdrawnSum);
   const userVerifiedCount = user?.key_count || 0;
   const canSendRequest = userVerifiedCount >= minRequestVerified;
   const belowMinIncoming = incomingRequests.filter(r => (r.requester_verified_count || 0) < minRequestVerified);
