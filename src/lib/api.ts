@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { calculateSharedBalance } from "@/lib/balance";
 
 // Types
 export type User = {
@@ -318,8 +319,13 @@ export async function requestWithdraw(userId: number, method: string, number: st
   const user = await getUser(userId);
   if (!user) throw new Error("User not found");
   if (user.is_blocked) throw new Error("Account blocked");
-  if (user.balance < amount) throw new Error("Insufficient balance");
   const settings = await getPublicSettings();
+  const { data: txs } = await supabase
+    .from("transactions")
+    .select("amount,type,status")
+    .eq("user_id", userId);
+  const sharedBalance = calculateSharedBalance(user, settings, (txs || []) as Transaction[]);
+  if (sharedBalance.availableBdt < amount) throw new Error("Insufficient balance");
   const minW = settings.minWithdraw || 50;
   if (amount < minW) throw new Error(`সর্বনিম্ন উইথড্র ${minW} TK`);
 
@@ -327,7 +333,6 @@ export async function requestWithdraw(userId: number, method: string, number: st
   const receive = amount - fee;
   if (receive <= 0) throw new Error("ফি কাটার পর পরিমাণ ০ এর কম");
 
-  await supabase.from("users").update({ balance: user.balance - amount }).eq("id", userId);
   await createTransaction({
     user_id: userId,
     type: "withdrawal",
@@ -335,8 +340,9 @@ export async function requestWithdraw(userId: number, method: string, number: st
     details: `${method.toUpperCase()}: ${number} · ফি ৳${fee} · পাবেন ৳${receive}`,
     status: "pending",
   });
+  await supabase.from("users").update({ balance: sharedBalance.availableBdt - amount }).eq("id", userId);
 
-  return { newBalance: user.balance - amount };
+  return { newBalance: sharedBalance.availableBdt - amount };
 }
 
 // Pool
@@ -469,9 +475,6 @@ export async function updateTransactionStatus(txId: number, status: string) {
       if (user) {
         await supabase.from("users").update({ balance: user.balance + tx.amount }).eq("id", tx.user_id);
       }
-    } else if (status === "completed") {
-      // Approved: reset key_count to 0
-      await supabase.from("users").update({ key_count: 0 }).eq("id", tx.user_id);
     }
   }
 }

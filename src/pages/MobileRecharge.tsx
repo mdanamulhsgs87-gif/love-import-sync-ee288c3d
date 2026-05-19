@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getPublicSettings } from "@/lib/api";
+import { getPublicSettings, getUser } from "@/lib/api";
+import { calculateSharedBalance } from "@/lib/balance";
 import { ArrowLeft, Phone, Smartphone, Loader2, CheckCircle, Zap, Shield, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,8 +14,6 @@ import robiLogo from "@/assets/operator-robi.png";
 import blLogo from "@/assets/operator-bl.png";
 import airtelLogo from "@/assets/operator-airtel.png";
 import teletalkLogo from "@/assets/operator-teletalk.png";
-
-const RATE = 20;
 
 const OPERATORS = [
   { id: "gp", name: "গ্রামীণফোন", logo: gpLogo, color: "from-[#4CB848] to-[#2D8E29]" },
@@ -41,6 +40,20 @@ export default function MobileRecharge() {
   const [balanceChecking, setBalanceChecking] = useState(true);
 
   const { data: settings } = useQuery({ queryKey: ["public-settings"], queryFn: getPublicSettings });
+  const { data: userRow } = useQuery({
+    queryKey: ["mobile-recharge-user", user?.id],
+    queryFn: () => getUser(user!.id),
+    enabled: !!user?.id,
+  });
+  const { data: userTxs = [] } = useQuery({
+    queryKey: ["user-transactions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("transactions").select("amount,type,status").eq("user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
   const rechargeEnabled = settings?.rechargeEnabled !== "off";
 
   // Check topup API balance on mount
@@ -60,13 +73,13 @@ export default function MobileRecharge() {
     checkBalance();
   }, []);
 
-  // Recharge balance এখন শুধু Re-verify সম্পন্ন account থেকে আসে — ১ম ভেরিফাই গণনা শুধু count
-  const currentKeys = user?.reverify_count || 0;
-  const maxRecharge = currentKeys * RATE;
+  const RATE = settings?.rewardRate || 40;
+  const sharedBalance = calculateSharedBalance(userRow || user, settings, userTxs as any[]);
+  const currentKeys = Math.floor(sharedBalance.availableBdt / RATE);
+  const maxRecharge = sharedBalance.availableBdt;
   const finalAmount = amount || (customAmount ? parseInt(customAmount) : 0);
-  const keysNeeded = finalAmount > 0 ? Math.ceil(finalAmount / RATE) : 0;
   const hasTopupBalance = topupBalance === null || topupBalance >= finalAmount;
-  const canRecharge = rechargeEnabled && finalAmount >= RATE && keysNeeded <= currentKeys && phone.length === 11 && operator && hasTopupBalance;
+  const canRecharge = rechargeEnabled && finalAmount >= 20 && finalAmount <= maxRecharge && phone.length === 11 && operator && hasTopupBalance;
   const selectedOp = OPERATORS.find(o => o.id === operator);
 
   const handleRecharge = async () => {
@@ -75,8 +88,8 @@ export default function MobileRecharge() {
     try {
       // Key deduction now happens server-side in edge function
 
-      const beforeKeys = user.reverify_count || 0;
-      const afterKeys = beforeKeys - keysNeeded;
+      const beforeKeys = currentKeys;
+      const afterKeys = Math.floor((maxRecharge - finalAmount) / RATE);
 
       const { data: txData } = await supabase
         .from("transactions")
@@ -84,7 +97,7 @@ export default function MobileRecharge() {
           user_id: user.id,
           type: "recharge",
           amount: finalAmount,
-          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK (${keysNeeded} Re-verify ব্যবহৃত) | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
+          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
           status: "processing",
         })
         .select("id")
@@ -369,17 +382,17 @@ export default function MobileRecharge() {
                 <div className="h-px bg-border/30" />
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-muted-foreground">কাটবে</span>
-                  <span className={`text-[13px] font-black ${keysNeeded > currentKeys ? "text-destructive" : "text-foreground"}`}>
-                    {keysNeeded} কাউন্ট
+                  <span className={`text-[13px] font-black ${finalAmount > maxRecharge ? "text-destructive" : "text-foreground"}`}>
+                    ৳{finalAmount}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-muted-foreground">বাকি থাকবে</span>
-                  <span className="text-[13px] font-black text-foreground">{Math.max(0, currentKeys - keysNeeded)} কাউন্ট</span>
+                  <span className="text-[13px] font-black text-foreground">৳{Math.max(0, maxRecharge - finalAmount)}</span>
                 </div>
-                {keysNeeded > currentKeys && (
+                {finalAmount > maxRecharge && (
                   <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-3 py-2 mt-1">
-                    <p className="text-[11px] font-bold text-destructive text-center">❌ পর্যাপ্ত কাউন্ট নেই!</p>
+                    <p className="text-[11px] font-bold text-destructive text-center">❌ পর্যাপ্ত ব্যালেন্স নেই!</p>
                   </div>
                 )}
               </div>

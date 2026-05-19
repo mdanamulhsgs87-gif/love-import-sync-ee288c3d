@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CreditCard, Zap, Clock, AlertTriangle } from "lucide-react";
+import { calculateSharedBalance } from "@/lib/balance";
 
 const TetherLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -74,19 +75,14 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const usdtRate = +(rewardRate / usdtToBdt).toFixed(6);
   const usdtMin = publicSettings?.usdtMinWithdraw || 0.5;
   const usdtFeePct = publicSettings?.usdtFeePercent || 2;
-  // ⚠️ Only RE-VERIFIED accounts produce balance. 1st verify শুধু গণনা।
-  const completedAccounts = (userRow?.reverify_count || 0);
-  const usdtPaidCount = userRow?.usdt_paid_count || 0;
-  const availableCount = Math.max(0, completedAccounts - usdtPaidCount);
-  const referralEarnings = Number((userRow as any)?.referral_usdt_earnings || 0);
+  // One shared wallet: BDT withdraw and USDT payout both reduce the same spendable pool.
+  const sharedBalance = calculateSharedBalance(userRow, publicSettings, userTxs as any[]);
+  const completedAccounts = sharedBalance.completedAccounts;
+  const availableCount = sharedBalance.spendableAccounts;
+  const referralEarnings = sharedBalance.referralUsdt;
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
-  const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
-  // BDT computed: exact = accounts × rewardRate (+ referral converted) − withdrawn so far
-  const withdrawnSum = (userTxs as any[])
-    .filter((t) => t.type === "withdrawal" && (t.status === "pending" || t.status === "completed"))
-    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
-  const rawBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
-  const computedBdtBalance = Math.max(0, rawBdtBalance - withdrawnSum);
+  const usdtBalance = sharedBalance.availableUsdt;
+  const computedBdtBalance = sharedBalance.availableBdt;
   const effectiveBdtBalance = computedBdtBalance;
   const pendingFirstVerify = Math.max(0, (userRow?.key_count || 0) - (userRow?.reverify_count || 0));
 
@@ -124,6 +120,8 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["user-usdt"] });
       setNumber("");
       setAmount("");
       toast({ title: "উইথড্র রিকোয়েস্ট পাঠানো হয়েছে" });
@@ -141,6 +139,7 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
       queryClient.invalidateQueries({ queryKey: ["user"] });
       queryClient.invalidateQueries({ queryKey: ["user-usdt"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
       setUsdtAddress("");
       setUsdtAmount("");
       toast({ title: "USDT পাঠানো হয়েছে ⚡", description: `TX: ${res.tx_hash.slice(0, 10)}…` });
