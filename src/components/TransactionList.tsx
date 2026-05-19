@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getUserTransactions } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowUpRight, History, CheckCircle2, Clock, XCircle, ShieldCheck, Hourglass, Sparkles, TrendingUp, RefreshCcw, Wallet } from "lucide-react";
+import { ArrowUpRight, History, CheckCircle2, Clock, XCircle, ShieldCheck, Hourglass, Sparkles, TrendingUp, RefreshCcw, Wallet, Coins } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -43,10 +43,22 @@ export function TransactionList() {
     );
   }
 
-  const completed = transactions.filter((t: any) => t.type === "earning" && t.status !== "pending" && t.status !== "rejected");
-  const pendingFirst = transactions.filter((t: any) => t.type === "earning" && t.status === "pending");
-  const withdrawals = transactions.filter((t: any) => t.type !== "earning");
-  const totalEarned = completed.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
+  // Categorize properly
+  const isFirstVerifyEarning = (t: any) =>
+    t.type === "earning" && typeof t.details === "string" && t.details.startsWith("Verified wallet");
+  const isReverifyEarning = (t: any) =>
+    t.type === "earning" && !isFirstVerifyEarning(t);
+  const isUsdtPayout = (t: any) => t.type === "usdt_payout";
+  const isWithdrawal = (t: any) => t.type === "withdrawal" || (t.type !== "earning" && !isUsdtPayout(t));
+
+  // Hide 1st-verify ৳1 entries from the visible list
+  const visible = transactions.filter((t: any) => !isFirstVerifyEarning(t));
+
+  const reverifyCompleted = visible.filter((t: any) => isReverifyEarning(t) && t.status !== "pending" && t.status !== "rejected");
+  const usdtPayouts = visible.filter(isUsdtPayout);
+  const withdrawalsList = visible.filter(isWithdrawal);
+  const totalEarned = reverifyCompleted.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
+  const totalUsdt = usdtPayouts.reduce((s: number, t: any) => s + (Number(t.amount) || 0) / 100, 0);
 
   return (
     <motion.div
@@ -94,11 +106,11 @@ export function TransactionList() {
               </div>
               <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--amber))]/20 to-[hsl(var(--orange))]/10 border border-[hsl(var(--amber))]/40 overflow-hidden">
                 <div className="flex items-center gap-1 mb-1">
-                  <RefreshCcw className="w-3 h-3 text-[hsl(var(--amber))]" />
-                  <p className="text-[9px] font-black text-[hsl(var(--amber))] uppercase">Pending</p>
+                  <Coins className="w-3 h-3 text-[hsl(var(--amber))]" />
+                  <p className="text-[9px] font-black text-[hsl(var(--amber))] uppercase">USDT</p>
                 </div>
                 <p className="text-xl font-black text-[hsl(var(--amber))] leading-none drop-shadow-[0_0_6px_hsl(var(--amber)/0.5)]">
-                  {pendingFirst.length}
+                  {totalUsdt.toFixed(2)}
                 </p>
               </div>
               <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--pink))]/20 to-[hsl(var(--purple))]/10 border border-[hsl(var(--pink))]/40 overflow-hidden">
@@ -107,7 +119,7 @@ export function TransactionList() {
                   <p className="text-[9px] font-black text-[hsl(var(--pink))] uppercase">উইথড্র</p>
                 </div>
                 <p className="text-xl font-black text-[hsl(var(--pink))] leading-none drop-shadow-[0_0_6px_hsl(var(--pink)/0.5)]">
-                  {withdrawals.length}
+                  {withdrawalsList.length + usdtPayouts.length}
                 </p>
               </div>
             </div>
@@ -118,16 +130,22 @@ export function TransactionList() {
       {/* Timeline list */}
       <div className="glass-card rounded-3xl overflow-hidden border border-border/40">
         <div className="divide-y divide-border/30 max-h-[480px] overflow-y-auto">
-          {transactions.map((tx: any, idx: number) => {
+          {visible.length === 0 && (
+            <div className="p-8 text-center">
+              <p className="text-xs text-muted-foreground font-bold">এখনো কোনো লেনদেন নেই</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Re-verify বা USDT পেমেন্ট হলে এখানে দেখাবে</p>
+            </div>
+          )}
+          {visible.map((tx: any, idx: number) => {
             const isPending = tx.status === "pending";
             const isRejected = tx.status === "rejected";
-            const isEarning = tx.type === "earning";
-            const isFirstVerify = isEarning && isPending;
-            const isCompleted = isEarning && !isPending && !isRejected;
+            const isReverify = isReverifyEarning(tx);
+            const isUsdt = isUsdtPayout(tx);
+            const isCompleted = isReverify && !isPending && !isRejected;
 
             const barColor = isRejected
               ? "hsl(var(--destructive))"
-              : isFirstVerify
+              : isUsdt
               ? "hsl(var(--amber))"
               : isCompleted
               ? "hsl(var(--emerald))"
@@ -162,22 +180,22 @@ export function TransactionList() {
                       className={`relative w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ${
                         isRejected
                           ? "bg-gradient-to-br from-destructive/30 to-destructive/10 text-destructive border border-destructive/40"
-                          : isFirstVerify
+                          : isUsdt
                           ? "bg-gradient-to-br from-[hsl(var(--amber))]/30 to-[hsl(var(--orange))]/15 text-[hsl(var(--amber))] border border-[hsl(var(--amber))]/40 shadow-[0_0_15px_-3px_hsl(var(--amber)/0.5)]"
                           : isCompleted
                           ? "bg-gradient-to-br from-[hsl(var(--emerald))]/30 to-[hsl(var(--cyan))]/15 text-[hsl(var(--emerald))] border border-[hsl(var(--emerald))]/40 shadow-[0_0_15px_-3px_hsl(var(--emerald)/0.5)]"
                           : "bg-gradient-to-br from-[hsl(var(--pink))]/30 to-[hsl(var(--purple))]/15 text-[hsl(var(--pink))] border border-[hsl(var(--pink))]/40"
                       }`}
                     >
-                      {isFirstVerify && (
+                      {isUsdt && (
                         <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--amber))]/30 to-transparent"
                           animate={{ x: ["-100%", "200%"] }}
                           transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                         />
                       )}
-                      {isFirstVerify ? (
-                        <Hourglass className="w-5 h-5 relative z-10" />
+                      {isUsdt ? (
+                        <Coins className="w-5 h-5 relative z-10" />
                       ) : isCompleted ? (
                         <ShieldCheck className="w-5 h-5 relative z-10" />
                       ) : isRejected ? (
@@ -188,22 +206,22 @@ export function TransactionList() {
                     </motion.div>
                     <div className="min-w-0 flex-1">
                       <p className="font-black text-[13px] truncate">
-                        {isFirstVerify
-                          ? "১ম ভেরিফাই সম্পন্ন"
+                        {isUsdt
+                          ? "💎 USDT পেমেন্ট"
                           : isCompleted
-                          ? "✨ অ্যাকাউন্ট Complete"
-                          : isEarning
-                          ? "আয়"
+                          ? "✨ Re-verify সফল"
+                          : isReverify
+                          ? "Re-verify আয়"
                           : `উইথড্র${tx.details ? `: ${tx.details}` : ""}`}
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate font-medium">
-                        {isFirstVerify
-                          ? "Re-verify করলে Balance যোগ হবে"
+                        {isUsdt
+                          ? (tx.details || "USDT পাঠানো হয়েছে")
                           : isCompleted
-                          ? "Re-verify সফল — Balance যোগ হয়েছে"
+                          ? "Balance যোগ হয়েছে"
                           : isRejected
                           ? "বাতিল করা হয়েছে"
-                          : isEarning
+                          : isReverify
                           ? "আয় যোগ হয়েছে"
                           : "পেমেন্ট প্রসেসিং"}
                       </p>
@@ -214,13 +232,15 @@ export function TransactionList() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    {isFirstVerify ? (
-                      <p className="font-black text-[hsl(var(--amber))] text-xs uppercase tracking-wider">পেন্ডিং</p>
+                    {isUsdt ? (
+                      <p className="font-black text-[hsl(var(--amber))] text-base drop-shadow-[0_0_4px_hsl(var(--amber)/0.5)]">
+                        -{(Number(tx.amount) / 100).toFixed(2)} <span className="text-[10px]">USDT</span>
+                      </p>
                     ) : isCompleted ? (
                       <p className="font-black text-[hsl(var(--emerald))] text-base drop-shadow-[0_0_4px_hsl(var(--emerald)/0.5)]">
                         +৳{tx.amount}
                       </p>
-                    ) : isEarning ? (
+                    ) : isReverify ? (
                       <p className="font-black text-primary text-base">+৳{tx.amount}</p>
                     ) : (
                       <p className={`font-black text-base ${isRejected ? "text-destructive line-through" : "text-[hsl(var(--pink))]"}`}>
