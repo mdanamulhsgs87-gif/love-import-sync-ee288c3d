@@ -656,8 +656,8 @@ export default function Dashboard() {
                   </div>
                 </button>
 
-                {/* 3 stat segments */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                {/* 2 stat segments — Pending & Complete only */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
                   {/* Pending */}
                   <div className={`relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--amber))]/20 to-[hsl(var(--orange))]/12 border border-[hsl(var(--amber))]/45 overflow-hidden ${pendingCount > 0 ? "shadow-[0_0_25px_-5px_hsl(var(--amber)/0.55)]" : ""}`}>
                     {pendingCount > 0 && (
@@ -674,7 +674,7 @@ export default function Dashboard() {
                     </div>
                     <motion.p key={`p-${pendingCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--amber))] leading-none drop-shadow-[0_0_8px_hsl(var(--amber)/0.6)]">{pendingCount}</motion.p>
+                      className="relative text-4xl font-black text-[hsl(var(--amber))] leading-none drop-shadow-[0_0_8px_hsl(var(--amber)/0.6)]">{pendingCount}</motion.p>
                     <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">Re-verify দরকার</p>
                   </div>
                   {/* Complete */}
@@ -685,36 +685,10 @@ export default function Dashboard() {
                     </div>
                     <motion.p key={`c-${completeCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--emerald))] leading-none drop-shadow-[0_0_8px_hsl(var(--emerald)/0.5)]">{completeCount}</motion.p>
+                      className="relative text-4xl font-black text-[hsl(var(--emerald))] leading-none drop-shadow-[0_0_8px_hsl(var(--emerald)/0.5)]">{completeCount}</motion.p>
                     <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">টাকা যোগ হয়েছে</p>
                   </div>
-                  {/* Total */}
-                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--purple))]/20 to-[hsl(var(--pink))]/12 border border-[hsl(var(--purple))]/45 overflow-hidden shadow-[0_0_20px_-8px_hsl(var(--purple)/0.4)]">
-                    <div className="relative flex items-center gap-1 mb-1">
-                      <Shield className="w-3 h-3 text-[hsl(var(--purple))]" />
-                      <p className="text-[9px] font-black text-[hsl(var(--purple))] uppercase tracking-wider">Total</p>
-                    </div>
-                    <motion.p key={`t-${totalCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--purple))] leading-none drop-shadow-[0_0_8px_hsl(var(--purple)/0.5)]">{totalCount}</motion.p>
-                    <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">১ম ভেরিফাই</p>
-                  </div>
                 </div>
-
-                {/* Progress bar */}
-                {totalCount > 0 && (
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1">
-                      <span>প্রগ্রেস</span>
-                      <span>{completeCount}/{totalCount}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-secondary/60 overflow-hidden border border-border/40">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }}
-                        transition={{ duration: 1.2, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--purple))] rounded-full shadow-[0_0_12px_hsl(var(--cyan)/0.6)]" />
-                    </div>
-                  </div>
-                )}
 
                 {/* CTA — only if pending exists */}
                 {pendingCount > 0 && (
