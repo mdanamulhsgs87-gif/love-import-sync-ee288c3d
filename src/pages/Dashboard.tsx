@@ -626,31 +626,82 @@ export default function Dashboard() {
                   </motion.div>
                 ))}
                 <div className="relative z-10 p-5">
-                {/* Header */}
-                <button onClick={() => setActivePanel("verified")} className="w-full flex items-center justify-between mb-4 group">
+                {/* Header — Premium Crown */}
+                <div className="w-full flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/40 via-[hsl(var(--pink))]/25 to-[hsl(var(--cyan))]/30 flex items-center justify-center border border-[hsl(var(--purple))]/40 shadow-[0_0_20px_hsl(var(--purple)/0.4)]">
-                      <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 rounded-2xl opacity-60"
-                        style={{ background: "conic-gradient(from 0deg, transparent 0%, hsl(var(--cyan)/0.5) 30%, transparent 60%)" }} />
-                      <Crown className="w-5 h-5 text-[hsl(var(--amber))] relative z-10 drop-shadow-[0_0_6px_hsl(var(--amber)/0.8)]" />
+                    {/* Ultra-premium 3D crown badge */}
+                    <div className="relative w-14 h-14 shrink-0">
+                      {/* Outer pulsing aura */}
+                      <motion.div
+                        className="absolute -inset-2 rounded-[20px] blur-xl"
+                        style={{ background: "radial-gradient(circle, hsl(var(--amber)/0.6), hsl(var(--orange)/0.3), transparent 70%)" }}
+                        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 2.2, repeat: Infinity }}
+                      />
+                      {/* Rotating conic ring */}
+                      <motion.div
+                        className="absolute inset-0 rounded-[18px] p-[2px]"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                        style={{ background: "conic-gradient(from 0deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--amber)))" }}
+                      >
+                        <div className="w-full h-full rounded-[16px] bg-background" />
+                      </motion.div>
+                      {/* Inner gold gradient */}
+                      <div className="absolute inset-[3px] rounded-[15px] bg-gradient-to-br from-[hsl(45,95%,55%)] via-[hsl(35,90%,50%)] to-[hsl(25,85%,40%)] flex items-center justify-center overflow-hidden shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_8px_rgba(0,0,0,0.3)]">
+                        {/* Shine sweep */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                          animate={{ x: ["-150%", "150%"] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                        />
+                        {/* Crown with bounce + glow */}
+                        <motion.div
+                          animate={{ y: [0, -2, 0], rotate: [0, -5, 5, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                          className="relative z-10"
+                        >
+                          <Crown
+                            className="w-7 h-7 text-white"
+                            fill="white"
+                            strokeWidth={2.2}
+                            style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
+                          />
+                        </motion.div>
+                        {/* Mini sparkles inside */}
+                        {[...Array(3)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-1 h-1 bg-white rounded-full"
+                            style={{ left: `${20 + i * 28}%`, top: `${15 + i * 20}%` }}
+                            animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.5 }}
+                          />
+                        ))}
+                      </div>
+                      {/* Pending notif dot */}
                       {pendingCount > 0 && (
-                        <motion.span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[hsl(var(--amber))] border-2 border-background shadow-[0_0_10px_hsl(var(--amber))]"
-                          animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+                        <motion.span
+                          className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-br from-[hsl(var(--pink))] to-destructive border-2 border-background flex items-center justify-center text-[10px] font-black text-white shadow-[0_0_12px_hsl(var(--pink))]"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          {pendingCount}
+                        </motion.span>
                       )}
                     </div>
                     <div className="text-left">
-                      <p className="text-[15px] font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent"
+                      <p className="text-[15px] font-black bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--pink))] to-[hsl(var(--cyan))] bg-clip-text text-transparent"
                         style={{ backgroundSize: "200% auto", animation: "shimmer-text 3s linear infinite" }}>
                         ✨ ভেরিফিকেশন স্ট্যাটাস
                       </p>
                       <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
                         <TrendingUp className="w-2.5 h-2.5 text-[hsl(var(--emerald))]" />
-                        {progressPct}% Complete · বিস্তারিত দেখুন →
+                        {progressPct}% Complete
                       </p>
                     </div>
                   </div>
-                </button>
+                </div>
 
                 {/* 2 stat segments — Pending & Complete only */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
