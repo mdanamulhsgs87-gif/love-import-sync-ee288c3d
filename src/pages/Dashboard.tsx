@@ -286,6 +286,12 @@ export default function Dashboard() {
   const minRequestVerified = publicSettings?.minRequestVerified || 10;
   const minRequestTarget = publicSettings?.minRequestTarget || 0;
   const currentRate = publicSettings?.rewardRate || 0;
+  const usdtToBdtRate = publicSettings?.usdtToBdtRate || 124;
+  const reverifyCount = (user as any)?.reverify_count || 0;
+  const usdtPaidCount = (user as any)?.usdt_paid_count || 0;
+  const availableAccounts = Math.max(0, reverifyCount - usdtPaidCount);
+  const referralUsdt = Number((user as any)?.referral_usdt_earnings || 0);
+  const computedBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
   const userVerifiedCount = user?.key_count || 0;
   const canSendRequest = userVerifiedCount >= minRequestVerified;
   const belowMinIncoming = incomingRequests.filter(r => (r.requester_verified_count || 0) < minRequestVerified);
