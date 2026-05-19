@@ -80,10 +80,32 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get ALL face_wallet_bindings (not filtered by user)
-    const { data: bindings, error: bindErr } = await supabase
+    // For re-verify, restrict matching to the CURRENT user's own bindings
+    // so we never accidentally match someone else's face/wallet.
+    let currentUserId: number | null = null;
+    if (source === "reverify") {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData } = await supabase.auth.getUser(token);
+        if (userData?.user) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("id")
+            .eq("auth_user_id", userData.user.id)
+            .maybeSingle();
+          if (profile) currentUserId = profile.id;
+        }
+      }
+    }
+
+    let bindingsQuery = supabase
       .from("face_wallet_bindings")
       .select("id, wallet_address, private_key, face_photo_url, user_id");
+    if (source === "reverify" && currentUserId !== null) {
+      bindingsQuery = bindingsQuery.eq("user_id", currentUserId);
+    }
+    const { data: bindings, error: bindErr } = await bindingsQuery;
 
     if (bindErr) throw bindErr;
     if (!bindings || bindings.length === 0) {
