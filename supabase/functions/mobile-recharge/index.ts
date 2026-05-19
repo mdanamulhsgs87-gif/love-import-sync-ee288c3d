@@ -177,14 +177,14 @@ Deno.serve(async (req) => {
     const topupData = await topupResponse.json();
 
     if (topupData.result === true) {
-      // Success - mark transaction completed with before/after counts
+      // Success - transaction itself is the spend record; do not reduce reverify_count.
       if (transactionId) {
-        const afterKeys = userData.reverify_count - keysNeeded;
         await adminClient.from("transactions").update({
           status: "completed",
-          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ সফল: ${phone} | ${amount} TK | TrxID: ${trxid} | Re-verify: ${userData.reverify_count} → ${afterKeys}`,
+          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ সফল: ${phone} | ${amount} TK | TrxID: ${trxid}`,
         }).eq("id", transactionId);
       }
+      await adminClient.from("users").update({ balance: Math.max(0, availableBdt - amount) }).eq("id", userId);
 
       return new Response(JSON.stringify({
         success: true,
@@ -194,17 +194,11 @@ Deno.serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Failed - refund re-verify count (already deducted server-side)
-      const { data: currentUser } = await adminClient.from("users").select("reverify_count").eq("id", userId).single();
-      if (currentUser) {
-        await adminClient.from("users").update({ reverify_count: currentUser.reverify_count + keysNeeded }).eq("id", userId);
-      }
-
-      // Mark transaction failed
+      // Failed - no count was deducted; failed transaction will not reduce shared balance.
       if (transactionId) {
         await adminClient.from("transactions").update({
           status: "failed",
-          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ ব্যর্থ: ${phone} | ${amount} TK | ${topupData.message || "Unknown error"} | Re-verify রিফান্ড হয়েছে`,
+          details: `📱 ${OPERATOR_MAP[operator]} রিচার্জ ব্যর্থ: ${phone} | ${amount} TK | ${topupData.message || "Unknown error"}`,
         }).eq("id", transactionId);
       }
 
