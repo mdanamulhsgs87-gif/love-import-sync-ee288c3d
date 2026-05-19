@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -599,30 +599,122 @@ export default function Dashboard() {
         {/* ========== HOME PANEL: Face Verification Only ========== */}
         {activePanel === "home" && (
           <>
-            {/* Verified Count - quick view */}
+            {/* Verification Status — Premium 3-stat panel */}
+            {(() => {
+              const totalCount = user.key_count || 0;
+              const completeCount = (user as any).reverify_count || 0;
+              const pendingCount = Math.max(0, totalCount - completeCount);
+              const progressPct = totalCount > 0 ? Math.round((completeCount / totalCount) * 100) : 0;
+              return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
-              onClick={() => setActivePanel("verified")}
-              className="cursor-pointer glass-card rounded-3xl border border-[hsl(var(--purple))]/30 relative overflow-hidden">
-              <motion.div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[hsl(var(--purple))]/10 via-[hsl(var(--cyan))]/8 to-[hsl(var(--emerald))]/10"
-                animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 4, repeat: Infinity }} />
-              <div className="relative z-10 p-5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/30 to-[hsl(var(--cyan))]/25 flex items-center justify-center border border-[hsl(var(--purple))]/30">
-                    <Shield className="w-5 h-5 text-[hsl(var(--purple))]" />
+              className="glass-card rounded-3xl border border-[hsl(var(--purple))]/30 relative overflow-hidden">
+              {/* Animated aurora background */}
+              <motion.div className="pointer-events-none absolute -inset-1 opacity-60"
+                style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.18), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.15), transparent 60%), radial-gradient(50% 60% at 50% 50%, hsl(var(--amber)/0.10), transparent 70%)" }}
+                animate={{ opacity: [0.45, 0.85, 0.45] }} transition={{ duration: 5, repeat: Infinity }} />
+              <div className="relative z-10 p-5">
+                {/* Header */}
+                <button onClick={() => setActivePanel("verified")} className="w-full flex items-center justify-between mb-4 group">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/30 to-[hsl(var(--cyan))]/25 flex items-center justify-center border border-[hsl(var(--purple))]/30">
+                      <Shield className="w-5 h-5 text-[hsl(var(--purple))]" />
+                      {pendingCount > 0 && (
+                        <motion.span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[hsl(var(--amber))] border-2 border-background"
+                          animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">ভেরিফিকেশন স্ট্যাটাস</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold">{progressPct}% Complete · বিস্তারিত দেখুন →</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">✅ ১ম ভেরিফাইড কাউন্ট</p>
-                    <p className="text-[10px] text-[hsl(var(--amber))] font-bold">⏳ Pending — Re-verify করলে Complete হবে</p>
+                </button>
+
+                {/* 3 stat segments */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {/* Pending */}
+                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--orange))]/10 border border-[hsl(var(--amber))]/35 overflow-hidden">
+                    {pendingCount > 0 && (
+                      <motion.div className="absolute inset-0 bg-[hsl(var(--amber))]/8"
+                        animate={{ opacity: [0, 0.6, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+                    )}
+                    <div className="relative flex items-center gap-1 mb-1">
+                      <Clock className="w-3 h-3 text-[hsl(var(--amber))]" />
+                      <p className="text-[9px] font-black text-[hsl(var(--amber))] uppercase tracking-wider">Pending</p>
+                    </div>
+                    <motion.p key={`p-${pendingCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                      className="relative text-3xl font-black text-[hsl(var(--amber))] leading-none">{pendingCount}</motion.p>
+                    <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">Re-verify দরকার</p>
+                  </div>
+                  {/* Complete */}
+                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--emerald))]/15 to-[hsl(var(--cyan))]/10 border border-[hsl(var(--emerald))]/35 overflow-hidden">
+                    <div className="relative flex items-center gap-1 mb-1">
+                      <CheckCircle2 className="w-3 h-3 text-[hsl(var(--emerald))]" />
+                      <p className="text-[9px] font-black text-[hsl(var(--emerald))] uppercase tracking-wider">Success</p>
+                    </div>
+                    <motion.p key={`c-${completeCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                      className="relative text-3xl font-black text-[hsl(var(--emerald))] leading-none">{completeCount}</motion.p>
+                    <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">টাকা যোগ হয়েছে</p>
+                  </div>
+                  {/* Total */}
+                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--purple))]/15 to-[hsl(var(--pink))]/10 border border-[hsl(var(--purple))]/35 overflow-hidden">
+                    <div className="relative flex items-center gap-1 mb-1">
+                      <Shield className="w-3 h-3 text-[hsl(var(--purple))]" />
+                      <p className="text-[9px] font-black text-[hsl(var(--purple))] uppercase tracking-wider">Total</p>
+                    </div>
+                    <motion.p key={`t-${totalCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                      className="relative text-3xl font-black text-[hsl(var(--purple))] leading-none">{totalCount}</motion.p>
+                    <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">১ম ভেরিফাই</p>
                   </div>
                 </div>
-                <motion.p key={user.key_count}
-                  initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                  className="text-4xl font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent drop-shadow-lg">
-                  {user.key_count || 0}
-                </motion.p>
+
+                {/* Progress bar */}
+                {totalCount > 0 && (
+                  <div className="mb-3">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1">
+                      <span>প্রগ্রেস</span>
+                      <span>{completeCount}/{totalCount}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-secondary/60 overflow-hidden border border-border/40">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--purple))] rounded-full shadow-[0_0_12px_hsl(var(--cyan)/0.6)]" />
+                    </div>
+                  </div>
+                )}
+
+                {/* CTA — only if pending exists */}
+                {pendingCount > 0 && (
+                  <motion.button
+                    onClick={() => {
+                      document.getElementById("reverify-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    className="relative w-full overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--orange))] to-[hsl(var(--amber))] shadow-[0_0_24px_hsl(var(--amber)/0.45)]">
+                    <motion.div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--amber))]/0 via-white/30 to-[hsl(var(--amber))]/0"
+                      animate={{ x: ["-100%", "200%"] }} transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
+                    <div className="relative flex items-center justify-center gap-2 rounded-2xl bg-background/90 backdrop-blur-sm px-4 py-3">
+                      <Zap className="w-4 h-4 text-[hsl(var(--amber))]" fill="currentColor" />
+                      <span className="text-sm font-black bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] bg-clip-text text-transparent">
+                        এখনই Re-verify করে {pendingCount}টি Complete করুন
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-[hsl(var(--orange))]" />
+                    </div>
+                  </motion.button>
+                )}
+                {pendingCount === 0 && totalCount > 0 && (
+                  <div className="flex items-center justify-center gap-2 rounded-2xl bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/30 px-4 py-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[hsl(var(--emerald))]" />
+                    <span className="text-xs font-black text-[hsl(var(--emerald))]">সব অ্যাকাউন্ট Complete ✨</span>
+                  </div>
+                )}
               </div>
             </motion.div>
+              );
+            })()}
 
             {/* Re-verify Balance Card (compact) */}
             <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
@@ -704,7 +796,7 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Face Verification Section - RE-VERIFY */}
-            <motion.div custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
+            <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReverifySection />
             </motion.div>
 
