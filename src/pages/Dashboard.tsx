@@ -99,6 +99,38 @@ export default function Dashboard() {
     refetchInterval: 60000,
   });
 
+  // Real reverify queue for THIS user (drives Pending/Complete counts)
+  const { data: myReverifyQueue = [] } = useQuery({
+    queryKey: ["my-reverify-queue", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reverify_queue")
+        .select("id,status")
+        .eq("assigned_user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 15000,
+    refetchInterval: 30000,
+  });
+
+  // User's transactions — needed so withdrawals subtract from displayed balance
+  const { data: userTransactions = [] } = useQuery({
+    queryKey: ["user-transactions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("amount,type,status")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 15000,
+    refetchInterval: 30000,
+  });
+
   const createUserRequestMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("ইউজার পাওয়া যায়নি");
@@ -272,11 +304,18 @@ export default function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ["incoming-user-transfer-requests", user?.guest_id] });
       })
       .subscribe();
+    const reverifyChannel = supabase
+      .channel('dashboard-reverify-queue')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reverify_queue', filter: user ? `assigned_user_id=eq.${user.id}` : undefined }, () => {
+        queryClient.invalidateQueries({ queryKey: ["my-reverify-queue", user?.id] });
+      })
+      .subscribe();
     return () => {
       supabase.removeChannel(settingsChannel);
       supabase.removeChannel(usersChannel);
       supabase.removeChannel(txChannel);
       supabase.removeChannel(requestsChannel);
+      supabase.removeChannel(reverifyChannel);
     };
   }, [user?.id, queryClient, refreshUser]);
 
@@ -291,7 +330,12 @@ export default function Dashboard() {
   const usdtPaidCount = (user as any)?.usdt_paid_count || 0;
   const availableAccounts = Math.max(0, reverifyCount - usdtPaidCount);
   const referralUsdt = Number((user as any)?.referral_usdt_earnings || 0);
-  const computedBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
+  // Subtract withdrawals (pending + completed) so balance reflects what's withdrawn.
+  const withdrawnSum = (userTransactions as any[])
+    .filter((t) => t.type === "withdrawal" && (t.status === "pending" || t.status === "completed"))
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const rawBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
+  const computedBdtBalance = Math.max(0, rawBdtBalance - withdrawnSum);
   const userVerifiedCount = user?.key_count || 0;
   const canSendRequest = userVerifiedCount >= minRequestVerified;
   const belowMinIncoming = incomingRequests.filter(r => (r.requester_verified_count || 0) < minRequestVerified);
@@ -597,9 +641,9 @@ export default function Dashboard() {
           <>
             {/* Verification Status — Premium 3-stat panel */}
             {(() => {
-              const totalCount = user.key_count || 0;
-              const completeCount = (user as any).reverify_count || 0;
-              const pendingCount = Math.max(0, totalCount - completeCount);
+              const pendingCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+              const completeCount = myReverifyQueue.filter((r: any) => r.status === "completed").length;
+              const totalCount = pendingCount + completeCount;
               const progressPct = totalCount > 0 ? Math.round((completeCount / totalCount) * 100) : 0;
               return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"

@@ -51,6 +51,21 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
     staleTime: 10000,
   });
 
+  // Pending+completed withdrawals — must be subtracted from displayed balance
+  const { data: userTxs = [] } = useQuery({
+    queryKey: ["user-transactions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("amount,type,status")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 10000,
+  });
+
   const minWithdraw = publicSettings?.minWithdraw || 50;
   const usdtEnabled = (publicSettings?.usdtPayoutEnabled || "off") === "on";
   const usdtToBdt = publicSettings?.usdtToBdtRate || 124;
@@ -66,9 +81,12 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const referralEarnings = Number((userRow as any)?.referral_usdt_earnings || 0);
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = +(accountsUsdt + referralEarnings).toFixed(4);
-  // BDT computed: exact = accounts × rewardRate (+ referral converted)
-  const computedBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
-  // Use computed balance directly — server `balance` may lag behind reverify_count updates
+  // BDT computed: exact = accounts × rewardRate (+ referral converted) − withdrawn so far
+  const withdrawnSum = (userTxs as any[])
+    .filter((t) => t.type === "withdrawal" && (t.status === "pending" || t.status === "completed"))
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const rawBdtBalance = availableCount * rewardRate + Math.floor(referralEarnings * usdtToBdt);
+  const computedBdtBalance = Math.max(0, rawBdtBalance - withdrawnSum);
   const effectiveBdtBalance = computedBdtBalance;
   const pendingFirstVerify = Math.max(0, (userRow?.key_count || 0) - (userRow?.reverify_count || 0));
 
