@@ -1,0 +1,1 @@
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS reverify_count_at_referral integer NOT NULL DEFAULT 0;

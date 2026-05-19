@@ -213,9 +213,15 @@ export async function applyReferralCode(userId: number, code: string): Promise<v
     .maybeSingle();
   if (!referrer) throw new Error("Reffer code thik na");
   if (referrer.id === userId) throw new Error("Nijer code use kora jabe na");
+  // Snapshot the referee's current reverify_count at the moment of applying the code,
+  // so the referrer only gets credit for re-verifies done AFTER this point.
+  const currentReverify = Number((me as any).reverify_count || 0);
   const { error } = await supabase
     .from("users")
-    .update({ referred_by_user_id: referrer.id })
+    .update({
+      referred_by_user_id: referrer.id,
+      reverify_count_at_referral: currentReverify,
+    } as any)
     .eq("id", userId);
   if (error) throw error;
 }
@@ -223,12 +229,14 @@ export async function applyReferralCode(userId: number, code: string): Promise<v
 export async function getReferralStats(userId: number): Promise<{ count: number; verifiedAccounts: number }> {
   const { data } = await supabase
     .from("users")
-    .select("id, reverify_count")
+    .select("id, reverify_count, reverify_count_at_referral")
     .eq("referred_by_user_id", userId);
   const list = data || [];
-  // Only count COMPLETED accounts (re-verified) — not raw first-verify count.
-  // This way the referrer only sees accounts the referee actually completed.
-  const verifiedAccounts = list.reduce((sum: number, u: any) => sum + (u.reverify_count || 0), 0);
+  // Only count re-verifies done AFTER the referral code was applied (delta from snapshot).
+  const verifiedAccounts = list.reduce((sum: number, u: any) => {
+    const delta = Number(u.reverify_count || 0) - Number(u.reverify_count_at_referral || 0);
+    return sum + Math.max(0, delta);
+  }, 0);
   return { count: list.length, verifiedAccounts };
 }
 
