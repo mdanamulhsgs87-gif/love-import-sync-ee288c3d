@@ -779,9 +779,50 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", damping: 15, delay: 0.5 }}
         >
-          <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[hsl(var(--amber))]" />
-            লেনদেনের ইতিহাস
+          <h3 className="text-lg font-black mb-4 px-2 flex items-center gap-3">
+            <span className="relative inline-flex">
+              {/* Rotating conic ring */}
+              <motion.span
+                className="absolute -inset-1 rounded-2xl opacity-80 blur-[2px]"
+                style={{ background: "conic-gradient(from 0deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--amber)))" }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+              />
+              {/* Pulsing aura */}
+              <motion.span
+                className="absolute -inset-2 rounded-full bg-[hsl(var(--amber))]/40 blur-xl"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 2.4, repeat: Infinity }}
+              />
+              <motion.span
+                className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] via-[hsl(var(--orange))] to-[hsl(var(--pink))] flex items-center justify-center shadow-[0_8px_24px_-4px_hsl(var(--amber)/0.7)] border border-white/20 overflow-hidden"
+                whileHover={{ scale: 1.08, rotate: 6 }}
+              >
+                {/* Shimmer sweep */}
+                <motion.span
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                  animate={{ x: ["-100%", "200%"] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.span
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.6, repeat: Infinity }}
+                  className="relative z-10"
+                >
+                  <Zap className="w-5 h-5 text-white drop-shadow-[0_0_6px_white]" fill="currentColor" />
+                </motion.span>
+                {/* Floating sparkles */}
+                <motion.span
+                  className="absolute -top-1 -right-1 text-[10px]"
+                  animate={{ y: [-2, -8, -2], opacity: [1, 0.4, 1], rotate: [0, 20, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >✨</motion.span>
+              </motion.span>
+            </span>
+            <span className="bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--pink))] to-[hsl(var(--purple))] bg-clip-text text-transparent"
+              style={{ backgroundSize: "200% auto", animation: "shimmer-text 3s linear infinite" }}>
+              লেনদেনের ইতিহাস
+            </span>
           </h3>
           <TransactionList />
         </motion.div>
