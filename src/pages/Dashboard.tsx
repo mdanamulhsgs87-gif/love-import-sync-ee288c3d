@@ -670,7 +670,7 @@ export default function Dashboard() {
                       কোনো অ্যাডমিনের অনুমোদনের দরকার নেই! মাত্র <span className="text-[hsl(var(--emerald))] font-black">২ সেকেন্ডে</span> আপনার রিচার্জ সফল হবে ✅
                     </p>
                     <p className="text-[11px] text-[hsl(var(--amber))] font-bold mt-1">
-                      💡 ১ Re-verify সম্পন্ন Account = ২০ টাকা রিচার্জ
+                      💡 ১ Re-verify সম্পন্ন Account = {currentRate} টাকা রিচার্জ
                     </p>
                   </div>
                 </div>
