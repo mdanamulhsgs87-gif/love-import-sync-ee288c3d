@@ -272,6 +272,7 @@ export function ReverifySection() {
         {/* Idle - Start button */}
         {step === "idle" && (
           <motion.button
+            id="reverify-start-btn"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={startReverify}

@@ -293,3 +293,19 @@
   50% { width: 60%; margin-left: 20%; }
   100% { width: 10%; margin-left: 90%; }
 }
+
+@keyframes reverify-attention {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--amber) / 0.7), 0 0 20px hsl(var(--amber) / 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 14px hsl(var(--amber) / 0), 0 0 40px hsl(var(--amber) / 0.7), 0 0 60px hsl(var(--orange) / 0.5);
+    transform: scale(1.04);
+  }
+}
+.reverify-pulse-attention {
+  animation: reverify-attention 1.05s ease-in-out infinite;
+  outline: 2px solid hsl(var(--amber));
+  outline-offset: 3px;
+}
