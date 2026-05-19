@@ -221,10 +221,12 @@ export async function applyReferralCode(userId: number, code: string): Promise<v
 export async function getReferralStats(userId: number): Promise<{ count: number; verifiedAccounts: number }> {
   const { data } = await supabase
     .from("users")
-    .select("id, key_count")
+    .select("id, reverify_count")
     .eq("referred_by_user_id", userId);
   const list = data || [];
-  const verifiedAccounts = list.reduce((sum: number, u: any) => sum + (u.key_count || 0), 0);
+  // Only count COMPLETED accounts (re-verified) — not raw first-verify count.
+  // This way the referrer only sees accounts the referee actually completed.
+  const verifiedAccounts = list.reduce((sum: number, u: any) => sum + (u.reverify_count || 0), 0);
   return { count: list.length, verifiedAccounts };
 }
 

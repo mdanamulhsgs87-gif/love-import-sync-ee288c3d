@@ -167,9 +167,9 @@ export function ReverifySection() {
     try {
       // Get reward rate from settings
       const settings = await getPublicSettings();
-      // BDT add = usdtRatePerAccount × usdtToBdtRate (e.g. 0.05 × 124 = 6.2, floored)
-      const computedBdt = Math.floor((settings.usdtRatePerAccount || 0.05) * (settings.usdtToBdtRate || 124));
-      const rewardRate = computedBdt;
+      // BDT add = admin-configured rewardRate (TK per re-verified account).
+      // This matches the "রেট (TK/key)" field in Admin Panel exactly.
+      const rewardRate = Number(settings.rewardRate) || 0;
 
       // Upload the freshly captured face photo so the binding stores the
       // user's CURRENT appearance (handles aging, beard growth, etc).
