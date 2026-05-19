@@ -104,13 +104,16 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get rewardRate from settings (BDT per re-verified account)
-    const { data: settingsData } = await adminClient
+    // Get rates from settings (BDT + USDT are one shared earning pool)
+    const { data: settingsRows } = await adminClient
       .from("settings")
       .select("key, value")
-      .eq("key", "rewardRate")
-      .maybeSingle();
-    const RATE = parseInt(settingsData?.value || "40", 10) || 40;
+      .in("key", ["rewardRate", "usdtToBdtRate"]);
+    const settingsMap: Record<string, string> = {};
+    settingsRows?.forEach((s: any) => { settingsMap[s.key] = s.value; });
+    const RATE = parseInt(settingsMap.rewardRate || "40", 10) || 40;
+    const USDT_TO_BDT = parseFloat(settingsMap.usdtToBdtRate || "124") || 124;
+    const USDT_RATE = +(RATE / USDT_TO_BDT).toFixed(6);
     const keysNeeded = Math.ceil(amount / RATE);
 
     if (!userId) {
@@ -119,11 +122,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch current reverify_count from DB (server-side truth)
-    // Recharge now uses re-verify based balance only — 1st verify count is NOT spendable.
+    // Fetch current shared wallet state from DB (server-side truth)
     const { data: userData, error: userError } = await adminClient
       .from("users")
-      .select("reverify_count, display_name")
+      .select("reverify_count, usdt_paid_count, referral_usdt_earnings, display_name")
       .eq("id", userId)
       .single();
 
@@ -133,25 +135,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (userData.reverify_count < keysNeeded) {
-      console.error(`BLOCKED: User ${userId} (${userData.display_name}) tried recharge ${amount} TK but only has ${userData.reverify_count} re-verifies (needs ${keysNeeded})`);
+    const { data: spendRows } = await adminClient
+      .from("transactions")
+      .select("id, amount, type, status")
+      .eq("user_id", userId)
+      .in("type", ["withdrawal", "recharge"])
+      .in("status", ["pending", "processing", "completed"]);
+    const spentBdt = (spendRows || [])
+      .filter((tx: any) => !transactionId || tx.id !== transactionId)
+      .reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0);
+    const availableCount = Math.max(0, Number(userData.reverify_count || 0) - Number(userData.usdt_paid_count || 0));
+    const referralUsdt = Number(userData.referral_usdt_earnings || 0);
+    const availableBdt = Math.max(0, Math.floor((availableCount * USDT_RATE + referralUsdt) * USDT_TO_BDT) - spentBdt);
+
+    if (availableBdt < amount) {
+      console.error(`BLOCKED: User ${userId} (${userData.display_name}) tried recharge ${amount} TK but available shared balance is ${availableBdt} TK`);
       return new Response(JSON.stringify({
-        error: `Re-verify সম্পন্ন না হলে রিচার্জ করা যাবে না। প্রয়োজন: ${keysNeeded}, আছে: ${userData.reverify_count}`
+        error: `পর্যাপ্ত ব্যালেন্স নেই। প্রয়োজন: ${amount}৳, আছে: ${availableBdt}৳`
       }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Deduct re-verify count ATOMICALLY on server side (not client)
-    const { error: deductErr } = await adminClient
-      .from("users")
-      .update({ reverify_count: userData.reverify_count - keysNeeded })
-      .eq("id", userId)
-      .eq("reverify_count", userData.reverify_count); // optimistic lock
-
-    if (deductErr) {
-      return new Response(JSON.stringify({ error: "কাউন্ট আপডেট ব্যর্থ, আবার চেষ্টা করুন" }), {
-        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

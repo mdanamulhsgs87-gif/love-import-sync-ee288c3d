@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserTransactions, getUser } from "@/lib/api";
+import { getUserTransactions, getUser, getPublicSettings } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowUpRight, History, CheckCircle2, Clock, XCircle, ShieldCheck, Hourglass, Sparkles, TrendingUp, RefreshCcw, Wallet, Coins } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { calculateSharedBalance } from "@/lib/balance";
 
 export function TransactionList() {
   const { user } = useAuth();
@@ -17,6 +18,11 @@ export function TransactionList() {
     queryFn: () => getUser(user!.id),
     enabled: !!user,
     refetchInterval: 8000,
+  });
+  const { data: settings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: getPublicSettings,
+    staleTime: 30000,
   });
 
   if (isLoading) {
@@ -68,7 +74,7 @@ export function TransactionList() {
   const withdrawnSum = withdrawalsList
     .filter((t: any) => t.status !== "rejected")
     .reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
-  const currentBalance = Number(dbUser?.balance || 0);
+  const currentBalance = calculateSharedBalance(dbUser, settings, transactions as any[]).availableBdt;
   const totalEarned = currentBalance + withdrawnSum;
   const totalUsdt = usdtPayouts.reduce((s: number, t: any) => s + (Number(t.amount) || 0) / 100, 0);
 

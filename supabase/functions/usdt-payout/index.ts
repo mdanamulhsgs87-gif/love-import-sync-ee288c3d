@@ -38,6 +38,7 @@ async function getSettings() {
   return {
     enabled: (map.usdtPayoutEnabled || 'off') === 'on',
     rate: effectiveUsdtRate,
+    usdtToBdt,
     minWithdraw: parseFloat(map.usdtMinWithdraw || '0.5') || 0.5,
     feePercent: parseFloat(map.usdtFeePercent || '2') || 2,
   }
@@ -69,13 +70,24 @@ Deno.serve(async (req: Request) => {
     if (!user) return json({ error: 'User not found' }, 404)
     if (user.is_blocked) return json({ error: 'Account blocked' }, 403)
 
-    // Calculate USDT balance: (reverify_count - usdt_paid_count) * rate
+    const { data: withdrawalRows } = await supabase
+      .from('transactions')
+      .select('amount,type,status')
+      .eq('user_id', user_id)
+      .eq('type', 'withdrawal')
+      .in('status', ['pending', 'completed'])
+
+    const bdtWithdrawn = (withdrawalRows || [])
+      .reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0)
+
+    // One shared wallet: previous USDT payouts + pending/completed BDT withdrawals
+    // both reduce the same re-verify/referral earning pool.
     const totalCount = user.reverify_count || 0
     const paidCount = user.usdt_paid_count || 0
     const availableCount = Math.max(0, totalCount - paidCount)
-    const accountsUsdt = +(availableCount * settings.rate).toFixed(6)
     const referralUsdt = Number(user.referral_usdt_earnings || 0)
-    const usdtBalance = +(accountsUsdt + referralUsdt).toFixed(6)
+    const availableBdt = Math.max(0, Math.floor((availableCount * settings.rate + referralUsdt) * settings.usdtToBdt) - bdtWithdrawn)
+    const usdtBalance = +(availableBdt / settings.usdtToBdt).toFixed(6)
 
     if (amount > usdtBalance + 1e-9) {
       return json({ error: `Insufficient USDT balance (you have ${usdtBalance})` }, 400)
@@ -115,8 +127,9 @@ Deno.serve(async (req: Request) => {
     if (remaining > 0) {
       newPaidCount = paidCount + Math.ceil(remaining / settings.rate)
     }
+    const newBdtBalance = Math.max(0, Math.floor((usdtBalance - amount) * settings.usdtToBdt))
     await supabase.from('users')
-      .update({ usdt_paid_count: newPaidCount, referral_usdt_earnings: newReferralEarnings })
+      .update({ usdt_paid_count: newPaidCount, referral_usdt_earnings: newReferralEarnings, balance: newBdtBalance })
       .eq('id', user_id)
 
     // Record transaction (amount in USDT cents = amount*100 since column is integer)

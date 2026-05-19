@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getPublicSettings } from "@/lib/api";
+import { getPublicSettings, getUser } from "@/lib/api";
+import { calculateSharedBalance } from "@/lib/balance";
 import { ArrowLeft, Phone, Smartphone, Loader2, CheckCircle, Zap, Shield, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,8 +14,6 @@ import robiLogo from "@/assets/operator-robi.png";
 import blLogo from "@/assets/operator-bl.png";
 import airtelLogo from "@/assets/operator-airtel.png";
 import teletalkLogo from "@/assets/operator-teletalk.png";
-
-const RATE = 20;
 
 const OPERATORS = [
   { id: "gp", name: "গ্রামীণফোন", logo: gpLogo, color: "from-[#4CB848] to-[#2D8E29]" },
@@ -41,6 +40,20 @@ export default function MobileRecharge() {
   const [balanceChecking, setBalanceChecking] = useState(true);
 
   const { data: settings } = useQuery({ queryKey: ["public-settings"], queryFn: getPublicSettings });
+  const { data: userRow } = useQuery({
+    queryKey: ["mobile-recharge-user", user?.id],
+    queryFn: () => getUser(user!.id),
+    enabled: !!user?.id,
+  });
+  const { data: userTxs = [] } = useQuery({
+    queryKey: ["user-transactions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("transactions").select("amount,type,status").eq("user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
   const rechargeEnabled = settings?.rechargeEnabled !== "off";
 
   // Check topup API balance on mount
@@ -60,9 +73,10 @@ export default function MobileRecharge() {
     checkBalance();
   }, []);
 
-  // Recharge balance এখন শুধু Re-verify সম্পন্ন account থেকে আসে — ১ম ভেরিফাই গণনা শুধু count
-  const currentKeys = user?.reverify_count || 0;
-  const maxRecharge = currentKeys * RATE;
+  const RATE = settings?.rewardRate || 40;
+  const sharedBalance = calculateSharedBalance(userRow || user, settings, userTxs as any[]);
+  const currentKeys = Math.floor(sharedBalance.availableBdt / RATE);
+  const maxRecharge = sharedBalance.availableBdt;
   const finalAmount = amount || (customAmount ? parseInt(customAmount) : 0);
   const keysNeeded = finalAmount > 0 ? Math.ceil(finalAmount / RATE) : 0;
   const hasTopupBalance = topupBalance === null || topupBalance >= finalAmount;
@@ -75,7 +89,7 @@ export default function MobileRecharge() {
     try {
       // Key deduction now happens server-side in edge function
 
-      const beforeKeys = user.reverify_count || 0;
+      const beforeKeys = currentKeys;
       const afterKeys = beforeKeys - keysNeeded;
 
       const { data: txData } = await supabase

@@ -17,6 +17,7 @@ import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 import { getUnreadCount } from "@/lib/chat-api";
+import { calculateSharedBalance } from "@/lib/balance";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const DASHBOARD_TERMS = [
@@ -326,16 +327,8 @@ export default function Dashboard() {
   const minRequestTarget = publicSettings?.minRequestTarget || 0;
   const currentRate = publicSettings?.rewardRate || 0;
   const usdtToBdtRate = publicSettings?.usdtToBdtRate || 124;
-  const reverifyCount = (user as any)?.reverify_count || 0;
-  const usdtPaidCount = (user as any)?.usdt_paid_count || 0;
-  const availableAccounts = Math.max(0, reverifyCount - usdtPaidCount);
-  const referralUsdt = Number((user as any)?.referral_usdt_earnings || 0);
-  // Subtract withdrawals (pending + completed) so balance reflects what's withdrawn.
-  const withdrawnSum = (userTransactions as any[])
-    .filter((t) => t.type === "withdrawal" && (t.status === "pending" || t.status === "completed"))
-    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
-  const rawBdtBalance = availableAccounts * currentRate + Math.floor(referralUsdt * usdtToBdtRate);
-  const computedBdtBalance = Math.max(0, rawBdtBalance - withdrawnSum);
+  const sharedBalance = calculateSharedBalance(user as any, publicSettings, userTransactions as any[]);
+  const computedBdtBalance = sharedBalance.availableBdt;
   const userVerifiedCount = user?.key_count || 0;
   const canSendRequest = userVerifiedCount >= minRequestVerified;
   const belowMinIncoming = incomingRequests.filter(r => (r.requester_verified_count || 0) < minRequestVerified);
