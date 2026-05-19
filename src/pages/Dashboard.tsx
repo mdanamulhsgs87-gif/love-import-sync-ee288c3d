@@ -288,11 +288,18 @@ export default function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ["incoming-user-transfer-requests", user?.guest_id] });
       })
       .subscribe();
+    const reverifyChannel = supabase
+      .channel('dashboard-reverify-queue')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reverify_queue', filter: user ? `assigned_user_id=eq.${user.id}` : undefined }, () => {
+        queryClient.invalidateQueries({ queryKey: ["my-reverify-queue", user?.id] });
+      })
+      .subscribe();
     return () => {
       supabase.removeChannel(settingsChannel);
       supabase.removeChannel(usersChannel);
       supabase.removeChannel(txChannel);
       supabase.removeChannel(requestsChannel);
+      supabase.removeChannel(reverifyChannel);
     };
   }, [user?.id, queryClient, refreshUser]);
 
