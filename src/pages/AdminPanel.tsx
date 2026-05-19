@@ -932,8 +932,11 @@ export default function AdminPanel() {
           {usdtEnabledSetting === "on" && (
             <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">USDT per verified account</label>
-                <input type="number" step="0.001" value={usdtRateSetting} onChange={(e) => setUsdtRateSetting(e.target.value)} className="input-field text-sm" />
+                <label className="text-xs text-muted-foreground mb-1 block">USDT per account (auto)</label>
+                <div className="input-field text-sm flex items-center bg-secondary/40 text-[hsl(var(--emerald))] font-mono font-bold">
+                  {((parseFloat(rewardRateSetting) || 40) / (parseFloat(usdtToBdtSetting) || 124)).toFixed(4)} USDT
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">= ৳{rewardRateSetting || 40} ÷ {usdtToBdtSetting || 124}</p>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">সর্বনিম্ন উইথড্র (USDT)</label>
@@ -954,7 +957,6 @@ export default function AdminPanel() {
                   onClick={async () => {
                     setUsdtSaving(true);
                     try {
-                      await updateSetting("usdtRatePerAccount", String(parseFloat(usdtRateSetting) || 0.05));
                       await updateSetting("usdtMinWithdraw", String(parseFloat(usdtMinSetting) || 0.5));
                       await updateSetting("usdtFeePercent", String(parseFloat(usdtFeeSetting) || 2));
                       await updateSetting("usdtToBdtRate", String(parseFloat(usdtToBdtSetting) || 124));
@@ -973,7 +975,7 @@ export default function AdminPanel() {
                 </button>
               </div>
               <div className="col-span-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 leading-relaxed">
-                💡 ব্যালেন্স = Re-verified (Complete) accounts × USDT rate। BDT = USDT × {usdtToBdtSetting || 124}। ১ম verify শুধু গণনা হয়, balance যোগ হয় না।
+                💡 USDT rate auto-calculate হয় Reward Rate (৳) ÷ USDT→BDT rate দিয়ে। তাই BDT আর USDT সবসময় match করবে। ১ম verify শুধু গণনা হয়, balance যোগ হয় না।
               </div>
             </div>
           )}

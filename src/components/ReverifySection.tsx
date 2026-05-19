@@ -211,7 +211,7 @@ export function ReverifySection() {
       queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
 
       const earnedTk = rewardRate;
-      const earnedUsdt = (settings.usdtRatePerAccount || 0.05);
+      const earnedUsdt = +(rewardRate / (settings.usdtToBdtRate || 124)).toFixed(4);
       setStep("done_success");
       setStatusMessage(`🎉 অ্যাকাউন্ট Complete! +${earnedUsdt} USDT (≈ ৳${earnedTk}) যোগ হয়েছে`);
       toast({ title: `🎉 ১টি অ্যাকাউন্ট সম্পন্ন! +${earnedUsdt} USDT (৳${earnedTk}) যোগ হয়েছে` });
