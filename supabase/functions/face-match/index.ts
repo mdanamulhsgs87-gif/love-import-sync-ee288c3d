@@ -92,7 +92,7 @@ serve(async (req) => {
           const { data: profile } = await supabase
             .from("users")
             .select("id")
-            .eq("auth_user_id", userData.user.id)
+            .eq("auth_id", userData.user.id)
             .maybeSingle();
           if (profile) currentUserId = profile.id;
         }
