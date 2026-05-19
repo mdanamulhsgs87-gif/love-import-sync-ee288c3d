@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -607,25 +607,51 @@ export default function Dashboard() {
               const progressPct = totalCount > 0 ? Math.round((completeCount / totalCount) * 100) : 0;
               return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
-              className="glass-card rounded-3xl border border-[hsl(var(--purple))]/30 relative overflow-hidden">
-              {/* Animated aurora background */}
-              <motion.div className="pointer-events-none absolute -inset-1 opacity-60"
-                style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.18), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.15), transparent 60%), radial-gradient(50% 60% at 50% 50%, hsl(var(--amber)/0.10), transparent 70%)" }}
-                animate={{ opacity: [0.45, 0.85, 0.45] }} transition={{ duration: 5, repeat: Infinity }} />
-              <div className="relative z-10 p-5">
+              className="relative rounded-[28px] p-[1.5px] overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--purple)/0.5)]">
+              {/* Rotating conic gradient border */}
+              <motion.div
+                className="absolute inset-0 rounded-[28px]"
+                style={{ background: "conic-gradient(from 0deg, hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--emerald)), hsl(var(--amber)), hsl(var(--pink)), hsl(var(--purple)))" }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              />
+              <div className="relative rounded-[27px] glass-card overflow-hidden">
+                {/* Animated aurora background */}
+                <motion.div className="pointer-events-none absolute -inset-1 opacity-70"
+                  style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.25), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.20), transparent 60%), radial-gradient(50% 60% at 50% 50%, hsl(var(--amber)/0.14), transparent 70%)" }}
+                  animate={{ opacity: [0.5, 0.95, 0.5] }} transition={{ duration: 5, repeat: Infinity }} />
+                {/* Floating sparkles */}
+                {[...Array(6)].map((_, i) => (
+                  <motion.div key={i} className="pointer-events-none absolute"
+                    style={{ left: `${10 + i * 15}%`, top: `${15 + (i % 3) * 25}%` }}
+                    animate={{ y: [0, -8, 0], opacity: [0.2, 0.9, 0.2], scale: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}>
+                    <Sparkles className="w-2.5 h-2.5 text-[hsl(var(--amber))]" />
+                  </motion.div>
+                ))}
+                <div className="relative z-10 p-5">
                 {/* Header */}
                 <button onClick={() => setActivePanel("verified")} className="w-full flex items-center justify-between mb-4 group">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/30 to-[hsl(var(--cyan))]/25 flex items-center justify-center border border-[hsl(var(--purple))]/30">
-                      <Shield className="w-5 h-5 text-[hsl(var(--purple))]" />
+                    <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--purple))]/40 via-[hsl(var(--pink))]/25 to-[hsl(var(--cyan))]/30 flex items-center justify-center border border-[hsl(var(--purple))]/40 shadow-[0_0_20px_hsl(var(--purple)/0.4)]">
+                      <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0 rounded-2xl opacity-60"
+                        style={{ background: "conic-gradient(from 0deg, transparent 0%, hsl(var(--cyan)/0.5) 30%, transparent 60%)" }} />
+                      <Crown className="w-5 h-5 text-[hsl(var(--amber))] relative z-10 drop-shadow-[0_0_6px_hsl(var(--amber)/0.8)]" />
                       {pendingCount > 0 && (
-                        <motion.span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[hsl(var(--amber))] border-2 border-background"
-                          animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+                        <motion.span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[hsl(var(--amber))] border-2 border-background shadow-[0_0_10px_hsl(var(--amber))]"
+                          animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
                       )}
                     </div>
                     <div className="text-left">
-                      <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent">ভেরিফিকেশন স্ট্যাটাস</p>
-                      <p className="text-[10px] text-muted-foreground font-semibold">{progressPct}% Complete · বিস্তারিত দেখুন →</p>
+                      <p className="text-[15px] font-black bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent"
+                        style={{ backgroundSize: "200% auto", animation: "shimmer-text 3s linear infinite" }}>
+                        ✨ ভেরিফিকেশন স্ট্যাটাস
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                        <TrendingUp className="w-2.5 h-2.5 text-[hsl(var(--emerald))]" />
+                        {progressPct}% Complete · বিস্তারিত দেখুন →
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -633,10 +659,14 @@ export default function Dashboard() {
                 {/* 3 stat segments */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {/* Pending */}
-                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--orange))]/10 border border-[hsl(var(--amber))]/35 overflow-hidden">
+                  <div className={`relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--amber))]/20 to-[hsl(var(--orange))]/12 border border-[hsl(var(--amber))]/45 overflow-hidden ${pendingCount > 0 ? "shadow-[0_0_25px_-5px_hsl(var(--amber)/0.55)]" : ""}`}>
                     {pendingCount > 0 && (
-                      <motion.div className="absolute inset-0 bg-[hsl(var(--amber))]/8"
-                        animate={{ opacity: [0, 0.6, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+                      <>
+                        <motion.div className="absolute inset-0 bg-[hsl(var(--amber))]/10"
+                          animate={{ opacity: [0, 0.7, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+                        <motion.div className="absolute -inset-1 bg-gradient-to-r from-transparent via-[hsl(var(--amber))]/25 to-transparent"
+                          animate={{ x: ["-100%", "200%"] }} transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }} />
+                      </>
                     )}
                     <div className="relative flex items-center gap-1 mb-1">
                       <Clock className="w-3 h-3 text-[hsl(var(--amber))]" />
@@ -644,29 +674,29 @@ export default function Dashboard() {
                     </div>
                     <motion.p key={`p-${pendingCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--amber))] leading-none">{pendingCount}</motion.p>
+                      className="relative text-3xl font-black text-[hsl(var(--amber))] leading-none drop-shadow-[0_0_8px_hsl(var(--amber)/0.6)]">{pendingCount}</motion.p>
                     <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">Re-verify দরকার</p>
                   </div>
                   {/* Complete */}
-                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--emerald))]/15 to-[hsl(var(--cyan))]/10 border border-[hsl(var(--emerald))]/35 overflow-hidden">
+                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--emerald))]/20 to-[hsl(var(--cyan))]/12 border border-[hsl(var(--emerald))]/45 overflow-hidden shadow-[0_0_20px_-8px_hsl(var(--emerald)/0.4)]">
                     <div className="relative flex items-center gap-1 mb-1">
                       <CheckCircle2 className="w-3 h-3 text-[hsl(var(--emerald))]" />
                       <p className="text-[9px] font-black text-[hsl(var(--emerald))] uppercase tracking-wider">Success</p>
                     </div>
                     <motion.p key={`c-${completeCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--emerald))] leading-none">{completeCount}</motion.p>
+                      className="relative text-3xl font-black text-[hsl(var(--emerald))] leading-none drop-shadow-[0_0_8px_hsl(var(--emerald)/0.5)]">{completeCount}</motion.p>
                     <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">টাকা যোগ হয়েছে</p>
                   </div>
                   {/* Total */}
-                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--purple))]/15 to-[hsl(var(--pink))]/10 border border-[hsl(var(--purple))]/35 overflow-hidden">
+                  <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[hsl(var(--purple))]/20 to-[hsl(var(--pink))]/12 border border-[hsl(var(--purple))]/45 overflow-hidden shadow-[0_0_20px_-8px_hsl(var(--purple)/0.4)]">
                     <div className="relative flex items-center gap-1 mb-1">
                       <Shield className="w-3 h-3 text-[hsl(var(--purple))]" />
                       <p className="text-[9px] font-black text-[hsl(var(--purple))] uppercase tracking-wider">Total</p>
                     </div>
                     <motion.p key={`t-${totalCount}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="relative text-3xl font-black text-[hsl(var(--purple))] leading-none">{totalCount}</motion.p>
+                      className="relative text-3xl font-black text-[hsl(var(--purple))] leading-none drop-shadow-[0_0_8px_hsl(var(--purple)/0.5)]">{totalCount}</motion.p>
                     <p className="relative text-[9px] text-muted-foreground mt-1 font-semibold">১ম ভেরিফাই</p>
                   </div>
                 </div>
@@ -724,6 +754,7 @@ export default function Dashboard() {
                     <span className="text-xs font-black text-[hsl(var(--emerald))]">সব অ্যাকাউন্ট Complete ✨</span>
                   </div>
                 )}
+                </div>
               </div>
             </motion.div>
               );
