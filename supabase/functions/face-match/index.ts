@@ -18,7 +18,7 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
-const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.95;
+const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.99;
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -80,23 +80,41 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // For re-verify, restrict matching to the CURRENT user's own bindings
-    // so we never accidentally match someone else's face/wallet.
+    // For re-verify, fail closed: only the logged-in user's own pending
+    // re-verify wallets may be checked. Never fall back to searching everyone.
     let currentUserId: number | null = null;
     if (source === "reverify") {
       const authHeader = req.headers.get("Authorization");
-      if (authHeader) {
-        const token = authHeader.replace("Bearer ", "");
-        const { data: userData } = await supabase.auth.getUser(token);
-        if (userData?.user) {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("id")
-            .eq("auth_id", userData.user.id)
-            .maybeSingle();
-          if (profile) currentUserId = profile.id;
-        }
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "login_required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !userData?.user) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "invalid_login" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", userData.user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "user_profile_not_found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      currentUserId = profile.id;
     }
 
     let bindingsQuery = supabase
