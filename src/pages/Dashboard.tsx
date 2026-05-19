@@ -613,9 +613,9 @@ export default function Dashboard() {
           <>
             {/* Verification Status — Premium 3-stat panel */}
             {(() => {
-              const totalCount = user.key_count || 0;
-              const completeCount = (user as any).reverify_count || 0;
-              const pendingCount = Math.max(0, totalCount - completeCount);
+              const pendingCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+              const completeCount = myReverifyQueue.filter((r: any) => r.status === "completed").length;
+              const totalCount = pendingCount + completeCount;
               const progressPct = totalCount > 0 ? Math.round((completeCount / totalCount) * 100) : 0;
               return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
