@@ -74,8 +74,8 @@ Deno.serve(async (req: Request) => {
       .from('transactions')
       .select('amount,type,status')
       .eq('user_id', user_id)
-      .eq('type', 'withdrawal')
-      .in('status', ['pending', 'completed'])
+      .in('type', ['withdrawal', 'recharge'])
+      .in('status', ['pending', 'processing', 'completed'])
 
     const bdtWithdrawn = (withdrawalRows || [])
       .reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0)
