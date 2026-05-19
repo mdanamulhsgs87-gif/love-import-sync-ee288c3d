@@ -104,7 +104,13 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const RATE = 20;
+    // Get rewardRate from settings (BDT per re-verified account)
+    const { data: settingsData } = await adminClient
+      .from("settings")
+      .select("key, value")
+      .eq("key", "rewardRate")
+      .maybeSingle();
+    const RATE = parseInt(settingsData?.value || "40", 10) || 40;
     const keysNeeded = Math.ceil(amount / RATE);
 
     if (!userId) {

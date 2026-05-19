@@ -31,9 +31,13 @@ async function getSettings() {
   const { data } = await supabase.from('settings').select('key, value')
   const map: Record<string, string> = {}
   data?.forEach((s: any) => { map[s.key] = s.value })
+  const rewardRate = parseFloat(map.rewardRate || '40') || 40
+  const usdtToBdt = parseFloat(map.usdtToBdtRate || '124') || 124
+  // Derive USDT per account from BDT rate for consistency
+  const effectiveUsdtRate = +(rewardRate / usdtToBdt).toFixed(6)
   return {
     enabled: (map.usdtPayoutEnabled || 'off') === 'on',
-    rate: parseFloat(map.usdtRatePerAccount || '0.05') || 0.05,
+    rate: effectiveUsdtRate,
     minWithdraw: parseFloat(map.usdtMinWithdraw || '0.5') || 0.5,
     feePercent: parseFloat(map.usdtFeePercent || '2') || 2,
   }
@@ -65,8 +69,8 @@ Deno.serve(async (req: Request) => {
     if (!user) return json({ error: 'User not found' }, 404)
     if (user.is_blocked) return json({ error: 'Account blocked' }, 403)
 
-    // Calculate USDT balance: (key_count + reverify_count - usdt_paid_count) * rate
-    const totalCount = (user.key_count || 0) + (user.reverify_count || 0)
+    // Calculate USDT balance: (reverify_count - usdt_paid_count) * rate
+    const totalCount = user.reverify_count || 0
     const paidCount = user.usdt_paid_count || 0
     const availableCount = Math.max(0, totalCount - paidCount)
     const accountsUsdt = +(availableCount * settings.rate).toFixed(6)

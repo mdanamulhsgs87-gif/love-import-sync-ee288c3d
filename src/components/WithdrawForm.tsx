@@ -53,10 +53,12 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
 
   const minWithdraw = publicSettings?.minWithdraw || 50;
   const usdtEnabled = (publicSettings?.usdtPayoutEnabled || "off") === "on";
-  const usdtRate = publicSettings?.usdtRatePerAccount || 0.05;
+  const usdtToBdt = publicSettings?.usdtToBdtRate || 124;
+  const rewardRate = publicSettings?.rewardRate || 40;
+  // Derive USDT per account from BDT rate for consistency
+  const usdtRate = +(rewardRate / usdtToBdt).toFixed(6);
   const usdtMin = publicSettings?.usdtMinWithdraw || 0.5;
   const usdtFeePct = publicSettings?.usdtFeePercent || 2;
-  const usdtToBdt = publicSettings?.usdtToBdtRate || 124;
   // ⚠️ Only RE-VERIFIED accounts produce balance. 1st verify শুধু গণনা।
   const completedAccounts = (userRow?.reverify_count || 0);
   const usdtPaidCount = userRow?.usdt_paid_count || 0;
