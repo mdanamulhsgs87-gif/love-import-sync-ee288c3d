@@ -117,11 +117,29 @@ serve(async (req) => {
       currentUserId = profile.id;
     }
 
+    let allowedPendingWallets: string[] | null = null;
+    if (source === "reverify" && currentUserId !== null) {
+      const { data: queueItems, error: queueErr } = await supabase
+        .from("reverify_queue")
+        .select("wallet_address")
+        .eq("assigned_user_id", currentUserId)
+        .eq("status", "pending");
+      if (queueErr) throw queueErr;
+
+      allowedPendingWallets = [...new Set((queueItems || []).map((q: any) => q.wallet_address).filter(Boolean))];
+      if (allowedPendingWallets.length === 0) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "no_pending_reverify_for_user" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     let bindingsQuery = supabase
       .from("face_wallet_bindings")
       .select("id, wallet_address, private_key, face_photo_url, user_id");
-    if (source === "reverify" && currentUserId !== null) {
-      bindingsQuery = bindingsQuery.eq("user_id", currentUserId);
+    if (source === "reverify" && currentUserId !== null && allowedPendingWallets) {
+      bindingsQuery = bindingsQuery.eq("user_id", currentUserId).in("wallet_address", allowedPendingWallets);
     }
     const { data: bindings, error: bindErr } = await bindingsQuery;
 
