@@ -175,12 +175,14 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "maintenanceMode") settings.maintenanceMode = s.value || "off";
     if (s.key === "maintenanceNotice") settings.maintenanceNotice = s.value || "";
     if (s.key === "usdtPayoutEnabled") settings.usdtPayoutEnabled = s.value || "off";
-    if (s.key === "usdtRatePerAccount") settings.usdtRatePerAccount = parseFloat(s.value) || 0.05;
     if (s.key === "usdtMinWithdraw") settings.usdtMinWithdraw = parseFloat(s.value) || 0.5;
     if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
     if (s.key === "referralBonusUsd") settings.referralBonusUsd = parseFloat(s.value) || 0.05;
     if (s.key === "usdtToBdtRate") settings.usdtToBdtRate = parseFloat(s.value) || 124;
   });
+
+  // Auto-derive USDT rate per account from BDT reward rate ÷ USDT→BDT rate
+  settings.usdtRatePerAccount = +(settings.rewardRate / settings.usdtToBdtRate).toFixed(6);
 
   return settings;
 }
