@@ -115,6 +115,22 @@ export default function Dashboard() {
     refetchInterval: 30000,
   });
 
+  // User's transactions — needed so withdrawals subtract from displayed balance
+  const { data: userTransactions = [] } = useQuery({
+    queryKey: ["user-transactions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("amount,type,status")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 15000,
+    refetchInterval: 30000,
+  });
+
   const createUserRequestMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("ইউজার পাওয়া যায়নি");
