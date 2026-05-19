@@ -78,9 +78,8 @@ export default function MobileRecharge() {
   const currentKeys = Math.floor(sharedBalance.availableBdt / RATE);
   const maxRecharge = sharedBalance.availableBdt;
   const finalAmount = amount || (customAmount ? parseInt(customAmount) : 0);
-  const keysNeeded = finalAmount > 0 ? Math.ceil(finalAmount / RATE) : 0;
   const hasTopupBalance = topupBalance === null || topupBalance >= finalAmount;
-  const canRecharge = rechargeEnabled && finalAmount >= RATE && keysNeeded <= currentKeys && phone.length === 11 && operator && hasTopupBalance;
+  const canRecharge = rechargeEnabled && finalAmount >= 20 && finalAmount <= maxRecharge && phone.length === 11 && operator && hasTopupBalance;
   const selectedOp = OPERATORS.find(o => o.id === operator);
 
   const handleRecharge = async () => {
@@ -90,7 +89,7 @@ export default function MobileRecharge() {
       // Key deduction now happens server-side in edge function
 
       const beforeKeys = currentKeys;
-      const afterKeys = beforeKeys - keysNeeded;
+      const afterKeys = Math.floor((maxRecharge - finalAmount) / RATE);
 
       const { data: txData } = await supabase
         .from("transactions")
@@ -98,7 +97,7 @@ export default function MobileRecharge() {
           user_id: user.id,
           type: "recharge",
           amount: finalAmount,
-          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK (${keysNeeded} Re-verify ব্যবহৃত) | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
+          details: `📱 ${operator.toUpperCase()} রিচার্জ: ${phone} | ${finalAmount} TK | আগে: ${beforeKeys} → পরে: ${afterKeys}`,
           status: "processing",
         })
         .select("id")
