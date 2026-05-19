@@ -201,7 +201,8 @@ CRITICAL RULES:
 - Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
 - Same shirt color or same background is NOT evidence of a match.
 - If facial features are not clearly the same person, return no duplicate.
-- Do not guess. Only match when you are highly confident from facial structure.
+- Do not guess. Only match when you are near-certain from facial structure.
+- If there is any doubt at all, return no duplicate.
 
 Existing photo IDs:
 ${bindingsWithPhotos.map((b, i) => `EXISTING_${i + 1}: ID="${b.id}"`).join("\n")}
@@ -219,7 +220,8 @@ CRITICAL RULES:
 - Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
 - Same shirt color or same background is NOT evidence of a match.
 - If facial features are not clearly the same person, return null.
-- Do not guess. Only match when you are highly confident from facial structure.
+- Do not guess. Only match when you are near-certain from facial structure.
+- If there is any doubt at all, return null. Wrong matches are worse than no matches.
 
 Reference photo IDs:
 ${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}
