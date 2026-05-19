@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -704,7 +704,7 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Face Verification Section - RE-VERIFY */}
-            <motion.div custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
+            <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReverifySection />
             </motion.div>
 
