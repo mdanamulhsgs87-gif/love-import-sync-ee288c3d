@@ -999,6 +999,7 @@ export type Database = {
           referred_by_user_id: number | null
           request_password: string | null
           reverify_count: number
+          reverify_count_at_referral: number
           usdt_paid_count: number
           watched_video_url: string | null
         }
@@ -1025,6 +1026,7 @@ export type Database = {
           referred_by_user_id?: number | null
           request_password?: string | null
           reverify_count?: number
+          reverify_count_at_referral?: number
           usdt_paid_count?: number
           watched_video_url?: string | null
         }
@@ -1051,6 +1053,7 @@ export type Database = {
           referred_by_user_id?: number | null
           request_password?: string | null
           reverify_count?: number
+          reverify_count_at_referral?: number
           usdt_paid_count?: number
           watched_video_url?: string | null
         }
