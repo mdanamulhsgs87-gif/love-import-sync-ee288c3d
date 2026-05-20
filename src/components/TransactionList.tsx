@@ -57,7 +57,10 @@ export function TransactionList() {
 
   // Categorize properly
   const isFirstVerifyEarning = (t: any) =>
-    t.type === "earning" && typeof t.details === "string" && t.details.startsWith("Verified wallet");
+    t.type === "earning" && (
+      (Number(t.amount) || 0) === 0 ||
+      (typeof t.details === "string" && (t.details.startsWith("Verified wallet") || t.details.includes("১ম ভেরিফাই")))
+    );
   const isReverifyEarning = (t: any) =>
     t.type === "earning" && !isFirstVerifyEarning(t);
   const isUsdtPayout = (t: any) => t.type === "usdt_payout";
