@@ -9,6 +9,33 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+async function getWalletSettings() {
+  const { data } = await supabase.from('settings').select('key, value').in('key', ['rewardRate', 'usdtToBdtRate', 'minWithdraw'])
+  const map: Record<string, string> = {}
+  data?.forEach((s: any) => { map[s.key] = s.value })
+  return {
+    rewardRate: parseFloat(map.rewardRate || '40') || 40,
+    usdtToBdt: parseFloat(map.usdtToBdtRate || '124') || 124,
+    minWithdraw: parseInt(map.minWithdraw || '50') || 50,
+  }
+}
+
+async function getSharedBalance(user: any) {
+  const settings = await getWalletSettings()
+  const { data: spendRows } = await supabase
+    .from('transactions')
+    .select('amount,type,status')
+    .eq('user_id', user.id)
+    .in('type', ['withdrawal', 'recharge'])
+    .in('status', ['pending', 'processing', 'completed'])
+  const spentBdt = (spendRows || []).reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0)
+  const spendableCount = Math.max(0, Number(user.reverify_count || 0) - Number(user.usdt_paid_count || 0))
+  const referralUsdt = Number(user.referral_usdt_earnings || 0)
+  const grossBdt = Math.floor(spendableCount * settings.rewardRate + referralUsdt * settings.usdtToBdt)
+  const availableBdt = Math.max(0, grossBdt - spentBdt)
+  return { ...settings, availableBdt, availableUsdt: +(availableBdt / settings.usdtToBdt).toFixed(6) }
+}
+
 // All available API features (excluding feed, youtube, reels, messenger)
 const AVAILABLE_FEATURES = [
   'face-verify', 'face-capture', 're-verify', 'wallet-binding',
