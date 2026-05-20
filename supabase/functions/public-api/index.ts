@@ -250,15 +250,23 @@ Deno.serve(async (req: Request) => {
           const body = await req.json()
           if (!body.task_id || !body.user_id) return json({ error: 'task_id and user_id required' }, 400)
 
-          const { error } = await supabase.from('reverify_queue')
+          const { data: updatedTasks, error } = await supabase.from('reverify_queue')
             .update({ status: 'completed', completed_at: new Date().toISOString() })
             .eq('id', body.task_id).eq('assigned_user_id', body.user_id)
+            .eq('status', 'pending')
+            .select('id')
           if (error) return json({ error: error.message }, 400)
+          if (!updatedTasks || updatedTasks.length === 0) return json({ error: 'No pending re-verify task found' }, 409)
 
           // Increment reverify_count and sync shared wallet balance
           const { data: userData } = await supabase.from('users').select('reverify_count').eq('id', body.user_id).single()
           const newCount = ((userData as any)?.reverify_count || 0) + 1
           await supabase.from('users').update({ reverify_count: newCount }).eq('id', body.user_id)
+          const walletSettings = await getWalletSettings()
+          await supabase.from('transactions').insert({
+            user_id: body.user_id, type: 'earning', amount: Math.floor(walletSettings.rewardRate),
+            details: `✅ অ্যাকাউন্ট Complete — Re-verify সফল (+৳${Math.floor(walletSettings.rewardRate)})`, status: 'completed',
+          })
           await supabase.rpc('sync_user_shared_balance', { p_user_id: body.user_id })
 
           return json({ reverify_count: newCount, message: 'Re-verify completed', _branding: branding })
