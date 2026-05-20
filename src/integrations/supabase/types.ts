@@ -1140,6 +1140,7 @@ export type Database = {
         Args: { p_batch_id: string }
         Returns: undefined
       }
+      sync_user_shared_balance: { Args: { p_user_id: number }; Returns: number }
       undo_last_verified_reset: {
         Args: { p_batch_id: string }
         Returns: number
