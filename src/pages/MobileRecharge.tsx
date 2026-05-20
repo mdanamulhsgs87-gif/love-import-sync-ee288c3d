@@ -91,7 +91,7 @@ export default function MobileRecharge() {
       const beforeKeys = currentKeys;
       const afterKeys = Math.floor((maxRecharge - finalAmount) / RATE);
 
-      const { data: txData } = await supabase
+      const { data: txData, error: txError } = await supabase
         .from("transactions")
         .insert({
           user_id: user.id,
@@ -102,6 +102,10 @@ export default function MobileRecharge() {
         })
         .select("id")
         .single();
+
+      if (txError || !txData?.id) {
+        throw new Error(txError?.message || "রিচার্জ রেকর্ড তৈরি হয়নি");
+      }
 
       const { data: topupResult, error: topupError } = await supabase.functions.invoke("mobile-recharge", {
         body: {

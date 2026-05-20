@@ -468,15 +468,9 @@ export async function updateTransactionStatus(txId: number, status: string) {
 
   await supabase.from("transactions").update({ status }).eq("id", txId);
 
-  if (tx.type === "withdrawal") {
-    if (status === "rejected") {
-      // Refund: add the amount back to user's balance
-      const user = await getUser(tx.user_id);
-      if (user) {
-        await supabase.from("users").update({ balance: user.balance + tx.amount }).eq("id", tx.user_id);
-      }
-    }
-  }
+  // Balance is now synced by the database trigger from the shared earning pool.
+  // Do not manually add/refund here, otherwise rejected withdrawals can double-refund.
+  await (supabase as any).rpc("sync_user_shared_balance", { p_user_id: tx.user_id });
 }
 
 export async function updateUserPaymentStatus(userId: number, status: string) {
@@ -581,7 +575,8 @@ export async function recalculateAllBalances(rate: number) {
 
 // Reset all users' balance to 0 when paymentMode is turned off
 export async function resetAllBalances() {
-  await supabase.from("users").update({ balance: 0 }).gt("id", 0);
+  const { error } = await (supabase as any).rpc("recalculate_all_balances", { p_rate: null });
+  if (error) throw error;
 }
 
 // Reset all users' verified count to 0 and log to reset_history

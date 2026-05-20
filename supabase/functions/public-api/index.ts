@@ -9,6 +9,33 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+async function getWalletSettings() {
+  const { data } = await supabase.from('settings').select('key, value').in('key', ['rewardRate', 'usdtToBdtRate', 'minWithdraw'])
+  const map: Record<string, string> = {}
+  data?.forEach((s: any) => { map[s.key] = s.value })
+  return {
+    rewardRate: parseFloat(map.rewardRate || '40') || 40,
+    usdtToBdt: parseFloat(map.usdtToBdtRate || '124') || 124,
+    minWithdraw: parseInt(map.minWithdraw || '50') || 50,
+  }
+}
+
+async function getSharedBalance(user: any) {
+  const settings = await getWalletSettings()
+  const { data: spendRows } = await supabase
+    .from('transactions')
+    .select('amount,type,status')
+    .eq('user_id', user.id)
+    .in('type', ['withdrawal', 'recharge'])
+    .in('status', ['pending', 'processing', 'completed'])
+  const spentBdt = (spendRows || []).reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0)
+  const spendableCount = Math.max(0, Number(user.reverify_count || 0) - Number(user.usdt_paid_count || 0))
+  const referralUsdt = Number(user.referral_usdt_earnings || 0)
+  const grossBdt = Math.floor(spendableCount * settings.rewardRate + referralUsdt * settings.usdtToBdt)
+  const availableBdt = Math.max(0, grossBdt - spentBdt)
+  return { ...settings, availableBdt, availableUsdt: +(availableBdt / settings.usdtToBdt).toFixed(6) }
+}
+
 // All available API features (excluding feed, youtube, reels, messenger)
 const AVAILABLE_FEATURES = [
   'face-verify', 'face-capture', 're-verify', 'wallet-binding',
@@ -129,9 +156,10 @@ Deno.serve(async (req: Request) => {
         checkFeature('balance-check')
         const uid = url.searchParams.get('user_id')
         if (!uid) return json({ error: 'user_id required' }, 400)
-        const { data: u } = await supabase.from('users').select('balance, key_count, reverify_count').eq('id', parseInt(uid)).single()
+        const { data: u } = await supabase.from('users').select('*').eq('id', parseInt(uid)).single()
         if (!u) return json({ error: 'User not found' }, 404)
-        return json({ ...u, _branding: branding })
+        const shared = await getSharedBalance(u)
+        return json({ ...u, balance: shared.availableBdt, usdt_balance: shared.availableUsdt, _branding: branding })
       }
 
       // ===== TRANSACTIONS =====
@@ -222,15 +250,24 @@ Deno.serve(async (req: Request) => {
           const body = await req.json()
           if (!body.task_id || !body.user_id) return json({ error: 'task_id and user_id required' }, 400)
 
-          const { error } = await supabase.from('reverify_queue')
+          const { data: updatedTasks, error } = await supabase.from('reverify_queue')
             .update({ status: 'completed', completed_at: new Date().toISOString() })
             .eq('id', body.task_id).eq('assigned_user_id', body.user_id)
+            .eq('status', 'pending')
+            .select('id')
           if (error) return json({ error: error.message }, 400)
+          if (!updatedTasks || updatedTasks.length === 0) return json({ error: 'No pending re-verify task found' }, 409)
 
-          // Increment reverify_count
+          // Increment reverify_count and sync shared wallet balance
           const { data: userData } = await supabase.from('users').select('reverify_count').eq('id', body.user_id).single()
           const newCount = ((userData as any)?.reverify_count || 0) + 1
           await supabase.from('users').update({ reverify_count: newCount }).eq('id', body.user_id)
+          const walletSettings = await getWalletSettings()
+          await supabase.from('transactions').insert({
+            user_id: body.user_id, type: 'earning', amount: Math.floor(walletSettings.rewardRate),
+            details: `✅ অ্যাকাউন্ট Complete — Re-verify সফল (+৳${Math.floor(walletSettings.rewardRate)})`, status: 'completed',
+          })
+          await supabase.rpc('sync_user_shared_balance', { p_user_id: body.user_id })
 
           return json({ reverify_count: newCount, message: 'Re-verify completed', _branding: branding })
         }
@@ -249,19 +286,17 @@ Deno.serve(async (req: Request) => {
         const { data: user } = await supabase.from('users').select('*').eq('id', body.user_id).single()
         if (!user) return json({ error: 'User not found' }, 404)
         if (user.is_blocked) return json({ error: 'Account blocked' }, 403)
-        if (user.balance < body.amount) return json({ error: 'Insufficient balance' }, 400)
+        const shared = await getSharedBalance(user)
+        if (shared.availableBdt < body.amount) return json({ error: 'Insufficient balance' }, 400)
 
-        // Check min withdraw
-        const { data: minWSet } = await supabase.from('settings').select('value').eq('key', 'minWithdraw').single()
-        const minW = parseInt(minWSet?.value || '50') || 50
+        const minW = shared.minWithdraw
         if (body.amount < minW) return json({ error: `Minimum withdraw: ${minW} TK` }, 400)
 
-        const newBalance = user.balance - body.amount
-        await supabase.from('users').update({ balance: newBalance }).eq('id', user.id)
         await supabase.from('transactions').insert({
           user_id: user.id, type: 'withdrawal', amount: body.amount,
           details: `${body.method.toUpperCase()}: ${body.number}`, status: 'pending',
         })
+        const { data: newBalance } = await supabase.rpc('sync_user_shared_balance', { p_user_id: user.id })
 
         return json({ new_balance: newBalance, message: 'Withdrawal requested', _branding: branding })
       }

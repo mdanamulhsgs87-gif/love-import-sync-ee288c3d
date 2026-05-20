@@ -194,19 +194,18 @@ Deno.serve(async (req) => {
           .eq("wallet_address", walletAddress);
       }
 
-      // 1. Increment reverify_count + balance (server-side, reliable)
+      // 1. Increment reverify_count only; shared wallet balance is synced centrally
       const { data: userData } = await adminClient
         .from("users")
-        .select("reverify_count, balance")
+        .select("reverify_count")
         .eq("id", dbUser.id)
         .single();
 
       const newReverifyCount = (userData?.reverify_count || 0) + 1;
-      const newBalance = (userData?.balance || 0) + rate;
 
       await adminClient
         .from("users")
-        .update({ reverify_count: newReverifyCount, balance: newBalance })
+        .update({ reverify_count: newReverifyCount })
         .eq("id", dbUser.id);
 
       // 2. Complete the matching pending 1st-verify transaction (oldest first)
@@ -265,6 +264,7 @@ Deno.serve(async (req) => {
           .from("reverify_queue")
           .update({ status: "completed", completed_at: new Date().toISOString() })
           .eq("wallet_address", walletAddress)
+          .eq("assigned_user_id", dbUser.id)
           .eq("status", "pending");
 
         // If binding was somehow removed, re-insert from queue data
