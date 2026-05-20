@@ -470,7 +470,7 @@ export async function updateTransactionStatus(txId: number, status: string) {
 
   // Balance is now synced by the database trigger from the shared earning pool.
   // Do not manually add/refund here, otherwise rejected withdrawals can double-refund.
-  await supabase.rpc("sync_user_shared_balance", { p_user_id: tx.user_id } as any);
+  await (supabase as any).rpc("sync_user_shared_balance", { p_user_id: tx.user_id });
 }
 
 export async function updateUserPaymentStatus(userId: number, status: string) {
