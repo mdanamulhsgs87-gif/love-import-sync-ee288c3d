@@ -575,7 +575,7 @@ export async function recalculateAllBalances(rate: number) {
 
 // Reset all users' balance to 0 when paymentMode is turned off
 export async function resetAllBalances() {
-  const { error } = await supabase.rpc("recalculate_all_balances", { p_rate: null } as any);
+  const { error } = await (supabase as any).rpc("recalculate_all_balances", { p_rate: null });
   if (error) throw error;
 }
 
