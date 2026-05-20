@@ -1116,6 +1116,10 @@ export type Database = {
         Returns: boolean
       }
       get_user_bindings_count: { Args: { p_user_id: number }; Returns: number }
+      get_user_shared_balance_before_spend: {
+        Args: { p_exclude_tx_id?: number; p_user_id: number }
+        Returns: number
+      }
       recalculate_all_balances: { Args: { p_rate: number }; Returns: undefined }
       reset_all_reverify_counts: {
         Args: { p_admin_name?: string }
