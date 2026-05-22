@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Gift, Copy, Check, Share2, Users, Sparkles, Crown, DollarSign, TrendingUp, Link2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { applyReferralCode, getReferralStats, getPublicSettings, getUser } from "@/lib/api";
+import { applyReferralCode, getReferralStats, getReferralHistory, getPublicSettings, getUser } from "@/lib/api";
 import { copyToClipboard } from "@/lib/clipboard";
 
 export function ReferralCard() {
@@ -34,6 +34,16 @@ export function ReferralCard() {
     staleTime: 30000,
   });
 
+  const bonus = settings?.referralBonusUsd || 0.05;
+
+  const { data: history } = useQuery({
+    queryKey: ["referral-history", user?.id, bonus],
+    queryFn: () => getReferralHistory(user!.id, bonus),
+    enabled: !!user?.id,
+    staleTime: 30000,
+  });
+  const [showHistory, setShowHistory] = useState(false);
+
   const applyMut = useMutation({
     mutationFn: () => applyReferralCode(user!.id, codeInput),
     onSuccess: async () => {
@@ -49,7 +59,6 @@ export function ReferralCard() {
 
   const myCode = (userRow as any).referral_code || "";
   const earnings = Number((userRow as any).referral_usdt_earnings || 0);
-  const bonus = settings?.referralBonusUsd || 0.05;
   const isReferred = !!(userRow as any).referred_by_user_id;
   const refLink = typeof window !== "undefined" ? `${window.location.origin}/register?ref=${myCode}` : "";
 
