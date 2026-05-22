@@ -314,6 +314,8 @@ export default function AdminPanel() {
       setUsdtFeeSetting(String(settingsData.usdtFeePercent ?? 2));
       setUsdtToBdtSetting(String((settingsData as any).usdtToBdtRate ?? 124));
       setReferralBonusSetting(String((settingsData as any).referralBonusUsd ?? 0.05));
+      setPromoUserPctSetting(String((settingsData as any).promoUserBonusPct ?? 5));
+      setPromoOwnerPctSetting(String((settingsData as any).promoOwnerCommissionPct ?? 5));
     }
   }, [settingsData]);
 
