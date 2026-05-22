@@ -20,10 +20,20 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
   const spendableAccounts = Math.max(0, completedAccounts - usdtPaidCount);
   const referralUsdt = Number(user?.referral_usdt_earnings || 0);
   const bdtWithdrawn = getActiveBdtWithdrawalTotal(transactions);
-  // Bonus: every full group of 10 spendable accounts → +10 TK per account = +100 TK per group
-  const bonusGroups = Math.floor(spendableAccounts / 10);
-  const bonusBdt = bonusGroups * 100;
-  const accountsToNextBonus = bonusGroups * 10 + 10 - spendableAccounts;
+  // Bonus: percentage tier based on remaining (un-withdrawn) accounts. Resets after withdraw.
+  //  >=20 accounts → 20%, >=10 accounts → 10%, else 0%. Gated by admin bonusStatus switch.
+  const bonusEnabled = (settings as any)?.bonusStatus === "on";
+  const bdtAccountsUsed = rewardRate > 0 ? Math.floor(bdtWithdrawn / rewardRate) : 0;
+  const remainingAccounts = Math.max(0, spendableAccounts - bdtAccountsUsed);
+  let bonusPercent = 0;
+  if (bonusEnabled) {
+    if (remainingAccounts >= 20) bonusPercent = 20;
+    else if (remainingAccounts >= 10) bonusPercent = 10;
+  }
+  const bonusBdt = Math.floor((remainingAccounts * rewardRate * bonusPercent) / 100);
+  const nextTierAt = bonusEnabled ? (remainingAccounts >= 20 ? 20 : remainingAccounts >= 10 ? 20 : 10) : 10;
+  const nextTierPercent = remainingAccounts >= 10 ? 20 : 10;
+  const accountsToNextTier = Math.max(0, nextTierAt - remainingAccounts);
   const grossBdt = Math.floor(spendableAccounts * rewardRate + bonusBdt + referralUsdt * usdtToBdt);
   const availableBdt = Math.max(0, grossBdt - bdtWithdrawn);
   const availableUsdt = +(availableBdt / usdtToBdt).toFixed(6);
@@ -36,9 +46,13 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
     usdtPaidCount,
     spendableAccounts,
     referralUsdt,
-    bonusGroups,
+    bonusEnabled,
+    bonusPercent,
+    remainingAccounts,
+    nextTierAt,
+    nextTierPercent,
+    accountsToNextTier,
     bonusBdt,
-    accountsToNextBonus,
     bdtWithdrawn,
     grossBdt,
     availableBdt,

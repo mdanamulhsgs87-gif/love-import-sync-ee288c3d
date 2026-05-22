@@ -80,9 +80,14 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const completedAccounts = sharedBalance.completedAccounts;
   const availableCount = sharedBalance.spendableAccounts;
   const referralEarnings = sharedBalance.referralUsdt;
-  const bonusGroups = sharedBalance.bonusGroups;
+  const bonusEnabled = sharedBalance.bonusEnabled;
+  const bonusPercent = sharedBalance.bonusPercent;
   const bonusBdt = sharedBalance.bonusBdt;
-  const accountsToNextBonus = sharedBalance.accountsToNextBonus;
+  const remainingAccounts = sharedBalance.remainingAccounts;
+  const accountsToNextTier = sharedBalance.accountsToNextTier;
+  const nextTierPercent = sharedBalance.nextTierPercent;
+  const tierTarget = remainingAccounts >= 20 ? 20 : remainingAccounts >= 10 ? 20 : 10;
+  const tierProgressPct = Math.min(100, Math.round((remainingAccounts / tierTarget) * 100));
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = sharedBalance.availableUsdt;
   const computedBdtBalance = sharedBalance.availableBdt;
@@ -221,7 +226,8 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
         </div>
       )}
 
-      {/* Bonus banner — visible regardless of system */}
+      {/* Bonus banner — only when admin switch is on */}
+      {bonusEnabled && (
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -231,26 +237,48 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
           <div className="text-2xl">🎁</div>
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-black text-[hsl(var(--amber))]">
-              ১০-Account Bonus সিস্টেম
+              Bonus সিস্টেম — {bonusPercent > 0 ? `+${bonusPercent}% Active` : "১০ Account এ +১০%"}
             </p>
             <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-              প্রতি ১০টি Re-verify পূর্ণ হলে — প্রতিটি account এ +১০৳ extra (= +১০০৳)। BDT/USDT দুটোতেই auto যোগ হবে।
+              ১০টি Re-verify = +১০% bonus · ২০টি Re-verify = +২০% bonus (max)। Withdraw করলে আবার শূন্য থেকে শুরু হবে।
             </p>
+          </div>
+        </div>
+        {/* Progress bar to next tier */}
+        <div className="mt-2.5">
+          <div className="flex items-center justify-between text-[9px] font-bold mb-1">
+            <span className="text-muted-foreground">{remainingAccounts} / {tierTarget} Account</span>
+            <span className="text-[hsl(var(--amber))]">
+              {remainingAccounts >= 20 ? "🏆 সর্বোচ্চ Tier!" : `Target: +${nextTierPercent}%`}
+            </span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-[hsl(var(--amber))]/15 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${tierProgressPct}%` }}
+              transition={{ duration: 0.6 }}
+              className="h-full bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
+            />
           </div>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/30 px-2 py-1.5 text-center">
-            <p className="text-[9px] text-muted-foreground font-bold">আজ পর্যন্ত Bonus</p>
+            <p className="text-[9px] text-muted-foreground font-bold">এখনকার Bonus</p>
             <p className="text-sm font-black text-[hsl(var(--emerald))]">+৳{bonusBdt}</p>
-            <p className="text-[8px] text-muted-foreground">{bonusGroups} × ১০ Account</p>
+            <p className="text-[8px] text-muted-foreground">{bonusPercent}% on {remainingAccounts} Acc</p>
           </div>
           <div className="rounded-lg bg-[hsl(var(--cyan))]/10 border border-[hsl(var(--cyan))]/30 px-2 py-1.5 text-center">
-            <p className="text-[9px] text-muted-foreground font-bold">পরবর্তী Bonus এ লাগবে</p>
-            <p className="text-sm font-black text-[hsl(var(--cyan))]">{accountsToNextBonus} Account</p>
-            <p className="text-[8px] text-muted-foreground">আরও +১০০৳</p>
+            <p className="text-[9px] text-muted-foreground font-bold">পরবর্তী Tier এ লাগবে</p>
+            <p className="text-sm font-black text-[hsl(var(--cyan))]">
+              {remainingAccounts >= 20 ? "—" : `${accountsToNextTier} Account`}
+            </p>
+            <p className="text-[8px] text-muted-foreground">
+              {remainingAccounts >= 20 ? "Max reached" : `→ +${nextTierPercent}% Bonus`}
+            </p>
           </div>
         </div>
       </motion.div>
+      )}
 
       {system === "usdt" ? (
         <>
