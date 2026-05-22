@@ -147,6 +147,14 @@ export default function AdminPanel() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<AdminCategory | null>(null);
 
+  // Promo code state
+  const [promoNewCode, setPromoNewCode] = useState("");
+  const [promoNewOwnerGuest, setPromoNewOwnerGuest] = useState("");
+  const [promoCreating, setPromoCreating] = useState(false);
+  const [promoUserPctSetting, setPromoUserPctSetting] = useState("5");
+  const [promoOwnerPctSetting, setPromoOwnerPctSetting] = useState("5");
+  const [promoPctSaving, setPromoPctSaving] = useState(false);
+
   // Auto-load latest reset batch ID from database
   const { data: latestBatchId } = useQuery({
     queryKey: ["latest-reset-batch"],
