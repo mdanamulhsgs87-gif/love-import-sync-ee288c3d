@@ -25,6 +25,8 @@ import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 import { getUnreadCount } from "@/lib/chat-api";
 import { calculateSharedBalance } from "@/lib/balance";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ChevronLeft } from "lucide-react";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -59,6 +61,44 @@ export default function Dashboard() {
   const [prevKeyCount, setPrevKeyCount] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [loadedAppVersion, setLoadedAppVersion] = useState<number | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  // Swipe-from-right-edge gesture to open the "More features" drawer
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      // Only start tracking if finger lands near the right edge
+      if (window.innerWidth - t.clientX <= 30) {
+        startX = t.clientX;
+        startY = t.clientY;
+        tracking = true;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!tracking) return;
+      const t = e.touches[0];
+      if (!t) return;
+      const dx = startX - t.clientX; // swipe right→left = positive
+      const dy = Math.abs(startY - t.clientY);
+      if (dx > 60 && dy < 50) {
+        tracking = false;
+        setMoreOpen(true);
+      }
+    };
+    const onEnd = () => { tracking = false; };
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, []);
 
   const { data: publicSettings } = useQuery({
     queryKey: ["public-settings"],
@@ -771,11 +811,6 @@ export default function Dashboard() {
               <ReverifySchedule />
             </motion.div>
 
-            {/* Level / Rank Card */}
-            <motion.div custom={1.3} variants={cardVariants} initial="hidden" animate="visible">
-              <LevelCard />
-            </motion.div>
-
             <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReverifySection />
             </motion.div>
@@ -785,30 +820,30 @@ export default function Dashboard() {
               <KeySubmitter />
             </motion.div>
 
-            {/* Referral / Reffer & Earn */}
-            <motion.div custom={2.5} variants={cardVariants} initial="hidden" animate="visible">
-              <ReferralCard />
-            </motion.div>
-
-            {/* Achievement Badges */}
-            <motion.div custom={2.7} variants={cardVariants} initial="hidden" animate="visible">
-              <AchievementBadges />
-            </motion.div>
-
-            {/* Leaderboard */}
-            <motion.div custom={2.9} variants={cardVariants} initial="hidden" animate="visible">
-              <Leaderboard />
-            </motion.div>
-
-            {/* Live Earning Feed */}
-            <motion.div custom={3.1} variants={cardVariants} initial="hidden" animate="visible">
-              <LiveEarningFeed />
-            </motion.div>
-
-            {/* Monthly Referral Contest */}
-            <motion.div custom={3.3} variants={cardVariants} initial="hidden" animate="visible">
-              <MonthlyReferralContest />
-            </motion.div>
+            {/* CTA: Open side drawer for additional features */}
+            <motion.button
+              custom={2.5}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setMoreOpen(true)}
+              className="w-full relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/15 via-[hsl(var(--cyan))]/10 to-[hsl(var(--purple))]/15 p-4 flex items-center gap-3 text-left"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-[hsl(var(--cyan))] flex items-center justify-center shrink-0 shadow-lg">
+                <Sparkles className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black">🎁 আরও ফিচার দেখুন</p>
+                <p className="text-[11px] text-muted-foreground font-bold">Referral · Leaderboard · Contest · Level · আরও</p>
+              </div>
+              <motion.div animate={{ x: [-3, 3, -3] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-primary">
+                <ChevronLeft className="w-5 h-5" />
+              </motion.div>
+            </motion.button>
+            <p className="text-center text-[10px] text-muted-foreground -mt-2">
+              👉 ডান থেকে বাম দিকে টান দিন
+            </p>
           </>
         )}
 
@@ -1079,6 +1114,38 @@ export default function Dashboard() {
           </motion.div>
         )}
       </main>
+
+      {/* Floating edge hint (right side) */}
+      {activePanel === "home" && !moreOpen && (
+        <motion.button
+          onClick={() => setMoreOpen(true)}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 h-20 w-7 rounded-l-2xl bg-gradient-to-b from-primary via-[hsl(var(--cyan))] to-[hsl(var(--purple))] shadow-2xl shadow-primary/40 flex items-center justify-center border-l-2 border-y-2 border-white/20"
+          aria-label="Open more features"
+        >
+          <ChevronLeft className="w-4 h-4 text-white drop-shadow" />
+        </motion.button>
+      )}
+
+      {/* Side drawer with extra features */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="right" className="w-[92vw] sm:max-w-md p-0 overflow-y-auto bg-background">
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <p className="font-black text-base">🎁 আরও ফিচার</p>
+          </div>
+          <div className="p-4 space-y-5">
+            <LevelCard />
+            <ReferralCard />
+            <AchievementBadges />
+            <Leaderboard />
+            <LiveEarningFeed />
+            <MonthlyReferralContest />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
