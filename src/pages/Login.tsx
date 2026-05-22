@@ -281,8 +281,7 @@ export default function Login() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.25 }}
-          className="flex rounded-2xl p-1.5 mb-4 backdrop-blur-xl border border-border/50 shadow-2xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, hsl(222 47% 10% / 0.9), hsl(222 47% 12% / 0.9))" }}
+          className="flex rounded-2xl p-1.5 mb-4 backdrop-blur-xl border border-border/60 shadow-xl relative overflow-hidden bg-white"
         >
           {(["login", "register"] as const).map((t) => (
             <motion.button
@@ -290,7 +289,7 @@ export default function Login() {
               onClick={() => { setTab(t); setLoginStep("phone"); }}
               whileTap={{ scale: 0.92 }}
               className={`flex-1 py-3.5 rounded-xl text-sm font-black tracking-wide transition-all duration-200 relative overflow-hidden z-10 ${
-                tab === t ? "text-white shadow-xl" : "text-muted-foreground hover:text-foreground"
+                tab === t ? "text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
               }`}
               style={tab === t ? {
                 background: t === "login" 
