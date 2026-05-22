@@ -50,8 +50,7 @@ export function MonthlyReferralContest() {
       const list: Row[] = (users || [])
         .filter((u: any) => !u.is_blocked)
         .map((u: any) => {
-          const raw = (u.display_name || u.guest_id || "User") as string;
-          const name = raw.length > 4 ? raw.slice(0, 2) + "***" + raw.slice(-2) : raw;
+          const name = (u.display_name || u.guest_id || "User") as string;
           return { id: u.id, name, avatar: u.avatar_url, count: counts.get(u.id) || 0 };
         })
         .sort((a, b) => b.count - a.count);

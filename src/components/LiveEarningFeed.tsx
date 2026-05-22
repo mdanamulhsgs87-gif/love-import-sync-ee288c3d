@@ -45,9 +45,7 @@ export function LiveEarningFeed() {
     const umap = new Map<number, any>((users || []).map((u: any) => [u.id, u]));
     const list: FeedItem[] = rows.slice(0, 12).map((r) => {
       const u = umap.get(r.assigned_user_id);
-      const raw = (u?.display_name || u?.guest_id || "User") as string;
-      // Mask middle of name for privacy
-      const name = raw.length > 4 ? raw.slice(0, 2) + "***" + raw.slice(-2) : raw;
+      const name = (u?.display_name || u?.guest_id || "User") as string;
       return { id: r.id, name, amount: rate, ago: timeAgo(r.completed_at || new Date().toISOString()) };
     });
     setItems(list);
