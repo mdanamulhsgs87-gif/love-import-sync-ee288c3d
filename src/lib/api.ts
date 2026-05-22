@@ -29,7 +29,7 @@ export type User = {
   promo_owner_user_id?: number | null;
   promo_user_bonus_bdt?: number;
   promo_owner_usdt_earnings?: number;
-  achievements_claimed?: string[] | null;
+  achievements_claimed?: any;
   spin_used_count?: number;
   bonus_claimed_bdt?: number;
 };
