@@ -240,16 +240,55 @@ export function ReverifySchedule() {
           </p>
 
           {/* How the system works — helps users understand timing */}
-          <div className="rounded-2xl border border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/10 to-[hsl(var(--orange))]/5 p-3 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-black text-[hsl(var(--amber))]">
-              ⏰ Re-verify সিস্টেম কীভাবে কাজ করে?
+          <div className="rounded-3xl border-2 border-[hsl(var(--amber))]/50 bg-gradient-to-br from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/8 to-[hsl(var(--rose))]/10 p-5 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/30">
+                <svg className="w-5 h-5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 1 1 1-18 0 9 9 0 1 1 18 0Z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-black text-[hsl(var(--amber))]">
+                Re-verify কীভাবে কাজ করে?
+              </h3>
             </div>
-            <ul className="text-[10px] text-foreground/80 leading-relaxed space-y-1 pl-1">
-              <li>✅ <b>১ম verify</b> করলে শুধু গণনা হয় — টাকা/USDT যোগ হয় না।</li>
-              <li>📅 প্রতিটি Account এর <b>৩-৪ দিন পর</b> Good-App আবার Re-verify চাইতে পারে।</li>
-              <li>🔔 যখনই Re-verify চাইবে, ঐ Account টা এখানে স্বয়ংক্রিয়ভাবে <b className="text-[hsl(var(--emerald))]">READY</b> হয়ে দেখাবে।</li>
-              <li>💰 Re-verify সম্পূর্ণ হলেই <b>৳{rewardRate}</b> বা USDT যোগ হবে।</li>
-            </ul>
+
+            <div className="space-y-3.5">
+              <div className="flex gap-3 items-start">
+                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--blue))]/20 flex items-center justify-center shrink-1">
+                  <span className="text-sm font-black text-[hsl(var(--blue))]">১</span>
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed pt-0.5">
+                  <b className="text-foreground">প্রথম Verify</b> — শুধু হিসাব হবে, টাকা যোগ হবে না।
+                </p>
+              </div>
+
+              <div className="flex gap-3 items-start">
+                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--cyan))]/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-[hsl(var(--cyan))]">২</span>
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
+                  <b className="text-foreground">৩-৪ দিন পর</b> Good-App আবার Re-verify চাইবে।
+                </p>
+              </div>
+
+              <div className="flex gap-3 items-start">
+                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--emerald))]/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৩</span>
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
+                  Re-verify চাইলে Account এ <b className="text-[hsl(var(--emerald))]">READY</b> লেখা দেখাবে — তখনই করতে পারবেন।
+                </p>
+              </div>
+
+              <div className="flex gap-3 items-start">
+                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--rose))]/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-[hsl(var(--rose))]">৪</span>
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
+                  Re-verify শেষ হলেই <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> বা USDT আপনার ব্যালেন্সে যোগ হবে।
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
