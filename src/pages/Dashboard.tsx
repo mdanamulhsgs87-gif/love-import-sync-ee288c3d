@@ -841,6 +841,53 @@ export default function Dashboard() {
                     </p>
                   </motion.div>
                 </div>
+                {(() => {
+                  const pCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+                  const pendingBdt = pCount * (currentRate || 0);
+                  if (pCount === 0) return null;
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 relative overflow-hidden rounded-2xl border border-[hsl(var(--amber))]/40 bg-gradient-to-r from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/10 to-[hsl(var(--amber))]/15 p-3"
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--amber))]/15 to-transparent"
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                      />
+                      <div className="relative flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <motion.div
+                            animate={{ rotate: [0, -8, 8, 0] }}
+                            transition={{ duration: 2.5, repeat: Infinity }}
+                            className="w-9 h-9 rounded-xl bg-[hsl(var(--amber))]/25 border border-[hsl(var(--amber))]/40 flex items-center justify-center shrink-0"
+                          >
+                            <Lock className="w-4 h-4 text-[hsl(var(--amber))]" />
+                          </motion.div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
+                              ⏳ Pending Balance
+                              <span className="text-[9px] font-bold text-muted-foreground">({pCount}টি Account)</span>
+                            </p>
+                            <p className="text-[10px] font-bold text-foreground/70 truncate">
+                              Re-verify করলেই Unlock হবে 🔓
+                            </p>
+                          </div>
+                        </div>
+                        <motion.p
+                          key={`pb-${pendingBdt}`}
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-2xl font-black text-[hsl(var(--amber))] drop-shadow-[0_0_8px_hsl(var(--amber)/0.5)] shrink-0 tabular-nums"
+                        >
+                          +{pendingBdt}
+                          <span className="text-xs ml-0.5">৳</span>
+                        </motion.p>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
                 <div className="mt-3 text-center bg-gradient-to-r from-[hsl(var(--cyan))]/10 via-[hsl(var(--emerald))]/10 to-[hsl(var(--amber))]/10 rounded-xl py-2 px-3 border border-[hsl(var(--cyan))]/20">
                   <p className="text-[11px] font-bold text-foreground/80">
                     ✅ শুধুমাত্র Re-verify সম্পন্ন হলে Account Complete হয় এবং Balance যোগ হয় — সরাসরি Withdraw বা Mobile Recharge করা যাবে
