@@ -820,81 +820,104 @@ export default function Dashboard() {
             })()}
 
             {/* Re-verify Balance Card (compact) */}
-            <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
-              className="glass-card rounded-3xl border border-[hsl(var(--cyan))]/25 relative overflow-hidden">
-              <motion.div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[hsl(var(--cyan))]/8 via-[hsl(var(--emerald))]/5 to-[hsl(var(--purple))]/8"
-                animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 4, repeat: Infinity }} />
-              <div className="relative z-10 p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(var(--cyan))]/30 to-[hsl(var(--emerald))]/25 flex items-center justify-center border border-[hsl(var(--cyan))]/30">
-                      <Wallet className="w-5 h-5 text-[hsl(var(--cyan))]" />
+            {(() => {
+              const pCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+              const pendingBdt = pCount * (currentRate || 0);
+              return (
+                <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
+                  className="rounded-3xl border-2 border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
+                  {/* TOP: Pending (faded, locked) */}
+                  <div className="relative px-5 pt-5 pb-4 border-b-2 border-dashed border-slate-200 bg-slate-50/70">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <motion.div
+                          animate={pCount > 0 ? { rotate: [0, -6, 6, 0] } : {}}
+                          transition={{ duration: 2.5, repeat: Infinity }}
+                          className="w-11 h-11 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0"
+                        >
+                          <Lock className="w-5 h-5 text-amber-600" />
+                        </motion.div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-amber-700 flex items-center gap-1.5">
+                            ⏳ Pending Balance
+                            {pCount > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-800">
+                                {pCount} Account
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                            Re-verify দিলেই নিচে যোগ হবে 👇
+                          </p>
+                        </div>
+                      </div>
+                      <motion.p
+                        key={`pb-${pendingBdt}`}
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-3xl font-black text-amber-500/60 tabular-nums shrink-0 blur-[0.6px]"
+                        style={{ textShadow: "0 0 8px rgba(245,158,11,0.25)" }}
+                      >
+                        {pendingBdt}
+                        <span className="text-base ml-0.5">৳</span>
+                      </motion.p>
                     </div>
-                    <div>
-                      <p className="text-sm font-black bg-gradient-to-r from-[hsl(var(--cyan))] via-[hsl(var(--emerald))] to-[hsl(var(--amber))] bg-clip-text text-transparent">রি-ভেরিফাই আয়</p>
-                      <p className="text-xs font-bold text-[hsl(var(--amber))]">💰 {currentRate} টাকা/রি-ভেরিফাই</p>
+
+                    {/* Animated arrow flowing down */}
+                    {pCount > 0 && (
+                      <motion.div
+                        animate={{ y: [0, 6, 0], opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.6, repeat: Infinity }}
+                        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white border-2 border-emerald-400 flex items-center justify-center shadow-md z-10"
+                      >
+                        <ChevronDown className="w-4 h-4 text-emerald-600" />
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* BOTTOM: Main / Re-verify balance (bright, ready) */}
+                  <div className="relative px-5 pt-5 pb-5 bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <motion.div
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 2.2, repeat: Infinity }}
+                          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-300/50 shrink-0"
+                        >
+                          <Wallet className="w-6 h-6 text-white" />
+                        </motion.div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                            ✅ Main Balance
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                              Ready
+                            </span>
+                          </p>
+                          <p className="text-[11px] font-bold text-amber-600 mt-0.5">
+                            💰 {currentRate}৳/Re-verify
+                          </p>
+                        </div>
+                      </div>
+                      <motion.p
+                        key={`mb-${computedBdtBalance}`}
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-4xl font-black text-emerald-600 tabular-nums shrink-0 drop-shadow-sm"
+                      >
+                        {computedBdtBalance}
+                        <span className="text-lg ml-0.5 text-amber-500">৳</span>
+                      </motion.p>
+                    </div>
+
+                    <div className="mt-3 rounded-xl bg-white border border-slate-200 px-3 py-2 text-center">
+                      <p className="text-[11px] font-bold text-slate-600">
+                        💸 এই Balance দিয়ে এখনই <span className="text-emerald-600">Withdraw</span> বা <span className="text-cyan-600">Recharge</span> করুন
+                      </p>
                     </div>
                   </div>
-                  <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                    <p className="text-4xl font-black bg-gradient-to-r from-[hsl(var(--amber))] via-[hsl(var(--cyan))] to-[hsl(var(--emerald))] bg-clip-text text-transparent drop-shadow-lg">
-                      {computedBdtBalance}<span className="text-lg ml-1 font-black text-[hsl(var(--amber))]">৳</span>
-                    </p>
-                  </motion.div>
-                </div>
-                {(() => {
-                  const pCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
-                  const pendingBdt = pCount * (currentRate || 0);
-                  if (pCount === 0) return null;
-                  return (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 relative overflow-hidden rounded-2xl border border-[hsl(var(--amber))]/40 bg-gradient-to-r from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/10 to-[hsl(var(--amber))]/15 p-3"
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--amber))]/15 to-transparent"
-                        animate={{ x: ["-100%", "200%"] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      />
-                      <div className="relative flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <motion.div
-                            animate={{ rotate: [0, -8, 8, 0] }}
-                            transition={{ duration: 2.5, repeat: Infinity }}
-                            className="w-9 h-9 rounded-xl bg-[hsl(var(--amber))]/25 border border-[hsl(var(--amber))]/40 flex items-center justify-center shrink-0"
-                          >
-                            <Lock className="w-4 h-4 text-[hsl(var(--amber))]" />
-                          </motion.div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
-                              ⏳ Pending Balance
-                              <span className="text-[9px] font-bold text-muted-foreground">({pCount}টি Account)</span>
-                            </p>
-                            <p className="text-[10px] font-bold text-foreground/70 truncate">
-                              Re-verify করলেই Unlock হবে 🔓
-                            </p>
-                          </div>
-                        </div>
-                        <motion.p
-                          key={`pb-${pendingBdt}`}
-                          initial={{ scale: 0.7, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl font-black text-[hsl(var(--amber))] drop-shadow-[0_0_8px_hsl(var(--amber)/0.5)] shrink-0 tabular-nums"
-                        >
-                          +{pendingBdt}
-                          <span className="text-xs ml-0.5">৳</span>
-                        </motion.p>
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-                <div className="mt-3 text-center bg-gradient-to-r from-[hsl(var(--cyan))]/10 via-[hsl(var(--emerald))]/10 to-[hsl(var(--amber))]/10 rounded-xl py-2 px-3 border border-[hsl(var(--cyan))]/20">
-                  <p className="text-[11px] font-bold text-foreground/80">
-                    ✅ শুধুমাত্র Re-verify সম্পন্ন হলে Account Complete হয় এবং Balance যোগ হয় — সরাসরি Withdraw বা Mobile Recharge করা যাবে
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+                </motion.div>
+              );
+            })()}
 
             {/* Custom Notice */}
             <AnimatePresence>
