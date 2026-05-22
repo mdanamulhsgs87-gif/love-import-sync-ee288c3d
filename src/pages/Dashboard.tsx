@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, ChevronRight, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
