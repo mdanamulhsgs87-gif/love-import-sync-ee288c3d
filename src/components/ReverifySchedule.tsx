@@ -22,6 +22,7 @@ export function ReverifySchedule() {
   const { user } = useAuth();
   const [now, setNow] = useState(Date.now());
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; wallet: string } | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -163,7 +164,7 @@ export function ReverifySchedule() {
 
           {/* List — sorted by least time remaining first */}
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-            {rows.map((r, idx) => (
+            {(showAll ? rows : rows.slice(0, 3)).map((r, idx) => (
               <motion.div
                 key={r.id}
                 layout
@@ -250,6 +251,17 @@ export function ReverifySchedule() {
               </motion.div>
             ))}
           </div>
+
+          {rows.length > 3 && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full py-2 rounded-2xl border border-[hsl(var(--emerald))]/40 bg-[hsl(var(--emerald))]/8 text-[hsl(var(--emerald))] text-xs font-black hover:bg-[hsl(var(--emerald))]/15 transition-colors"
+            >
+              {showAll
+                ? "🔼 সংক্ষেপে দেখুন"
+                : `🔽 সবগুলো দেখুন (${rows.length}টি)`}
+            </button>
+          )}
 
           <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
             💡 যেটার সময় সবচেয়ে কম সেটা সবার উপরে। ছবি দেখে পরিচিত মানুষ চিনে রাখুন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
