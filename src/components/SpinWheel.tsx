@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,8 +42,27 @@ export function SpinWheel() {
 
   const rv = Number(user?.reverify_count || 0);
   const used = Number((user as any)?.spin_used_count || 0);
-  const earned = Math.floor(rv / 10);
+
+  // Count successful referrals (users that signed up with this user's referral_code)
+  const { data: referralCount = 0 } = useQuery({
+    queryKey: ["referralCount", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("users")
+        .select("id", { count: "exact", head: true })
+        .eq("referred_by_user_id", user!.id);
+      return count || 0;
+    },
+    staleTime: 60000,
+  });
+
+  const signupBonus = 1;                              // 🎁 1 free spin on new account
+  const reverifyEarned = Math.floor(rv / 10);          // 1 spin per 10 reverify
+  const referralBonus = Math.floor(referralCount / 5) * 2; // +2 spins per 5 referrals
+  const earned = signupBonus + reverifyEarned + referralBonus;
   const available = Math.max(0, earned - used);
+  const nextReferralIn = 5 - (referralCount % 5);
 
   const segAngle = 360 / SEGMENTS.length;
 
@@ -104,7 +124,7 @@ export function SpinWheel() {
           </div>
           <div>
             <h3 className="text-base font-black leading-tight">🎡 Lucky Spin</h3>
-            <p className="text-[10px] text-muted-foreground font-semibold">প্রতি ১০ Re-verify = ১ Spin</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">🎁 1 Free + প্রতি 10 Re-verify = 1 Spin • 5 Refer = +2 Spin</p>
           </div>
         </div>
       </div>
@@ -201,7 +221,7 @@ export function SpinWheel() {
               🔒 আপনার কোনো Spin বাকি নেই
             </p>
             <p className="text-[11px] font-semibold text-[hsl(var(--purple))] mt-0.5">
-              আর <span className="text-[hsl(var(--amber))] font-black">{nextSpinIn}</span> টি Re-verify করলে নতুন Spin পাবেন ✨
+              আর <span className="text-[hsl(var(--amber))] font-black">{nextSpinIn}</span> টি Re-verify অথবা <span className="text-[hsl(var(--emerald))] font-black">{nextReferralIn}</span> জন Refer করলে নতুন Spin পাবেন ✨
             </p>
           </div>
         )}
