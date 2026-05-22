@@ -952,7 +952,7 @@ export default function Dashboard() {
                     রিকুয়েস্ট পাঠাতে সর্বনিম্ন <span className="text-[hsl(var(--amber))] font-black">{minRequestVerified}</span> টি ভেরিফাইড কাউন্ট দরকার।
                   </p>
                   {bonusEnabled && (
-                    <p className="text-xs text-foreground/80">৫০ টি = ২০% বোনাস</p>
+                    <p className="text-xs text-foreground/80">🎁 ১০ Account = +১০% · ২০ Account = +২০% Bonus</p>
                   )}
                 </div>
 
