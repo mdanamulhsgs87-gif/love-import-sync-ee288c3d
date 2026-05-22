@@ -47,7 +47,15 @@ export function SpinWheel() {
   const segAngle = 360 / SEGMENTS.length;
 
   const handleSpin = async () => {
-    if (!user || spinning || available <= 0) return;
+    if (!user || spinning) return;
+    if (available <= 0) {
+      toast({
+        title: "🎡 কোনো Spin বাকি নেই",
+        description: "দয়া করে আরও Re-verify করুন এবং নতুন Spin জিতে নিন!",
+        variant: "destructive",
+      });
+      return;
+    }
     setSpinning(true);
 
     const idx = pickWeighted();
@@ -98,10 +106,6 @@ export function SpinWheel() {
             <h3 className="text-base font-black leading-tight">🎡 Lucky Spin</h3>
             <p className="text-[10px] text-muted-foreground font-semibold">প্রতি ১০ Re-verify = ১ Spin</p>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] text-muted-foreground font-semibold">Available</p>
-          <p className="text-lg font-black text-[hsl(var(--purple))]">{available}</p>
         </div>
       </div>
 
@@ -168,7 +172,7 @@ export function SpinWheel() {
         {/* Center button (does NOT rotate) */}
         <button
           onClick={handleSpin}
-          disabled={spinning || available <= 0}
+          disabled={spinning}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[72px] h-[72px] rounded-full bg-gradient-to-br from-white to-slate-200 border-4 border-[hsl(var(--purple))] shadow-2xl flex flex-col items-center justify-center font-black text-[12px] text-[hsl(var(--purple))] z-10 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 transition-transform"
         >
           {spinning ? (
@@ -182,15 +186,26 @@ export function SpinWheel() {
         </button>
       </div>
 
-      {available > 0 ? (
-        <p className="text-center text-[11px] font-bold text-[hsl(var(--emerald))]">
-          ✨ আপনার {available} টি Spin আছে — এখনই ঘোরান!
-        </p>
-      ) : (
-        <p className="text-center text-[11px] font-semibold text-muted-foreground">
-          🔒 আর {nextSpinIn} টি Re-verify করলে নতুন Spin পাবেন
-        </p>
-      )}
+      {/* Spin count display - below wheel */}
+      <div className="mt-2 rounded-xl border border-[hsl(var(--purple))]/30 bg-gradient-to-r from-[hsl(var(--purple))]/15 via-[hsl(var(--pink))]/10 to-[hsl(var(--amber))]/15 px-3 py-2.5">
+        {available > 0 ? (
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-[hsl(var(--amber))]" />
+            <p className="text-center text-[13px] font-black text-[hsl(var(--purple))]">
+              আপনার <span className="text-[hsl(var(--emerald))] text-base">{available}</span> টি Spin বাকি আছে — এখনই ঘোরান! 🎉
+            </p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-[12px] font-black text-muted-foreground">
+              🔒 আপনার কোনো Spin বাকি নেই
+            </p>
+            <p className="text-[11px] font-semibold text-[hsl(var(--purple))] mt-0.5">
+              আর <span className="text-[hsl(var(--amber))] font-black">{nextSpinIn}</span> টি Re-verify করলে নতুন Spin পাবেন ✨
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
