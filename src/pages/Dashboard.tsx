@@ -122,10 +122,6 @@ export default function Dashboard() {
   const createUserRequestMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("ইউজার পাওয়া যায়নি");
-      if (!userRequestPassword.trim()) throw new Error("Request পাসওয়ার্ড দিন");
-      if ((user as any).request_password && userRequestPassword !== (user as any).request_password) {
-        throw new Error("Request পাসওয়ার্ড ভুল হয়েছে");
-      }
       let targetInput = requestTargetNumber.trim();
       if ((user as any).locked_target_guest_id) {
         targetInput = (user as any).locked_target_guest_id;
@@ -150,17 +146,13 @@ export default function Dashboard() {
         requesterPaymentMethod: requestPaymentMethod,
         targetGuestId: targetGuestId,
       });
-      const updates: Record<string, string> = {};
-      if (!(user as any).request_password) updates.request_password = userRequestPassword.trim();
-      if (!(user as any).locked_target_guest_id) updates.locked_target_guest_id = targetGuestId;
-      if (Object.keys(updates).length > 0) {
-        await supabase.from("users").update(updates as any).eq("id", user.id);
+      if (!(user as any).locked_target_guest_id) {
+        await supabase.from("users").update({ locked_target_guest_id: targetGuestId } as any).eq("id", user.id);
         await refreshUser();
       }
     },
     onSuccess: () => {
       setRequestPaymentNumber("");
-      setUserRequestPassword("");
       toast({ title: "রিকুয়েস্ট পাঠানো হয়েছে" });
     },
     onError: (error: Error) => {
