@@ -623,3 +623,78 @@ export async function resetAllReverifyCounts(): Promise<number> {
 export async function resetUserReverifyCount(userId: number) {
   await supabase.from("users").update({ reverify_count: 0 }).eq("id", userId);
 }
+
+// ─── Promo Code APIs ────────────────────────────────────────────
+export type PromoCode = {
+  id: string;
+  code: string;
+  owner_user_id: number;
+  is_active: boolean;
+  total_uses: number;
+  total_earned_usdt: number;
+  created_at: string;
+  owner_display_name?: string | null;
+  owner_guest_id?: string | null;
+};
+
+export async function listPromoCodes(): Promise<PromoCode[]> {
+  const { data, error } = await (supabase as any)
+    .from("promo_codes")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const codes = (data || []) as PromoCode[];
+  if (codes.length === 0) return codes;
+  const ownerIds = Array.from(new Set(codes.map((c) => c.owner_user_id)));
+  const { data: owners } = await supabase
+    .from("users")
+    .select("id, display_name, guest_id")
+    .in("id", ownerIds);
+  const map = new Map<number, any>((owners || []).map((o: any) => [o.id, o]));
+  return codes.map((c) => ({
+    ...c,
+    owner_display_name: map.get(c.owner_user_id)?.display_name ?? null,
+    owner_guest_id: map.get(c.owner_user_id)?.guest_id ?? null,
+  }));
+}
+
+export async function createPromoCode(code: string, ownerGuestId: string): Promise<PromoCode> {
+  const cleanedCode = code.trim().toUpperCase();
+  const cleanedGuest = ownerGuestId.trim();
+  if (!cleanedCode || cleanedCode.length < 3) throw new Error("Code minimum 3 character hote hobe");
+  if (!cleanedGuest) throw new Error("Owner UID/phone dorkar");
+
+  const { data: owner, error: ownerErr } = await supabase
+    .from("users")
+    .select("id, guest_id, display_name")
+    .eq("guest_id", cleanedGuest)
+    .maybeSingle();
+  if (ownerErr) throw ownerErr;
+  if (!owner) throw new Error("Owner user khuje pawa jaini");
+
+  const { data, error } = await (supabase as any)
+    .from("promo_codes")
+    .insert({ code: cleanedCode, owner_user_id: owner.id })
+    .select()
+    .single();
+  if (error) {
+    if (String(error.message || "").toLowerCase().includes("duplicate")) {
+      throw new Error("Ei code agei exists");
+    }
+    throw error;
+  }
+  return { ...data, owner_display_name: owner.display_name, owner_guest_id: owner.guest_id };
+}
+
+export async function togglePromoCode(id: string, isActive: boolean) {
+  const { error } = await (supabase as any)
+    .from("promo_codes")
+    .update({ is_active: isActive })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deletePromoCode(id: string) {
+  const { error } = await (supabase as any).from("promo_codes").delete().eq("id", id);
+  if (error) throw error;
+}
