@@ -1176,17 +1176,34 @@ export default function Dashboard() {
       {/* Side drawer with extra features */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="right" className="w-[92vw] sm:max-w-md p-0 overflow-y-auto bg-background">
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <p className="font-black text-base">🎁 আরও ফিচার</p>
+          <div className="sticky top-0 z-20 bg-gradient-to-r from-primary/15 via-[hsl(var(--cyan))]/10 to-[hsl(var(--purple))]/15 backdrop-blur-md border-b border-border/50 px-3 py-2.5 flex items-center gap-2">
+            <button
+              onClick={() => setMoreOpen(false)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-background border border-border shadow-sm text-sm font-black hover:bg-secondary transition-all"
+              aria-label="Back to home"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <Home className="w-4 h-4" />
+              <span>হোমে ফিরুন</span>
+            </button>
+            <div className="flex-1 flex items-center justify-end gap-1.5">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <p className="font-black text-sm">🎁 আরও ফিচার</p>
+            </div>
           </div>
-          <div className="p-4 space-y-5">
+          <div className="p-4 space-y-5 pb-28">
             <LevelCard />
             <ReferralCard />
             <AchievementBadges />
             <Leaderboard />
             <LiveEarningFeed />
             <MonthlyReferralContest />
+            <button
+              onClick={() => setMoreOpen(false)}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary via-[hsl(var(--cyan))] to-[hsl(var(--purple))] text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/30"
+            >
+              <Home className="w-4 h-4" /> হোমে ফিরে যান
+            </button>
           </div>
         </SheetContent>
       </Sheet>
