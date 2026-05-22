@@ -272,8 +272,7 @@ export async function getReferralHistory(userId: number, bonusUsd: number = 0.05
     .filter((u: any) => !u.is_blocked)
     .map((u: any) => {
       const verified = Math.max(0, Number(u.reverify_count || 0) - Number(u.reverify_count_at_referral || 0));
-      const raw = (u.display_name || u.guest_id || "User") as string;
-      const name = raw.length > 4 ? raw.slice(0, 2) + "***" + raw.slice(-2) : raw;
+      const name = (u.display_name || u.guest_id || "User") as string;
       return {
         id: u.id,
         name,

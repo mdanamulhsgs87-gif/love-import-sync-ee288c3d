@@ -27,14 +27,15 @@ export function MonthlyReferralContest() {
       // Fetch users referred this month (only those who have referrer)
       const { data } = await supabase
         .from("users")
-        .select("referred_by_user_id,created_at,reverify_count")
+        .select("referred_by_user_id,created_at,reverify_count,reverify_count_at_referral")
         .gte("created_at", start)
         .not("referred_by_user_id", "is", null)
-        .gt("reverify_count", 0)
         .limit(1000);
 
       const counts = new Map<number, number>();
       (data || []).forEach((r: any) => {
+        const delta = Number(r.reverify_count || 0) - Number(r.reverify_count_at_referral || 0);
+        if (delta <= 0) return;
         const id = r.referred_by_user_id as number;
         counts.set(id, (counts.get(id) || 0) + 1);
       });
