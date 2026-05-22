@@ -638,80 +638,38 @@ export default function Dashboard() {
               return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
               className="relative rounded-[28px] p-[1.5px] overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--purple)/0.5)]">
-              {/* Rotating conic gradient border */}
-              <motion.div
+              {/* Static gradient border (perf) */}
+              <div
                 className="absolute inset-0 rounded-[28px]"
-                style={{ background: "conic-gradient(from 0deg, hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--emerald)), hsl(var(--amber)), hsl(var(--pink)), hsl(var(--purple)))" }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                style={{ background: "linear-gradient(135deg, hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--emerald)), hsl(var(--amber)))" }}
               />
               <div className="relative rounded-[27px] glass-card overflow-hidden">
-                {/* Animated aurora background */}
-                <motion.div className="pointer-events-none absolute -inset-1 opacity-70"
-                  style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.25), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.20), transparent 60%), radial-gradient(50% 60% at 50% 50%, hsl(var(--amber)/0.14), transparent 70%)" }}
-                  animate={{ opacity: [0.5, 0.95, 0.5] }} transition={{ duration: 5, repeat: Infinity }} />
-                {/* Floating sparkles */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div key={i} className="pointer-events-none absolute"
-                    style={{ left: `${10 + i * 15}%`, top: `${15 + (i % 3) * 25}%` }}
-                    animate={{ y: [0, -8, 0], opacity: [0.2, 0.9, 0.2], scale: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}>
-                    <Sparkles className="w-2.5 h-2.5 text-[hsl(var(--amber))]" />
-                  </motion.div>
-                ))}
+                {/* Static aurora background (perf) */}
+                <div className="pointer-events-none absolute -inset-1 opacity-70"
+                  style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.25), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.20), transparent 60%)" }} />
                 <div className="relative z-10 p-5">
                 {/* Header — Premium Crown */}
                 <div className="w-full flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {/* Ultra-premium 3D crown badge */}
                     <div className="relative w-14 h-14 shrink-0">
-                      {/* Outer pulsing aura */}
-                      <motion.div
-                        className="absolute -inset-2 rounded-[20px] blur-xl"
-                        style={{ background: "radial-gradient(circle, hsl(var(--amber)/0.6), hsl(var(--orange)/0.3), transparent 70%)" }}
-                        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 2.2, repeat: Infinity }}
-                      />
-                      {/* Rotating conic ring */}
-                      <motion.div
+                      {/* Static ring (perf) */}
+                      <div
                         className="absolute inset-0 rounded-[18px] p-[2px]"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                        style={{ background: "conic-gradient(from 0deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--amber)))" }}
+                        style={{ background: "linear-gradient(135deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)))" }}
                       >
                         <div className="w-full h-full rounded-[16px] bg-background" />
-                      </motion.div>
+                      </div>
                       {/* Inner gold gradient */}
                       <div className="absolute inset-[3px] rounded-[15px] bg-gradient-to-br from-[hsl(45,95%,55%)] via-[hsl(35,90%,50%)] to-[hsl(25,85%,40%)] flex items-center justify-center overflow-hidden shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_8px_rgba(0,0,0,0.3)]">
-                        {/* Shine sweep */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                          animate={{ x: ["-150%", "150%"] }}
-                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                        />
-                        {/* Crown with bounce + glow */}
-                        <motion.div
-                          animate={{ y: [0, -2, 0], rotate: [0, -5, 5, 0] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                          className="relative z-10"
-                        >
+                        <div className="relative z-10">
                           <Crown
                             className="w-7 h-7 text-white"
                             fill="white"
                             strokeWidth={2.2}
                             style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
                           />
-                        </motion.div>
-                        {/* Mini sparkles inside */}
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white rounded-full"
-                            style={{ left: `${20 + i * 28}%`, top: `${15 + i * 20}%` }}
-                            animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.5 }}
-                          />
-                        ))}
+                        </div>
                       </div>
                       {/* Pending notif dot */}
                       {pendingCount > 0 && (
