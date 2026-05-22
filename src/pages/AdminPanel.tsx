@@ -1684,9 +1684,6 @@ export default function AdminPanel() {
         </>)}
 
 
-        {activeCategory === "pool" && (<>
-        </>)}
-
         {activeCategory === "promo" && (<>
         <div className="pt-4">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
