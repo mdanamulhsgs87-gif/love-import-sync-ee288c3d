@@ -701,13 +701,21 @@ export async function createPromoCode(code: string, ownerGuestId: string): Promi
   if (!cleanedCode || cleanedCode.length < 3) throw new Error("Code minimum 3 character hote hobe");
   if (!cleanedGuest) throw new Error("Owner UID/phone dorkar");
 
-  const { data: owner, error: ownerErr } = await supabase
+  // Search by guest_id, numeric id, or display_name (case-insensitive)
+  const isNumeric = /^\d+$/.test(cleanedGuest);
+  let ownerQuery = supabase
     .from("users")
     .select("id, guest_id, display_name")
-    .eq("guest_id", cleanedGuest)
-    .maybeSingle();
+    .limit(1);
+  if (isNumeric) {
+    ownerQuery = ownerQuery.or(`guest_id.eq.${cleanedGuest},id.eq.${cleanedGuest}`);
+  } else {
+    ownerQuery = ownerQuery.or(`guest_id.eq.${cleanedGuest},display_name.ilike.${cleanedGuest}`);
+  }
+  const { data: owners, error: ownerErr } = await ownerQuery;
   if (ownerErr) throw ownerErr;
-  if (!owner) throw new Error("Owner user khuje pawa jaini");
+  const owner = owners && owners[0];
+  if (!owner) throw new Error(`Owner user khuje pawa jaini (${cleanedGuest}). UID/phone/display name diye try korun.`);
 
   const { data, error } = await (supabase as any)
     .from("promo_codes")
