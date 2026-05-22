@@ -36,6 +36,19 @@ function pickWeighted(): number {
   return 0;
 }
 
+function fireCelebration() {
+  const colors = ["#f59e0b", "#ec4899", "#8b5cf6", "#10b981", "#3b82f6", "#ef4444"];
+  const end = Date.now() + 2200;
+  // burst from center
+  confetti({ particleCount: 120, spread: 90, startVelocity: 45, origin: { y: 0.5 }, colors });
+  // continuous side cannons
+  (function frame() {
+    confetti({ particleCount: 5, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, colors });
+    confetti({ particleCount: 5, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, colors });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
 export function SpinWheel() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
