@@ -849,39 +849,6 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            {/* 📱 Mobile Recharge Promo Banner */}
-            <motion.div custom={0.5} variants={cardVariants} initial="hidden" animate="visible"
-              onClick={() => navigate("/mobile-recharge")}
-              className="cursor-pointer group relative overflow-hidden rounded-3xl border-2 border-[hsl(var(--emerald))]/40 shadow-lg shadow-[hsl(var(--emerald))]/10">
-              <motion.div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--emerald))]/15 via-[hsl(var(--cyan))]/10 to-[hsl(var(--blue))]/15"
-                animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 3, repeat: Infinity }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[btn-shine_3s_ease-in-out_infinite]" />
-              <div className="relative z-10 p-5">
-                <div className="flex items-center gap-4">
-                  <motion.div animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] flex items-center justify-center shadow-xl shadow-[hsl(var(--emerald))]/30">
-                    <Smartphone className="w-7 h-7 text-white" />
-                  </motion.div>
-                  <div className="flex-1">
-                    <h3 className="text-[17px] font-black bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] bg-clip-text text-transparent leading-tight">
-                      ⚡ তাৎক্ষণিক মোবাইল রিচার্জ
-                    </h3>
-                    <p className="text-[12px] font-bold text-foreground/70 mt-1 leading-relaxed">
-                      কোনো অ্যাডমিনের অনুমোদনের দরকার নেই! মাত্র <span className="text-[hsl(var(--emerald))] font-black">২ সেকেন্ডে</span> আপনার রিচার্জ সফল হবে ✅
-                    </p>
-                    <p className="text-[11px] text-[hsl(var(--amber))] font-bold mt-1">
-                      💡 ১ Re-verify সম্পন্ন Account = {currentRate} টাকা রিচার্জ
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] rounded-xl py-2.5 group-hover:opacity-90 transition-opacity">
-                  <Smartphone className="w-4 h-4 text-white" />
-                  <span className="text-[13px] font-black text-white tracking-wide">এখনই রিচার্জ করুন →</span>
-                </div>
-              </div>
-            </motion.div>
-
             {/* Custom Notice */}
             <AnimatePresence>
               {customNoticeText && (
