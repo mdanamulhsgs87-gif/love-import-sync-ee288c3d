@@ -64,7 +64,8 @@ export function TransactionList() {
   const isReverifyEarning = (t: any) =>
     t.type === "earning" && !isFirstVerifyEarning(t);
   const isUsdtPayout = (t: any) => t.type === "usdt_payout";
-  const isWithdrawal = (t: any) => t.type === "withdrawal" || (t.type !== "earning" && !isUsdtPayout(t));
+  const isBonus = (t: any) => t.type === "bonus";
+  const isWithdrawal = (t: any) => t.type === "withdrawal" || (t.type !== "earning" && t.type !== "bonus" && !isUsdtPayout(t));
 
   // Hide 1st-verify ৳1 entries from the visible list
   const visible = transactions.filter((t: any) => !isFirstVerifyEarning(t));
@@ -72,6 +73,7 @@ export function TransactionList() {
   const reverifyCompleted = visible.filter((t: any) => isReverifyEarning(t) && t.status !== "pending" && t.status !== "rejected");
   const usdtPayouts = visible.filter(isUsdtPayout);
   const withdrawalsList = visible.filter(isWithdrawal);
+  const bonusList = visible.filter(isBonus);
   // True total earned = current balance + all non-rejected withdrawals.
   // This matches reality even if reward-rate changed historically.
   const withdrawnSum = withdrawalsList
@@ -165,10 +167,13 @@ export function TransactionList() {
             const isRejected = tx.status === "rejected";
             const isReverify = isReverifyEarning(tx);
             const isUsdt = isUsdtPayout(tx);
+            const isBonusTx = isBonus(tx);
             const isCompleted = isReverify && !isPending && !isRejected;
 
             const barColor = isRejected
               ? "hsl(var(--destructive))"
+              : isBonusTx
+              ? "hsl(var(--amber))"
               : isUsdt
               ? "hsl(var(--amber))"
               : isCompleted
@@ -204,6 +209,8 @@ export function TransactionList() {
                       className={`relative w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden ${
                         isRejected
                           ? "bg-gradient-to-br from-destructive/30 to-destructive/10 text-destructive border border-destructive/40"
+                          : isBonusTx
+                          ? "bg-gradient-to-br from-[hsl(var(--amber))]/30 to-[hsl(var(--pink))]/15 text-[hsl(var(--amber))] border border-[hsl(var(--amber))]/40 shadow-[0_0_15px_-3px_hsl(var(--amber)/0.5)]"
                           : isUsdt
                           ? "bg-gradient-to-br from-[hsl(var(--amber))]/30 to-[hsl(var(--orange))]/15 text-[hsl(var(--amber))] border border-[hsl(var(--amber))]/40 shadow-[0_0_15px_-3px_hsl(var(--amber)/0.5)]"
                           : isCompleted
@@ -218,7 +225,9 @@ export function TransactionList() {
                           transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                         />
                       )}
-                      {isUsdt ? (
+                      {isBonusTx ? (
+                        <Sparkles className="w-5 h-5 relative z-10" />
+                      ) : isUsdt ? (
                         <Coins className="w-5 h-5 relative z-10" />
                       ) : isCompleted ? (
                         <ShieldCheck className="w-5 h-5 relative z-10" />
@@ -230,7 +239,9 @@ export function TransactionList() {
                     </motion.div>
                     <div className="min-w-0 flex-1">
                       <p className="font-black text-[13px] truncate">
-                        {isUsdt
+                        {isBonusTx
+                          ? "🎁 ১০-Account Bonus"
+                          : isUsdt
                           ? "💎 USDT পেমেন্ট"
                           : isCompleted
                           ? "✨ Re-verify সফল"
@@ -239,7 +250,9 @@ export function TransactionList() {
                           : `উইথড্র${tx.details ? `: ${tx.details}` : ""}`}
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate font-medium">
-                        {isUsdt
+                        {isBonusTx
+                          ? (tx.details || "১০টি Re-verify পূর্ণ — Bonus যোগ হয়েছে")
+                          : isUsdt
                           ? (tx.details || "USDT পাঠানো হয়েছে")
                           : isCompleted
                           ? "Balance যোগ হয়েছে"
@@ -256,7 +269,11 @@ export function TransactionList() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    {isUsdt ? (
+                    {isBonusTx ? (
+                      <p className="font-black text-[hsl(var(--amber))] text-base drop-shadow-[0_0_4px_hsl(var(--amber)/0.5)]">
+                        +৳{tx.amount}
+                      </p>
+                    ) : isUsdt ? (
                       <p className="font-black text-[hsl(var(--amber))] text-base drop-shadow-[0_0_4px_hsl(var(--amber)/0.5)]">
                         -{(Number(tx.amount) / 100).toFixed(2)} <span className="text-[10px]">USDT</span>
                       </p>
