@@ -51,12 +51,12 @@ async function resolvePhoneLoginEmail(guestId: string) {
 
 
 const FEATURES = [
-  { icon: MessageCircle, title: "মেসেঞ্জার", desc: "বন্ধুদের সাথে ফ্রি চ্যাট, ইমোজি, থিম কাস্টমাইজ করুন" },
-  { icon: Video, title: "ভিডিও কল", desc: "ফ্রি ভিডিও ও অডিও কল করুন যেকোনো সময়" },
-  { icon: Users, title: "সোশ্যাল ফিড", desc: "পোস্ট করুন, লাইক দিন, কমেন্ট করুন বন্ধুদের সাথে" },
-  { icon: PlayCircle, title: "শর্ট ভিডিও ও রিলস", desc: "মজার ভিডিও দেখুন এবং শেয়ার করুন" },
-  { icon: Shield, title: "ভেরিফাইড ব্যাজ", desc: "কী সংগ্রহ করে ভেরিফাইড ব্যাজ অর্জন করুন" },
-  { icon: Sparkles, title: "আয় করুন", desc: "অ্যাপ ব্যবহার করে ব্যালেন্স অর্জন ও উইথড্র করুন" },
+  { icon: Sparkles, title: "ফেস ভেরিফাই করে আয়", desc: "ফেস ভেরিফাই/রি-ভেরিফাই করে সরাসরি TK আয় করুন" },
+  { icon: Shield, title: "ইনস্ট্যান্ট উইথড্র", desc: "অ্যাডমিন ছাড়াই bKash/Nagad-এ সরাসরি উইথড্র" },
+  { icon: MessageCircle, title: "মেসেঞ্জার", desc: "বন্ধুদের সাথে ফ্রি চ্যাট ও ইমোজি" },
+  { icon: Video, title: "ভিডিও কল", desc: "ফ্রি ভিডিও ও অডিও কল যেকোনো সময়" },
+  { icon: Users, title: "সোশ্যাল ফিড", desc: "পোস্ট, লাইক, কমেন্ট ও স্টোরি শেয়ার" },
+  { icon: PlayCircle, title: "মোবাইল রিচার্জ", desc: "অ্যাপ থেকেই সরাসরি মোবাইল রিচার্জ করুন" },
 ];
 
 export default function Login() {
