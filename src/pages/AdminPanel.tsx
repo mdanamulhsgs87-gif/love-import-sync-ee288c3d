@@ -26,7 +26,8 @@ import {
   adminDismissTransferRequest,
   adminCancelTransferBatch,
 } from "@/lib/user-requests";
-import { ShieldCheck, UserX, UserCheck, CheckCircle, XCircle, Loader2, Coins, Key, Search, RefreshCcw, Copy, Users, ChevronDown, ChevronUp, Trash2, Bell, Send, History, Lock, Eye, EyeOff, ToggleLeft, ToggleRight, Wallet, Settings, FileText, CreditCard, Clock, Youtube, Pencil, AlertCircle, Camera, Smartphone, X, ZoomIn, Zap } from "lucide-react";
+import { ShieldCheck, UserX, UserCheck, CheckCircle, XCircle, Loader2, Coins, Key, Search, RefreshCcw, Copy, Users, ChevronDown, ChevronUp, Trash2, Bell, Send, History, Lock, Eye, EyeOff, ToggleLeft, ToggleRight, Wallet, Settings, FileText, CreditCard, Clock, Youtube, Pencil, AlertCircle, Camera, Smartphone, X, ZoomIn, Zap, Gift } from "lucide-react";
+import { listPromoCodes, createPromoCode, togglePromoCode, deletePromoCode } from "@/lib/api";
 import { AdminKeyVault } from "@/components/AdminKeyVault";
 import { ApiKeyManager } from "@/components/ApiKeyManager";
 import { motion } from "framer-motion";
@@ -73,7 +74,7 @@ function Section({ icon: Icon, title, count, color, children, defaultOpen = fals
   );
 }
 
-type AdminCategory = "overview" | "reverify" | "requests" | "payments" | "settings" | "pool" | "users" | "bindings" | "history" | "youtube" | "api";
+type AdminCategory = "overview" | "reverify" | "requests" | "payments" | "settings" | "promo" | "pool" | "users" | "bindings" | "history" | "youtube" | "api";
 
 const ADMIN_CATEGORIES: { id: AdminCategory; label: string; icon: any; color: string }[] = [
   { id: "overview", label: "ওভারভিউ", icon: ShieldCheck, color: "primary" },
@@ -81,6 +82,7 @@ const ADMIN_CATEGORIES: { id: AdminCategory; label: string; icon: any; color: st
   { id: "requests", label: "রিকুয়েস্ট", icon: Send, color: "cyan" },
   { id: "payments", label: "পেমেন্ট", icon: Wallet, color: "orange" },
   { id: "settings", label: "সেটিংস", icon: Settings, color: "primary" },
+  { id: "promo", label: "প্রোমো কোড", icon: Gift, color: "rose" },
   { id: "pool", label: "পুল কি", icon: Key, color: "emerald" },
   { id: "users", label: "ইউজার", icon: Users, color: "blue" },
   { id: "bindings", label: "ফেস-ওয়ালেট", icon: Camera, color: "cyan" },
