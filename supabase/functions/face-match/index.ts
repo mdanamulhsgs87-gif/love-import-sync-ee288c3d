@@ -161,19 +161,25 @@ serve(async (req) => {
     // Previously we short-circuited and returned the single binding without
     // verifying the face — that allowed any face to "match" any wallet.
 
-    // Download stored face photos and convert to base64
-    const bindingsWithPhotos = [];
-    for (const b of bindings) {
-      try {
-        const photoResp = await fetch(b.face_photo_url);
-        if (!photoResp.ok) continue;
-        const photoBlob = await photoResp.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(photoBlob)));
-        bindingsWithPhotos.push({ ...b, photoBase64: base64 });
-      } catch {
-        console.error(`Failed to fetch photo for binding ${b.id}`);
-      }
-    }
+    // Download stored face photos in parallel (much faster than sequential)
+    const bindingsWithPhotos: any[] = [];
+    const photoResults = await Promise.all(
+      bindings.map(async (b) => {
+        try {
+          const photoResp = await fetch(b.face_photo_url);
+          if (!photoResp.ok) return null;
+          const photoBlob = await photoResp.arrayBuffer();
+          const bytes = new Uint8Array(photoBlob);
+          let binary = "";
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          return { ...b, photoBase64: btoa(binary) };
+        } catch {
+          console.error(`Failed to fetch photo for binding ${b.id}`);
+          return null;
+        }
+      })
+    );
+    for (const r of photoResults) if (r) bindingsWithPhotos.push(r);
 
     if (bindingsWithPhotos.length === 0) {
       if (mode === "check_duplicate") {
