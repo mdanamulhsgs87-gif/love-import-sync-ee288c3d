@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import confetti from "canvas-confetti";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { createTransaction } from "@/lib/api";
 import { Sparkles, Loader2, Gift } from "lucide-react";
 
 // Display segments around the wheel (some big ones are pure decoration with 0% weight)
@@ -34,11 +36,25 @@ function pickWeighted(): number {
   return 0;
 }
 
+function fireCelebration() {
+  const colors = ["#f59e0b", "#ec4899", "#8b5cf6", "#10b981", "#3b82f6", "#ef4444"];
+  const end = Date.now() + 2200;
+  // burst from center
+  confetti({ particleCount: 120, spread: 90, startVelocity: 45, origin: { y: 0.5 }, colors });
+  // continuous side cannons
+  (function frame() {
+    confetti({ particleCount: 5, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, colors });
+    confetti({ particleCount: 5, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, colors });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
 export function SpinWheel() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  const [celebrate, setCelebrate] = useState<{ amount: number } | null>(null);
 
   const rv = Number(user?.reverify_count || 0);
   const used = Number((user as any)?.spin_used_count || 0);
@@ -100,6 +116,20 @@ export function SpinWheel() {
           })
           .eq("id", user.id);
         if (error) throw error;
+        // Record in transaction history
+        try {
+          await createTransaction({
+            user_id: user.id,
+            type: "spin_win",
+            amount: prizeBdt,
+            details: `🎡 Lucky Spin Win — ৳${prizeBdt}`,
+            status: "completed",
+          });
+        } catch (_) { /* non-fatal */ }
+        // 🎉 Celebration confetti
+        fireCelebration();
+        setCelebrate({ amount: prizeBdt });
+        setTimeout(() => setCelebrate(null), 3500);
         toast({
           title: `🎉 আপনি জিতেছেন ৳${prizeBdt}!`,
           description: "টাকা সরাসরি wallet এ যোগ হয়েছে। BDT/USDT তে withdraw করতে পারবেন।",
@@ -117,6 +147,25 @@ export function SpinWheel() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-[hsl(var(--purple))]/30 bg-gradient-to-br from-[hsl(var(--purple))]/15 via-[hsl(var(--pink))]/10 to-[hsl(var(--amber))]/10 backdrop-blur-md p-4">
+      {celebrate && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+        >
+          <motion.div
+            initial={{ y: 30, scale: 0.6, rotate: -8 }}
+            animate={{ y: 0, scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 14 }}
+            className="px-6 py-4 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] via-[hsl(var(--pink))] to-[hsl(var(--purple))] shadow-2xl border-4 border-white/60 text-center"
+          >
+            <div className="text-3xl font-black text-white drop-shadow-lg">🎉 অভিনন্দন! 🎉</div>
+            <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">৳{celebrate.amount}</div>
+            <div className="text-xs font-bold text-white/90 mt-1">আপনি জিতেছেন! Wallet এ যোগ হয়েছে ✨</div>
+          </motion.div>
+        </motion.div>
+      )}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-[hsl(var(--purple))]/20 flex items-center justify-center">
