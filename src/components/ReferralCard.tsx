@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Gift, Copy, Check, Share2, Users, Sparkles, Crown, DollarSign, TrendingUp, Link2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { applyReferralCode, getReferralStats, getPublicSettings, getUser } from "@/lib/api";
+import { applyReferralCode, getReferralStats, getReferralHistory, getPublicSettings, getUser } from "@/lib/api";
 import { copyToClipboard } from "@/lib/clipboard";
 
 export function ReferralCard() {
@@ -34,6 +34,16 @@ export function ReferralCard() {
     staleTime: 30000,
   });
 
+  const bonus = settings?.referralBonusUsd || 0.05;
+
+  const { data: history } = useQuery({
+    queryKey: ["referral-history", user?.id, bonus],
+    queryFn: () => getReferralHistory(user!.id, bonus),
+    enabled: !!user?.id,
+    staleTime: 30000,
+  });
+  const [showHistory, setShowHistory] = useState(false);
+
   const applyMut = useMutation({
     mutationFn: () => applyReferralCode(user!.id, codeInput),
     onSuccess: async () => {
@@ -49,7 +59,6 @@ export function ReferralCard() {
 
   const myCode = (userRow as any).referral_code || "";
   const earnings = Number((userRow as any).referral_usdt_earnings || 0);
-  const bonus = settings?.referralBonusUsd || 0.05;
   const isReferred = !!(userRow as any).referred_by_user_id;
   const refLink = typeof window !== "undefined" ? `${window.location.origin}/register?ref=${myCode}` : "";
 
@@ -249,6 +258,70 @@ export function ReferralCard() {
           <div className="mt-4 pt-4 border-t border-border/60">
             <p className="text-[11px] text-[hsl(var(--emerald))] flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5" /> আপনি ইতিমধ্যে একটি রেফার কোড ব্যবহার করেছেন (স্থায়ী)
+            </p>
+          </div>
+        )}
+
+        {/* Referral history */}
+        {history && history.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              className="w-full flex items-center justify-between mb-2"
+            >
+              <p className="text-[11px] font-black uppercase tracking-wider text-[hsl(var(--emerald))]">
+                📋 Refer History ({history.length})
+              </p>
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {showHistory ? "▲ লুকান" : "▼ দেখুন"}
+              </span>
+            </button>
+            {showHistory && (
+              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                {history.map((h) => (
+                  <div
+                    key={h.id}
+                    className={`flex items-center gap-2 p-2 rounded-xl border ${
+                      h.status === "earning"
+                        ? "border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/5"
+                        : "border-[hsl(var(--amber))]/25 bg-[hsl(var(--amber))]/5"
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-[10px] font-black shrink-0">
+                      {h.avatar_url ? (
+                        <img src={h.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        h.name[0]?.toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold truncate">{h.name}</p>
+                      <p className="text-[9px] text-muted-foreground">
+                        {h.verified_count} Re-verify
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {h.status === "earning" ? (
+                        <>
+                          <p className="text-[11px] font-black text-[hsl(var(--emerald))]">
+                            +${h.earned_usdt.toFixed(3).replace(/\.?0+$/, "")}
+                          </p>
+                          <p className="text-[8px] font-bold text-[hsl(var(--emerald))]/80">PAID</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[10px] font-black text-[hsl(var(--amber))]">$0.00</p>
+                          <p className="text-[8px] font-bold text-[hsl(var(--amber))]/90">⏳ PENDING</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[9px] text-muted-foreground mt-2 text-center">
+              💡 Pending user-ra Re-verify korlei automatic earning add hobe
             </p>
           </div>
         )}

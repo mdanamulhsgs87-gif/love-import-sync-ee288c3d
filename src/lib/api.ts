@@ -251,6 +251,41 @@ export async function getReferralStats(userId: number): Promise<{ count: number;
   return { count: list.length, verifiedAccounts };
 }
 
+export type ReferralHistoryItem = {
+  id: number;
+  name: string;
+  avatar_url: string | null;
+  joined_at: string;
+  verified_count: number;   // reverifies done AFTER applying ref code
+  earned_usdt: number;      // earned from this user
+  status: "pending" | "earning";
+};
+
+export async function getReferralHistory(userId: number, bonusUsd: number = 0.05): Promise<ReferralHistoryItem[]> {
+  const { data } = await supabase
+    .from("users")
+    .select("id,display_name,guest_id,avatar_url,created_at,reverify_count,reverify_count_at_referral,is_blocked")
+    .eq("referred_by_user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  return (data || [])
+    .filter((u: any) => !u.is_blocked)
+    .map((u: any) => {
+      const verified = Math.max(0, Number(u.reverify_count || 0) - Number(u.reverify_count_at_referral || 0));
+      const raw = (u.display_name || u.guest_id || "User") as string;
+      const name = raw.length > 4 ? raw.slice(0, 2) + "***" + raw.slice(-2) : raw;
+      return {
+        id: u.id,
+        name,
+        avatar_url: u.avatar_url,
+        joined_at: u.created_at,
+        verified_count: verified,
+        earned_usdt: +(verified * bonusUsd).toFixed(4),
+        status: verified > 0 ? "earning" : "pending",
+      };
+    });
+}
+
 export async function updateSetting(key: string, value: string) {
   const { data: existingRows, error: existingError } = await supabase
     .from("settings")
