@@ -14,6 +14,9 @@ import { createUserTransferRequest, getIncomingTransferRequests, submitIncomingT
 import { ReverifySection } from "@/components/ReverifySection";
 import { ReverifySchedule } from "@/components/ReverifySchedule";
 import { ReferralCard } from "@/components/ReferralCard";
+import { LevelCard } from "@/components/LevelCard";
+import { AchievementBadges } from "@/components/AchievementBadges";
+import { Leaderboard } from "@/components/Leaderboard";
 import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
@@ -766,6 +769,11 @@ export default function Dashboard() {
               <ReverifySchedule />
             </motion.div>
 
+            {/* Level / Rank Card */}
+            <motion.div custom={1.3} variants={cardVariants} initial="hidden" animate="visible">
+              <LevelCard />
+            </motion.div>
+
             <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReverifySection />
             </motion.div>
@@ -778,6 +786,16 @@ export default function Dashboard() {
             {/* Referral / Reffer & Earn */}
             <motion.div custom={2.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReferralCard />
+            </motion.div>
+
+            {/* Achievement Badges */}
+            <motion.div custom={2.7} variants={cardVariants} initial="hidden" animate="visible">
+              <AchievementBadges />
+            </motion.div>
+
+            {/* Leaderboard */}
+            <motion.div custom={2.9} variants={cardVariants} initial="hidden" animate="visible">
+              <Leaderboard />
             </motion.div>
           </>
         )}
