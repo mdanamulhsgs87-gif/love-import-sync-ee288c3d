@@ -17,6 +17,8 @@ import { ReferralCard } from "@/components/ReferralCard";
 import { LevelCard } from "@/components/LevelCard";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { Leaderboard } from "@/components/Leaderboard";
+import { LiveEarningFeed } from "@/components/LiveEarningFeed";
+import { MonthlyReferralContest } from "@/components/MonthlyReferralContest";
 import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
