@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { TransactionList } from "@/components/TransactionList";
-import { ArrowLeft, Camera, User, Copy, Check, Pencil, X, Save, Key, Calendar, Phone, MessageCircle, Send, Headphones, ChevronDown, ChevronUp, History, Sparkles, Shield, Zap, Lock, Loader2, KeyRound, Mail } from "lucide-react";
+import { ArrowLeft, Camera, User, Copy, Check, Pencil, X, Save, Key, Calendar, Phone, Send, Headphones, ChevronDown, ChevronUp, History, Sparkles, Shield, Zap, Lock, Loader2, KeyRound, Mail } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -682,33 +682,6 @@ export default function Profile() {
                 সাপোর্ট
               </h3>
               <div className="space-y-3">
-                <motion.div
-                  className="flex items-center gap-3 p-3.5 bg-secondary/50 rounded-xl border border-border/50"
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  transition={{ type: "spring", damping: 15 }}
-                >
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">ডেভেলপার</p>
-                    <p className="font-bold text-sm">Md Anamul Haque</p>
-                  </div>
-                </motion.div>
-                <motion.a
-                  href="https://wa.me/8801892564963" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3.5 bg-[hsl(var(--emerald))]/8 border border-[hsl(var(--emerald))]/20 rounded-xl"
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  transition={{ type: "spring", damping: 15 }}
-                >
-                  <div className="p-2 rounded-lg bg-[hsl(var(--emerald))]/15">
-                    <MessageCircle className="w-4 h-4 text-[hsl(var(--emerald))]" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">WhatsApp</p>
-                    <p className="font-bold text-sm text-[hsl(var(--emerald))]">01892564963</p>
-                  </div>
-                </motion.a>
                 <motion.a
                   href="https://t.me/+6a3iUf1_GAhiMWY1" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3.5 bg-[hsl(var(--blue))]/8 border border-[hsl(var(--blue))]/20 rounded-xl"
