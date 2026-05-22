@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowRight, Lock, User, Phone, PlayCircle, CheckCircle2, MessageCircle, Video, Users, Shield, Sparkles, ChevronDown, ExternalLink, Mail, KeyRound } from "lucide-react";
+import { Loader2, ArrowRight, Lock, User, Phone, PlayCircle, CheckCircle2, MessageCircle, Video, Users, Shield, Sparkles, ChevronDown, ExternalLink, Mail, KeyRound, Gift, Ticket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import loginBg from "@/assets/login-bg.jpg";
 import { useNavigate } from "react-router-dom";
@@ -70,6 +70,8 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regReferralCode, setRegReferralCode] = useState("");
+  const [regPromoCode, setRegPromoCode] = useState("");
   const [showAbout, setShowAbout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -204,7 +206,12 @@ export default function Login() {
         email: fakeEmail,
         password: regPassword,
         options: {
-          data: { display_name: displayName.trim(), phone: normalizedPhone },
+          data: {
+            display_name: displayName.trim(),
+            phone: normalizedPhone,
+            referral_code: regReferralCode.trim().toUpperCase() || undefined,
+            promo_code: regPromoCode.trim().toUpperCase() || undefined,
+          },
         },
       });
       if (error) throw error;
@@ -419,6 +426,25 @@ export default function Login() {
                       </label>
                       <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="কমপক্ষে ৬ অক্ষর..." className="input-field text-base py-3" />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5 ml-1 flex items-center gap-1.5">
+                        <Gift className="w-3.5 h-3.5 text-[hsl(var(--pink))]" /> রেফার কোড <span className="text-muted-foreground/60 font-normal">(Optional)</span>
+                      </label>
+                      <input type="text" value={regReferralCode}
+                        onChange={(e) => setRegReferralCode(e.target.value.toUpperCase())}
+                        placeholder="বন্ধুর রেফার কোড থাকলে দিন"
+                        className="input-field text-base py-3 uppercase tracking-wider" maxLength={20} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5 ml-1 flex items-center gap-1.5">
+                        <Ticket className="w-3.5 h-3.5 text-[hsl(var(--amber))]" /> প্রোমো কোড <span className="text-muted-foreground/60 font-normal">(Optional)</span>
+                      </label>
+                      <input type="text" value={regPromoCode}
+                        onChange={(e) => setRegPromoCode(e.target.value.toUpperCase())}
+                        placeholder="অ্যাডমিন/ইউটিউবারের প্রোমো কোড"
+                        className="input-field text-base py-3 uppercase tracking-wider" maxLength={20} />
                     </div>
 
                     <motion.button type="submit"
