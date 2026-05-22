@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowRight, Lock, User, Phone, Gift } from "lucide-react";
+import { Loader2, ArrowRight, Lock, User, Phone, Gift, Youtube } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -101,6 +102,7 @@ export default function Register() {
             display_name: displayName.trim(),
             phone: normalizedPhone,
             referral_code: referralCode.trim().toUpperCase() || undefined,
+            promo_code: promoCode.trim().toUpperCase() || undefined,
           },
         },
       });
@@ -255,6 +257,22 @@ export default function Register() {
                       />
                       <p className="text-[10px] text-muted-foreground mt-1.5">
                         Bondhur reffer code thakle din — verify korle she 0.05$ bonus paabe.
+                      </p>
+                    </div>
+                    <div className="mt-3 rounded-xl border border-[hsl(var(--rose))]/30 bg-[hsl(var(--rose))]/5 p-3">
+                      <label className="text-[11px] font-bold text-[hsl(var(--rose))] flex items-center gap-1.5 mb-2 uppercase tracking-wider">
+                        <Youtube className="w-3.5 h-3.5" /> Promo Code (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        placeholder="YOUTUBER50"
+                        maxLength={20}
+                        className="input-field font-mono uppercase tracking-widest"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        YouTuber/Telegram admin theke code thakle din — prottek account e <b>5% extra bonus</b> paben 🎁
                       </p>
                     </div>
                   </>

@@ -545,6 +545,36 @@ export type Database = {
           },
         ]
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          owner_user_id: number
+          total_earned_usdt: number
+          total_uses: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_user_id: number
+          total_earned_usdt?: number
+          total_uses?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          owner_user_id?: number
+          total_earned_usdt?: number
+          total_uses?: number
+        }
+        Relationships: []
+      }
       reset_history: {
         Row: {
           id: number
@@ -994,6 +1024,10 @@ export type Database = {
           online_at: string | null
           payment_scheduled_at: string | null
           payment_status: string
+          promo_code_used: string | null
+          promo_owner_usdt_earnings: number
+          promo_owner_user_id: number | null
+          promo_user_bonus_bdt: number
           referral_code: string | null
           referral_usdt_earnings: number
           referred_by_user_id: number | null
@@ -1021,6 +1055,10 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          promo_code_used?: string | null
+          promo_owner_usdt_earnings?: number
+          promo_owner_user_id?: number | null
+          promo_user_bonus_bdt?: number
           referral_code?: string | null
           referral_usdt_earnings?: number
           referred_by_user_id?: number | null
@@ -1048,6 +1086,10 @@ export type Database = {
           online_at?: string | null
           payment_scheduled_at?: string | null
           payment_status?: string
+          promo_code_used?: string | null
+          promo_owner_usdt_earnings?: number
+          promo_owner_user_id?: number | null
+          promo_user_bonus_bdt?: number
           referral_code?: string | null
           referral_usdt_earnings?: number
           referred_by_user_id?: number | null
