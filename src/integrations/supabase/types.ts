@@ -1007,9 +1007,11 @@ export type Database = {
       }
       users: {
         Row: {
+          achievements_claimed: Json
           auth_id: string | null
           avatar_url: string | null
           balance: number
+          bonus_claimed_bdt: number
           cover_url: string | null
           created_at: string | null
           display_name: string | null
@@ -1034,13 +1036,16 @@ export type Database = {
           request_password: string | null
           reverify_count: number
           reverify_count_at_referral: number
+          spin_used_count: number
           usdt_paid_count: number
           watched_video_url: string | null
         }
         Insert: {
+          achievements_claimed?: Json
           auth_id?: string | null
           avatar_url?: string | null
           balance?: number
+          bonus_claimed_bdt?: number
           cover_url?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -1065,13 +1070,16 @@ export type Database = {
           request_password?: string | null
           reverify_count?: number
           reverify_count_at_referral?: number
+          spin_used_count?: number
           usdt_paid_count?: number
           watched_video_url?: string | null
         }
         Update: {
+          achievements_claimed?: Json
           auth_id?: string | null
           avatar_url?: string | null
           balance?: number
+          bonus_claimed_bdt?: number
           cover_url?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -1096,6 +1104,7 @@ export type Database = {
           request_password?: string | null
           reverify_count?: number
           reverify_count_at_referral?: number
+          spin_used_count?: number
           usdt_paid_count?: number
           watched_video_url?: string | null
         }
