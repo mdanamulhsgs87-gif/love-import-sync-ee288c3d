@@ -50,16 +50,10 @@ export default function Dashboard() {
   const [submitterPaymentNumber, setSubmitterPaymentNumber] = useState("");
   const [submitterPaymentMethod, setSubmitterPaymentMethod] = useState("bkash");
   const [submitterRate, setSubmitterRate] = useState("");
-  const [userRequestPassword, setUserRequestPassword] = useState("");
   const [nowMs, setNowMs] = useState(Date.now());
   const [prevKeyCount, setPrevKeyCount] = useState<number | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [loadedAppVersion, setLoadedAppVersion] = useState<number | null>(null);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showRequestPasswordSetup, setShowRequestPasswordSetup] = useState(false);
-  const [requestPasswordDraft, setRequestPasswordDraft] = useState("");
-  const [requestPasswordConfirm, setRequestPasswordConfirm] = useState("");
-  const [requestPasswordSaving, setRequestPasswordSaving] = useState(false);
 
   const { data: publicSettings } = useQuery({
     queryKey: ["public-settings"],
