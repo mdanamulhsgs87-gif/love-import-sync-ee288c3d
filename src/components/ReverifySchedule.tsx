@@ -101,7 +101,7 @@ export function ReverifySchedule() {
                 )}
               </h2>
               <p className="text-[10px] text-muted-foreground">
-                GoodDollar Re-verify চাইছে — এখনই Re-verify করুন · ৳{rewardRate}/Account
+                Good-App Re-verify চাইছে — এখনই Re-verify করুন · ৳{rewardRate}/Account
               </p>
             </div>
           </div>
