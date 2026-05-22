@@ -70,6 +70,8 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regReferralCode, setRegReferralCode] = useState("");
+  const [regPromoCode, setRegPromoCode] = useState("");
   const [showAbout, setShowAbout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -204,7 +206,12 @@ export default function Login() {
         email: fakeEmail,
         password: regPassword,
         options: {
-          data: { display_name: displayName.trim(), phone: normalizedPhone },
+          data: {
+            display_name: displayName.trim(),
+            phone: normalizedPhone,
+            referral_code: regReferralCode.trim().toUpperCase() || undefined,
+            promo_code: regPromoCode.trim().toUpperCase() || undefined,
+          },
         },
       });
       if (error) throw error;
