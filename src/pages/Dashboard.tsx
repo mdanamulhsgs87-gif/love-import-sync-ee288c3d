@@ -532,22 +532,6 @@ export default function Dashboard() {
                 {activePanel === "settings" && <span className="h-2 w-2 rounded-full bg-[hsl(var(--amber))] shadow-[0_0_8px_hsl(var(--amber))]" />}
                 <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
-              {!(user as any).request_password && (
-                <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--purple))]" onClick={() => setShowRequestPasswordSetup(true)}>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--purple))]/20 text-[hsl(var(--purple))] mr-3 group-hover:scale-110 transition-transform">
-                    <KeyRound className="h-[18px] w-[18px]" />
-                  </span>
-                  <span className="flex-1 text-[14px] font-bold text-white/90">রিকুয়েস্ট পাসওয়ার্ড</span>
-                  <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--amber))]" onClick={() => setShowTermsModal(true)}>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] mr-3 group-hover:scale-110 transition-transform">
-                  <FileText className="h-[18px] w-[18px]" />
-                </span>
-                <span className="flex-1 text-[14px] font-bold text-white/90">শর্তাবলী</span>
-                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
-              </DropdownMenuItem>
               {!window.matchMedia("(display-mode: standalone)").matches && (
                 <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--emerald))]" onClick={() => navigate("/install")}>
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] mr-3 group-hover:scale-110 transition-transform">
