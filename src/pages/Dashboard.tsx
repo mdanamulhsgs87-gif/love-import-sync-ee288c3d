@@ -862,6 +862,96 @@ export default function Dashboard() {
               );
             })()}
 
+            {/* 🎁 Bonus Banner — Beautiful & Emoji-rich */}
+            {(() => {
+              const sb = sharedBalance;
+              if (!sb.bonusEnabled) return null;
+              const percent = sb.bonusPercent;
+              const remaining = sb.remainingAccounts;
+              const accountsToNext = sb.accountsToNextTier;
+              const nextAt = sb.nextTierAt;
+              const nextPct = sb.nextTierPercent;
+              const isMax = percent >= 20;
+              return (
+                <motion.div custom={0.3} variants={cardVariants} initial="hidden" animate="visible">
+                  <div className="relative overflow-hidden rounded-3xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/10 to-[hsl(var(--pink))]/10 shadow-[0_12px_40px_-10px_hsl(var(--amber)/0.4)]">
+                    {/* Sparkle particles */}
+                    <div className="pointer-events-none absolute inset-1 opacity-40" style={{ background: "radial-gradient(circle at 15% 20%, hsl(var(--amber)/0.35), transparent 40%), radial-gradient(circle at 85% 80%, hsl(var(--pink)/0.25), transparent 40%)" }} />
+                    <div className="relative z-10 p-5">
+                      {/* Header row */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/40">
+                          <span className="text-2xl">🎁</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-foreground">বোনাস সিস্টেম চালু আছে! 🔥</p>
+                          <p className="text-[11px] text-muted-foreground font-bold">রি-ভেরিফাই করতে থাকুন — বোনাস বাড়তে থাকবে</p>
+                        </div>
+                        <div className="ml-auto">
+                          <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${isMax ? "bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-white shadow-lg" : "bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))]"}`}>
+                            {isMax ? "🏆 MAX" : "⚡ LIVE"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Rules */}
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className={`rounded-xl p-2.5 border text-center ${remaining >= 10 ? "bg-[hsl(var(--emerald))]/10 border-[hsl(var(--emerald))]/30" : "bg-secondary/40 border-border/50"}`}>
+                          <p className="text-lg">🎯</p>
+                          <p className="text-[11px] font-black text-foreground">১০ Account = +১০%</p>
+                          {remaining >= 10 && <p className="text-[10px] text-[hsl(var(--emerald))] font-bold mt-0.5">✅ Reached!</p>}
+                        </div>
+                        <div className={`rounded-xl p-2.5 border text-center ${remaining >= 20 ? "bg-[hsl(var(--emerald))]/10 border-[hsl(var(--emerald))]/30" : "bg-secondary/40 border-border/50"}`}>
+                          <p className="text-lg">🏆</p>
+                          <p className="text-[11px] font-black text-foreground">২০ Account = +২০%</p>
+                          {remaining >= 20 && <p className="text-[10px] text-[hsl(var(--emerald))] font-bold mt-0.5">✅ Reached!</p>}
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="rounded-xl bg-secondary/50 border border-border/40 p-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[11px] font-black text-foreground">📊 বোনাস প্রোগ্রেস</p>
+                          <p className="text-[11px] font-black text-[hsl(var(--amber))]">
+                            {remaining >= 20 ? "+২০% 🏆" : remaining >= 10 ? "+১০% 🎯" : "০% 😴"}
+                          </p>
+                        </div>
+                        <div className="h-2.5 w-full rounded-full bg-secondary overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
+                            initial={{ width: 1 }}
+                            animate={{ width: `${Math.min((remaining / 20) * 100, 100)}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <p className="text-[10px] text-muted-foreground font-bold">
+                            {remaining >= 20
+                              ? "🔥 সর্বোচ্চ বোনাসে পৌঁছেছেন!"
+                              : remaining >= 10
+                                ? `${accountsToNext} টি আর করলেই +${nextPct}% 🚀`
+                                : `${10 - remaining} টি করলেই +১০% শুরু 🌟`}
+                          </p>
+                          <p className="text-[10px] font-black text-[hsl(var(--amber))]">{remaining} / 20</p>
+                        </div>
+                      </div>
+
+                      {/* Bonus money preview */}
+                      {sb.bonusBdt > 0 && (
+                        <div className="mt-3 rounded-xl bg-gradient-to-r from-[hsl(var(--amber))]/20 to-[hsl(var(--orange))]/15 border border-[hsl(var(--amber))]/30 p-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">💰</span>
+                            <p className="text-xs font-bold text-foreground">বর্তমান বোনাস</p>
+                          </div>
+                          <p className="text-lg font-black text-[hsl(var(--amber))]">+{sb.bonusBdt}৳</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
+
             {/* Custom Notice */}
             <AnimatePresence>
               {customNoticeText && (
