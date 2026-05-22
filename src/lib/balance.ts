@@ -1,6 +1,6 @@
 import type { Settings, Transaction, User } from "@/lib/api";
 
-type BalanceUser = Pick<User, "reverify_count" | "usdt_paid_count" | "referral_usdt_earnings" | "promo_user_bonus_bdt" | "promo_owner_usdt_earnings"> | null | undefined;
+type BalanceUser = Pick<User, "reverify_count" | "usdt_paid_count" | "referral_usdt_earnings" | "promo_user_bonus_bdt" | "promo_owner_usdt_earnings" | "bonus_claimed_bdt"> | null | undefined;
 type BalanceTx = Pick<Transaction, "type" | "amount" | "status">;
 
 const activeSpendStatuses = new Set(["pending", "processing", "completed"]);
@@ -21,6 +21,7 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
   const referralUsdt = Number(user?.referral_usdt_earnings || 0);
   const promoUserBdt = Number(user?.promo_user_bonus_bdt || 0);
   const promoOwnerUsdt = Number(user?.promo_owner_usdt_earnings || 0);
+  const bonusClaimedBdt = Number(user?.bonus_claimed_bdt || 0);
   const bdtWithdrawn = getActiveBdtWithdrawalTotal(transactions);
   // Bonus: percentage tier based on remaining (un-withdrawn) accounts. Resets after withdraw.
   //  >=20 accounts → 20%, >=10 accounts → 10%, else 0%. Gated by admin bonusStatus switch.
@@ -42,6 +43,7 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
     + referralUsdt * usdtToBdt
     + promoUserBdt
     + promoOwnerUsdt * usdtToBdt
+    + bonusClaimedBdt
   );
   const availableBdt = Math.max(0, grossBdt - bdtWithdrawn);
   const availableUsdt = +(availableBdt / usdtToBdt).toFixed(6);
@@ -56,6 +58,7 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
     referralUsdt,
     promoUserBdt,
     promoOwnerUsdt,
+    bonusClaimedBdt,
     bonusEnabled,
     bonusPercent,
     remainingAccounts,
