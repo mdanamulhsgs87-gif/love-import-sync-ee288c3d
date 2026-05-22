@@ -12,14 +12,14 @@ import {
 } from "@/lib/feed-api";
 import {
   deleteComment, toggleCommentLike, getUnreadNotificationCount,
-  getNotifications, markNotificationsRead, getNewReelsCount, markReelsSeen
+  getNotifications, markNotificationsRead
 } from "@/lib/feed-api";
 import { getOrCreateConversation, getUnreadCount } from "@/lib/chat-api";
 import { getSuggestedPeople, sendFriendRequest, getReceivedRequests, acceptFriendRequest, rejectFriendRequest, getFriendRequestCount, getAllUsersWithStatus } from "@/lib/friend-api";
 import { getOnlineUsers } from "@/hooks/use-online";
 import {
   Heart, MessageCircle, Send, Image, X, Home, Users, Bell, Menu,
-  Plus, User, Search, Phone, Share2, Loader2, MoreHorizontal, Trash2, Play, Globe, UserPlus, ChevronRight, ThumbsUp, Video, Check
+  Plus, User, Search, Phone, Share2, Loader2, MoreHorizontal, Trash2, Play, Globe, UserPlus, ChevronRight, ThumbsUp, Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -148,13 +148,6 @@ export default function Feed() {
     queryFn: () => getUnreadNotificationCount(user!.id),
     enabled: !!user,
     staleTime: 30000,
-  });
-
-  const { data: newReelsCount = 0 } = useQuery({
-    queryKey: ["new-reels-count", user?.id],
-    queryFn: () => getNewReelsCount(user!.id),
-    enabled: !!user,
-    refetchInterval: 60000,
   });
 
   const { data: notificationsList = [] } = useQuery({
