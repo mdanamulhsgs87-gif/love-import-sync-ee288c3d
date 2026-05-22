@@ -778,22 +778,22 @@ export default function Dashboard() {
                 <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
                   className="rounded-3xl border-2 border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
                   {/* TOP: Pending (faded, locked) */}
-                  <div className="relative px-5 pt-5 pb-5 border-b border-dashed border-slate-200 bg-white">
-                    <div className={`flex items-center justify-between gap-3 ${pCount === 0 ? "opacity-40 grayscale" : "opacity-55"}`}>
+                  <div className="relative px-5 pt-5 pb-5 border-b border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50">
+                    <div className={`flex items-center justify-between gap-3 ${pCount === 0 ? "opacity-50 grayscale" : ""}`}>
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-slate-100 border border-slate-300 flex items-center justify-center shrink-0">
-                          <Lock className="w-5 h-5 text-slate-500" />
+                        <div className="w-11 h-11 rounded-2xl bg-amber-100 border-2 border-amber-400 flex items-center justify-center shrink-0 shadow-md shadow-amber-300/40">
+                          <Lock className="w-5 h-5 text-amber-700" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-600 flex items-center gap-1.5">
+                          <p className="text-xs font-black text-amber-800 flex items-center gap-1.5">
                             ⏳ Pending Balance
                             {pCount > 0 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
                                 {pCount} Account
                               </span>
                             )}
                           </p>
-                          <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                          <p className="text-[11px] font-bold text-amber-700/80 mt-0.5">
                             Re-verify দিলেই নিচে যোগ হবে 👇
                           </p>
                         </div>
@@ -802,10 +802,10 @@ export default function Dashboard() {
                         key={`pb-${pendingBdt}`}
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-3xl font-black text-slate-400 tabular-nums shrink-0"
+                        className="text-3xl font-black text-amber-600 tabular-nums shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]"
                       >
                         {pendingBdt}
-                        <span className="text-base ml-0.5">৳</span>
+                        <span className="text-base ml-0.5 text-orange-500">৳</span>
                       </motion.p>
                     </div>
 

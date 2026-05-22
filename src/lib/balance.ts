@@ -20,7 +20,11 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
   const spendableAccounts = Math.max(0, completedAccounts - usdtPaidCount);
   const referralUsdt = Number(user?.referral_usdt_earnings || 0);
   const bdtWithdrawn = getActiveBdtWithdrawalTotal(transactions);
-  const grossBdt = Math.floor(spendableAccounts * rewardRate + referralUsdt * usdtToBdt);
+  // Bonus: every full group of 10 spendable accounts → +10 TK per account = +100 TK per group
+  const bonusGroups = Math.floor(spendableAccounts / 10);
+  const bonusBdt = bonusGroups * 100;
+  const accountsToNextBonus = bonusGroups * 10 + 10 - spendableAccounts;
+  const grossBdt = Math.floor(spendableAccounts * rewardRate + bonusBdt + referralUsdt * usdtToBdt);
   const availableBdt = Math.max(0, grossBdt - bdtWithdrawn);
   const availableUsdt = +(availableBdt / usdtToBdt).toFixed(6);
 
@@ -32,6 +36,9 @@ export function calculateSharedBalance(user: BalanceUser, settings?: Settings | 
     usdtPaidCount,
     spendableAccounts,
     referralUsdt,
+    bonusGroups,
+    bonusBdt,
+    accountsToNextBonus,
     bdtWithdrawn,
     grossBdt,
     availableBdt,
