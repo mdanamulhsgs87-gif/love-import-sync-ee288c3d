@@ -899,6 +899,10 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Face Verification Section - RE-VERIFY */}
+            <motion.div custom={1.2} variants={cardVariants} initial="hidden" animate="visible">
+              <MaturingWallet />
+            </motion.div>
+
             <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
               <ReverifySection />
             </motion.div>
