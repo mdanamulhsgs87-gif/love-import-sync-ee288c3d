@@ -799,6 +799,16 @@ export default function Dashboard() {
             <motion.div custom={2.9} variants={cardVariants} initial="hidden" animate="visible">
               <Leaderboard />
             </motion.div>
+
+            {/* Live Earning Feed */}
+            <motion.div custom={3.1} variants={cardVariants} initial="hidden" animate="visible">
+              <LiveEarningFeed />
+            </motion.div>
+
+            {/* Monthly Referral Contest */}
+            <motion.div custom={3.3} variants={cardVariants} initial="hidden" animate="visible">
+              <MonthlyReferralContest />
+            </motion.div>
           </>
         )}
 
