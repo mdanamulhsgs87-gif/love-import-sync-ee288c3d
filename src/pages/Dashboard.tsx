@@ -839,9 +839,6 @@ export default function Dashboard() {
                               Ready
                             </span>
                           </p>
-                          <p className="text-[11px] font-bold text-amber-600 mt-0.5">
-                            💰 {currentRate}৳/Re-verify
-                          </p>
                         </div>
                       </div>
                       <motion.p
