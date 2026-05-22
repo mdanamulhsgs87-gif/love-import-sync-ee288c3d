@@ -106,21 +106,16 @@ export function AnnouncementPopup() {
                 </ul>
               </div>
 
-              {/* Admin commission */}
+              {/* Direct withdraw */}
               <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <p className="font-semibold text-purple-600 dark:text-purple-400 mb-2">👨‍💼 অ্যাডমিন কমিশন:</p>
+                <p className="font-semibold text-purple-600 dark:text-purple-400 mb-2">💳 সরাসরি উইথড্র (নতুন সিস্টেম):</p>
                 <ul className="space-y-1 text-xs">
-                  <li>💸 শুধু ১ম ভেরিফিকেশনে অ্যাডমিন কমিশন দেওয়া হবে</li>
-                  <li>📤 রি-ভেরিফিকেশনে ইউজার সরাসরি bKash/Nagad-এ টাকা নিতে পারবে</li>
-                  <li>🔒 ১ম বার যে অ্যাডমিন সিলেক্ট করবেন, সবসময় তার মাধ্যমেই পেমেন্ট</li>
-                  <li>❌ অ্যাডমিন পরিবর্তন করা যাবে না</li>
-                  <li>💵 প্রতি অ্যাকাউন্টে অ্যাডমিন কমিশন: ১০ টাকা</li>
+                  <li>🚫 উইথড্র দিতে কোনো অ্যাডমিন লাগবে না</li>
+                  <li>📤 ভেরিফাই/রি-ভেরিফাই করার পর সরাসরি bKash/Nagad-এ টাকা নিতে পারবেন</li>
+                  <li>⚡ অ্যাপ থেকেই নাম্বার দিয়ে রিকোয়েস্ট দিলে অটো প্রসেস হবে</li>
+                  <li>🎁 রেফার ও প্রোমো কোড ব্যবহার করে এক্সট্রা বোনাস পাবেন</li>
                 </ul>
               </div>
-
-              <p className="text-center text-xs text-primary font-medium">
-                🏆 যে অ্যাডমিন বেশি ইউজার ও অ্যাকাউন্ট করতে পারবে, তার জন্য থাকবে এক্সট্রা বোনাস 🎁
-              </p>
 
               {/* How verification works */}
               <div className="p-3 rounded-xl bg-muted/50 border border-border">
@@ -131,7 +126,7 @@ export function AnnouncementPopup() {
                   <li>লিঙ্কে গিয়ে আপনার ফেস দিয়ে ভেরিফাই করুন</li>
                   <li>ভেরিফিকেশন সফল হলে অ্যাপে <strong>Verified Count</strong> বাড়বে</li>
                   <li className="text-primary font-medium">১৪–২০ দিন পর রি-ভেরিফিকেশন লাগলে অ্যাপের <strong>"Re-Verify"</strong> সেকশনে গিয়ে একই ফেস দিয়ে আবার ভেরিফাই করুন</li>
-                  <li>রি-ভেরিফিকেশন সফল হলে সরাসরি TK ব্যালেন্স পাবেন যা bKash/Nagad-এ উইথড্র করতে পারবেন</li>
+                  <li>ভেরিফিকেশন সফল হলে সরাসরি TK ব্যালেন্স পাবেন এবং অ্যাডমিন ছাড়াই bKash/Nagad-এ উইথড্র করতে পারবেন</li>
                 </ol>
               </div>
             </div>
