@@ -59,14 +59,6 @@ const FEATURES = [
   { icon: Sparkles, title: "আয় করুন", desc: "অ্যাপ ব্যবহার করে ব্যালেন্স অর্জন ও উইথড্র করুন" },
 ];
 
-const TERMS = [
-  "আমাদের অ্যাপে কাজ করতে হলে অবশ্যই একজন নির্দিষ্ট অ্যাডমিনের মাধ্যমে কাজ শিখে তারপর কাজ করতে হবে। কোনো অ্যাডমিন না পেলে আমাদের টেলিগ্রাম গ্রুপে জয়েন করে অ্যাডমিনকে মেসেজ দিতে পারবেন। সেখানে অনেক অ্যাডমিন আছেন যারা আপনাকে সাহায্য করবে।",
-  "সকল ব্যবহারকারীকে অ্যাপের নিয়ম-কানুন মানতে হবে। অ্যাপ কর্তৃপক্ষের সব সিদ্ধান্ত মানতে হবে।",
-  "একটি ডিভাইসে একাধিক অ্যাকাউন্ট তৈরি করা যায়, তবে নিয়ম লঙ্ঘন করলে অ্যাডমিন অ্যাকাউন্ট ব্লক করতে পারেন।",
-  "কোনো প্রকার প্রতারণা, হ্যাকিং, বা অসৎ উপায়ে ব্যালেন্স অর্জনের চেষ্টা করলে অ্যাকাউন্ট স্থায়ীভাবে বন্ধ করা হবে।",
-  "অ্যাপ কর্তৃপক্ষ যেকোনো সময় নিয়ম পরিবর্তন করার অধিকার রাখে।",
-];
-
 export default function Login() {
   const [tab, setTab] = useState<"login" | "register">("login");
   // Login states
@@ -78,8 +70,6 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
-  const [agreedTerms, setAgreedTerms] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -195,10 +185,6 @@ export default function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!agreedTerms) {
-      toast({ title: "শর্তাবলী", description: "রেজিস্ট্রেশন করতে শর্তাবলীতে সম্মতি দিন", variant: "destructive" });
-      return;
-    }
     const normalizedPhone = normalizePhone(regPhone.trim());
     if (!normalizedPhone) {
       toast({ title: "রেজিস্ট্রেশন ব্যর্থ", description: "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)", variant: "destructive" });
