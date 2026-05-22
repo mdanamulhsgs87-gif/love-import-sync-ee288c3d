@@ -608,6 +608,15 @@ export default function Dashboard() {
         {activePanel === "home" && (
           <>
 
+            {/* ⭐ TOP PRIORITY: Face Verification + Re-verify (sobar upore) */}
+            <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible">
+              <KeySubmitter />
+            </motion.div>
+
+            <motion.div id="reverify-section" custom={0.2} variants={cardVariants} initial="hidden" animate="visible">
+              <ReverifySection />
+            </motion.div>
+
             {/* Re-verify Balance Card (compact) */}
             {(() => {
               const pCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
@@ -811,16 +820,7 @@ export default function Dashboard() {
               <ReverifySchedule />
             </motion.div>
 
-            <motion.div id="reverify-section" custom={1.5} variants={cardVariants} initial="hidden" animate="visible">
-              <ReverifySection />
-            </motion.div>
-
-            {/* First Time Verification - KEY SUBMIT */}
-            <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible">
-              <KeySubmitter />
-            </motion.div>
-
-            {/* CTA: Open side drawer for additional features */}
+            {/* ✨ Premium CTA: Open side drawer (BIG, eye-catching) */}
             <motion.button
               custom={2.5}
               variants={cardVariants}
@@ -828,22 +828,66 @@ export default function Dashboard() {
               animate="visible"
               whileTap={{ scale: 0.97 }}
               onClick={() => setMoreOpen(true)}
-              className="w-full relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/15 via-[hsl(var(--cyan))]/10 to-[hsl(var(--purple))]/15 p-4 flex items-center gap-3 text-left"
+              className="w-full relative overflow-hidden rounded-3xl p-[2.5px] shadow-2xl"
+              style={{
+                background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(330 85% 60%), hsl(265 85% 65%), hsl(195 90% 55%))",
+                backgroundSize: "300% 300%",
+              }}
             >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-[hsl(var(--cyan))] flex items-center justify-center shrink-0 shadow-lg">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
+              <motion.div
+                animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-3xl"
+                style={{
+                  background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(330 85% 60%), hsl(265 85% 65%), hsl(195 90% 55%))",
+                  backgroundSize: "300% 300%",
+                }}
+              />
+              <div className="relative rounded-[22px] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-5 py-5">
+                {/* Sparkles bg */}
+                <div className="absolute inset-0 rounded-[22px] opacity-30 pointer-events-none"
+                  style={{ background: "radial-gradient(circle at 20% 30%, hsl(45 95% 55% / 0.4), transparent 50%), radial-gradient(circle at 80% 70%, hsl(330 85% 60% / 0.4), transparent 50%)" }}
+                />
+                <div className="relative flex items-center gap-4">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-xl"
+                    style={{ background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(330 85% 60%))" }}
+                  >
+                    <Sparkles className="w-7 h-7 text-white drop-shadow-lg" />
+                  </motion.div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-lg font-black text-white leading-tight">🎁 আরও ফিচার দেখুন</p>
+                    <p className="text-xs text-white/70 font-bold mt-0.5">Referral · Level · Leaderboard · Contest</p>
+                  </div>
+                  <motion.div
+                    animate={{ x: [0, -8, 0] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    className="shrink-0"
+                  >
+                    <ChevronLeft className="w-7 h-7 text-white drop-shadow-lg" strokeWidth={3} />
+                  </motion.div>
+                </div>
+                {/* Swipe hint banner */}
+                <motion.div
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                  className="relative mt-4 rounded-xl px-3 py-2.5 border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center gap-2"
+                >
+                  <motion.span
+                    animate={{ x: [10, -10, 10] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-xl"
+                  >
+                    👉
+                  </motion.span>
+                  <p className="text-sm font-black text-white">
+                    ডান থেকে বাম দিকে <span className="text-[hsl(45_95%_65%)]">টান দিন</span>
+                  </p>
+                </motion.div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black">🎁 আরও ফিচার দেখুন</p>
-                <p className="text-[11px] text-muted-foreground font-bold">Referral · Leaderboard · Contest · Level · আরও</p>
-              </div>
-              <motion.div animate={{ x: [-3, 3, -3] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-primary">
-                <ChevronLeft className="w-5 h-5" />
-              </motion.div>
             </motion.button>
-            <p className="text-center text-[10px] text-muted-foreground -mt-2">
-              👉 ডান থেকে বাম দিকে টান দিন
-            </p>
           </>
         )}
 
