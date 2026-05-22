@@ -880,25 +880,6 @@ export default function Feed() {
           </button>
 
           <button
-            onClick={() => navigate("/short-reels")}
-            className="relative flex-1 h-full flex items-center justify-center border-b-[3px] border-transparent text-gray-500 dark:text-muted-foreground"
-          >
-            <Video className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={() => { if (user) { markReelsSeen(user.id).then(() => queryClient.invalidateQueries({ queryKey: ["new-reels-count"] })); } navigate("/reels"); }}
-            className="relative flex-1 h-full flex items-center justify-center border-b-[3px] border-transparent text-gray-500 dark:text-muted-foreground"
-          >
-            <Play className="w-6 h-6" />
-            {newReelsCount > 0 && (
-              <span className="absolute top-0.5 right-[calc(50%-20px)] min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                {newReelsCount > 99 ? "99+" : newReelsCount}
-              </span>
-            )}
-          </button>
-
-          <button
             onClick={() => { setActiveTab("notif"); if (user) markNotificationsRead(user.id).then(() => queryClient.invalidateQueries({ queryKey: ["notif-count"] })); }}
             className={`relative flex-1 h-full flex items-center justify-center border-b-[3px] transition-colors ${
               activeTab === "notif" ? "border-blue-600 text-blue-600 dark:border-primary dark:text-primary" : "border-transparent text-gray-500 dark:text-muted-foreground"
