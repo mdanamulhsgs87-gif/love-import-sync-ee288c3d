@@ -1861,9 +1861,6 @@ export default function AdminPanel() {
                       {(u as any).locked_target_guest_id && (
                         <p className="text-[10px] text-[hsl(var(--amber))]">🔒 Lock: {(u as any).locked_target_guest_id}</p>
                       )}
-                      {(u as any).request_password && (
-                        <p className="text-[10px] text-muted-foreground">🔑 Req Pass: ✓</p>
-                      )}
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -1889,11 +1886,10 @@ export default function AdminPanel() {
                       </button>
                     </div>
                   </div>
-                  {/* Target unlock & Request password reset */}
-                  {((u as any).locked_target_guest_id || (u as any).request_password) && (
+                  {/* Target unlock */}
+                  {(u as any).locked_target_guest_id && (
                     <div className="flex flex-wrap gap-2">
-                      {(u as any).locked_target_guest_id && (
-                        <button
+                      <button
                           onClick={async () => {
                             await supabase.from("users").update({ locked_target_guest_id: null } as any).eq("id", u.id);
                             queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -1903,19 +1899,6 @@ export default function AdminPanel() {
                         >
                           🔓 টার্গেট আনলক
                         </button>
-                      )}
-                      {(u as any).request_password && (
-                        <button
-                          onClick={async () => {
-                            await supabase.from("users").update({ request_password: null } as any).eq("id", u.id);
-                            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-                            toast({ title: `ID ${u.id} এর request পাসওয়ার্ড রিসেট হয়েছে` });
-                          }}
-                          className="text-[10px] px-2.5 py-1.5 bg-[hsl(var(--purple))]/15 text-[hsl(var(--purple))] rounded-lg font-bold hover:bg-[hsl(var(--purple))]/25 transition-colors flex items-center gap-1"
-                        >
-                          🔑 Req Pass রিসেট
-                        </button>
-                      )}
                     </div>
                   )}
                   {editingKeyCountUserId === u.id && (
