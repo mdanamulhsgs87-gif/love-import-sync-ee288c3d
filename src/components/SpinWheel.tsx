@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -45,16 +45,6 @@ export function SpinWheel() {
   const available = Math.max(0, earned - used);
 
   const segAngle = 360 / SEGMENTS.length;
-
-  const wheelGradient = useMemo(() => {
-    let acc = 0;
-    const stops = SEGMENTS.map((s) => {
-      const start = acc;
-      acc += segAngle;
-      return `${s.color} ${start}deg ${acc}deg`;
-    }).join(", ");
-    return `conic-gradient(${stops})`;
-  }, [segAngle]);
 
   const handleSpin = async () => {
     if (!user || spinning || available <= 0) return;
@@ -115,47 +105,78 @@ export function SpinWheel() {
         </div>
       </div>
 
-      <div className="relative mx-auto w-[260px] h-[260px] my-4">
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
-          <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-white drop-shadow-lg" />
+      <div className="relative mx-auto w-[280px] h-[280px] my-4">
+        {/* Pointer (top, pointing down) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
+          <div className="w-0 h-0 border-l-[14px] border-r-[14px] border-t-[24px] border-l-transparent border-r-transparent border-t-[hsl(var(--amber))] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]" />
         </div>
 
         {/* Wheel */}
-        <motion.div
-          className="absolute inset-0 rounded-full shadow-2xl border-4 border-white/30"
-          style={{ background: wheelGradient }}
+        <motion.svg
+          viewBox="-100 -100 200 200"
+          className="absolute inset-0 w-full h-full drop-shadow-2xl"
           animate={{ rotate: rotation }}
           transition={{ duration: 4, ease: [0.17, 0.67, 0.21, 0.99] }}
+          style={{ transformOrigin: "50% 50%" }}
         >
           {SEGMENTS.map((s, i) => {
-            const angle = i * segAngle + segAngle / 2;
+            // Segment from startAngle to endAngle, with 0deg at top, going clockwise
+            const startAngle = i * segAngle - 90; // -90 so first segment starts at top
+            const endAngle = startAngle + segAngle;
+            const sRad = (startAngle * Math.PI) / 180;
+            const eRad = (endAngle * Math.PI) / 180;
+            const r = 95;
+            const x1 = Math.cos(sRad) * r;
+            const y1 = Math.sin(sRad) * r;
+            const x2 = Math.cos(eRad) * r;
+            const y2 = Math.sin(eRad) * r;
+            const largeArc = segAngle > 180 ? 1 : 0;
+            const path = `M 0 0 L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+            // Label position (mid-radius)
+            const midAngle = startAngle + segAngle / 2;
+            const mRad = (midAngle * Math.PI) / 180;
+            const lr = 65;
+            const lx = Math.cos(mRad) * lr;
+            const ly = Math.sin(mRad) * lr;
+            // Rotate text to be readable along the radial direction
+            const textRotate = midAngle + 90;
+
             return (
-              <div
-                key={i}
-                className="absolute top-1/2 left-1/2 origin-left text-[11px] font-black text-white drop-shadow-md whitespace-nowrap"
-                style={{
-                  transform: `rotate(${angle}deg) translate(40px, -6px)`,
-                }}
-              >
-                {s.label}
-              </div>
+              <g key={i}>
+                <path d={path} fill={s.color} stroke="rgba(255,255,255,0.4)" strokeWidth={0.8} />
+                <text
+                  x={lx}
+                  y={ly}
+                  fill="white"
+                  fontSize={s.value >= 100 ? 10 : 11}
+                  fontWeight={900}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  transform={`rotate(${textRotate} ${lx} ${ly})`}
+                  style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.35)", strokeWidth: 0.6 }}
+                >
+                  {s.label}
+                </text>
+              </g>
             );
           })}
-        </motion.div>
+          {/* Outer ring */}
+          <circle cx={0} cy={0} r={97} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={3} />
+        </motion.svg>
 
-        {/* Center button */}
+        {/* Center button (does NOT rotate) */}
         <button
           onClick={handleSpin}
           disabled={spinning || available <= 0}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-white to-slate-200 border-4 border-[hsl(var(--purple))] shadow-2xl flex flex-col items-center justify-center font-black text-[11px] text-[hsl(var(--purple))] z-10 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 transition-transform"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[72px] h-[72px] rounded-full bg-gradient-to-br from-white to-slate-200 border-4 border-[hsl(var(--purple))] shadow-2xl flex flex-col items-center justify-center font-black text-[12px] text-[hsl(var(--purple))] z-10 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 transition-transform"
         >
           {spinning ? (
             <Loader2 className="w-6 h-6 animate-spin" />
           ) : (
             <>
-              <Sparkles className="w-5 h-5" />
-              SPIN
+              <Sparkles className="w-4 h-4" />
+              <span className="leading-none mt-0.5">SPIN</span>
             </>
           )}
         </button>

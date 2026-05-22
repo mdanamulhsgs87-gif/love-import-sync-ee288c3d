@@ -76,78 +76,51 @@ export function AchievementBadges() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {TIERS.map((t, i) => {
             const isClaimed = claimed.includes(t.key);
             const isReady = rv >= t.need && !isClaimed;
             const isLocked = rv < t.need;
-            const progress = Math.min(100, (rv / t.need) * 100);
             return (
-              <motion.div
+              <motion.button
                 key={t.key}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.04 }}
-                className={`relative overflow-hidden rounded-xl border p-3 ${
+                onClick={() => isReady && handleClaim(t)}
+                disabled={!isReady || !!claimingKey}
+                title={`${t.need} Re-verify → ৳${t.bonus}`}
+                className={`relative aspect-square rounded-xl border flex flex-col items-center justify-center p-1.5 text-center overflow-hidden ${
                   isClaimed
-                    ? "border-[hsl(var(--emerald))]/40 bg-[hsl(var(--emerald))]/10"
+                    ? "border-[hsl(var(--emerald))]/50 bg-[hsl(var(--emerald))]/15"
                     : isReady
-                    ? "border-[hsl(var(--amber))]/60 bg-gradient-to-r from-[hsl(var(--amber))]/20 to-[hsl(var(--orange))]/10"
-                    : "border-white/5 bg-background/30"
+                    ? "border-[hsl(var(--amber))]/60 bg-gradient-to-br from-[hsl(var(--amber))]/25 to-[hsl(var(--orange))]/15 shadow-lg shadow-[hsl(var(--amber))]/20 cursor-pointer"
+                    : "border-white/5 bg-background/30 opacity-60 grayscale"
                 }`}
               >
                 {isReady && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none"
                     animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
                   />
                 )}
-                <div className="relative flex items-center gap-3">
-                  <div className={`text-2xl ${isLocked ? "grayscale opacity-50" : ""}`}>{t.emoji}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-black truncate">{t.need} Re-verify</p>
-                      <span className="text-[10px] font-bold text-muted-foreground">→</span>
-                      <p className="text-sm font-black text-[hsl(var(--amber))]">৳{t.bonus}</p>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-background/50 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          isClaimed ? "bg-[hsl(var(--emerald))]" : "bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
-                        }`}
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <p className="text-[9px] text-muted-foreground font-semibold mt-0.5">
-                      {Math.min(rv, t.need)}/{t.need}
-                    </p>
+                <div className="text-xl leading-none">{t.emoji}</div>
+                <div className="text-[9px] font-black mt-0.5 leading-tight">{t.need}=৳{t.bonus}</div>
+                {isClaimed ? (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--emerald))] border border-background flex items-center justify-center text-[8px] font-black text-white">
+                    ✓
                   </div>
-                  {isClaimed ? (
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] text-[10px] font-black">
-                      <Check className="w-3 h-3" /> Claimed
-                    </div>
-                  ) : isReady ? (
-                    <motion.button
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => handleClaim(t)}
-                      disabled={!!claimingKey}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-white text-[11px] font-black shadow-lg shadow-[hsl(var(--amber))]/30 disabled:opacity-60"
-                    >
-                      {claimingKey === t.key ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-3 h-3" />
-                      )}
-                      Claim
-                    </motion.button>
-                  ) : (
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-background/50 text-muted-foreground text-[10px] font-bold">
-                      <Lock className="w-3 h-3" /> Locked
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+                ) : isReady ? (
+                  <div className="absolute -top-1 -right-1 px-1 h-4 rounded-full bg-[hsl(var(--amber))] border border-background flex items-center justify-center text-[7px] font-black text-white animate-pulse">
+                    {claimingKey === t.key ? "…" : "Claim"}
+                  </div>
+                ) : (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-white/10 flex items-center justify-center">
+                    <Lock className="w-2 h-2 text-muted-foreground" />
+                  </div>
+                )}
+              </motion.button>
             );
           })}
         </div>
