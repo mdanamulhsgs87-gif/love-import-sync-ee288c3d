@@ -20,9 +20,12 @@ const TIERS: Tier[] = [
   { key: "t500", need: 500, bonusUsdt: 18.0, emoji: "🚀", label: "Elite" },
 ];
 
-function UsdtIcon({ className = "w-3 h-3" }: { className?: string }) {
+function UsdtIcon({ size = 14 }: { size?: number }) {
   return (
-    <span className={`inline-flex items-center justify-center rounded-full bg-[#26A17B] text-white font-black ${className}`} style={{ fontSize: "0.6em", lineHeight: 1 }}>
+    <span
+      className="inline-flex items-center justify-center rounded-full bg-[#26A17B] text-white font-black shadow-sm shrink-0"
+      style={{ width: size, height: size, fontSize: size * 0.72, lineHeight: 1 }}
+    >
       ₮
     </span>
   );
@@ -108,7 +111,7 @@ export function AchievementBadges() {
                     ? "border-[hsl(var(--emerald))]/50 bg-[hsl(var(--emerald))]/15"
                     : isReady
                     ? "border-[hsl(var(--amber))]/60 bg-gradient-to-br from-[hsl(var(--amber))]/25 to-[hsl(var(--orange))]/15 shadow-lg shadow-[hsl(var(--amber))]/20 cursor-pointer"
-                    : "border-white/5 bg-background/30 opacity-60 grayscale"
+                    : "border-white/5 bg-background/30 opacity-70"
                 }`}
               >
                 {isReady && (
@@ -118,9 +121,13 @@ export function AchievementBadges() {
                     transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
                   />
                 )}
-                <div className="text-xl leading-none">{t.emoji}</div>
-                <div className="text-[9px] font-black mt-0.5 leading-tight flex items-center justify-center gap-0.5">
-                  {t.need}=<UsdtIcon className="w-2.5 h-2.5" />{t.bonusUsdt}
+                <div className="text-lg leading-none">{t.emoji}</div>
+                <div className="text-[10px] font-black mt-1 leading-tight text-muted-foreground">
+                  {t.need} Re-verify
+                </div>
+                <div className="mt-0.5 flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-[#26A17B]/15 border border-[#26A17B]/40">
+                  <UsdtIcon size={11} />
+                  <span className="text-[10px] font-black text-[#26A17B]">{t.bonusUsdt}</span>
                 </div>
                 {isClaimed ? (
                   <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--emerald))] border border-background flex items-center justify-center text-[8px] font-black text-white">
