@@ -12,7 +12,7 @@ import {
 } from "@/lib/feed-api";
 import {
   deleteComment, toggleCommentLike, getUnreadNotificationCount,
-  getNotifications, markNotificationsRead, getNewReelsCount, markReelsSeen
+  getNotifications, markNotificationsRead
 } from "@/lib/feed-api";
 import { getOrCreateConversation, getUnreadCount } from "@/lib/chat-api";
 import { getSuggestedPeople, sendFriendRequest, getReceivedRequests, acceptFriendRequest, rejectFriendRequest, getFriendRequestCount, getAllUsersWithStatus } from "@/lib/friend-api";
@@ -148,13 +148,6 @@ export default function Feed() {
     queryFn: () => getUnreadNotificationCount(user!.id),
     enabled: !!user,
     staleTime: 30000,
-  });
-
-  const { data: newReelsCount = 0 } = useQuery({
-    queryKey: ["new-reels-count", user?.id],
-    queryFn: () => getNewReelsCount(user!.id),
-    enabled: !!user,
-    refetchInterval: 60000,
   });
 
   const { data: notificationsList = [] } = useQuery({
@@ -882,25 +875,6 @@ export default function Feed() {
             {unreadCount > 0 && (
               <span className="absolute top-0.5 right-[calc(50%-20px)] min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                 {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => navigate("/short-reels")}
-            className="relative flex-1 h-full flex items-center justify-center border-b-[3px] border-transparent text-gray-500 dark:text-muted-foreground"
-          >
-            <Video className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={() => { if (user) { markReelsSeen(user.id).then(() => queryClient.invalidateQueries({ queryKey: ["new-reels-count"] })); } navigate("/reels"); }}
-            className="relative flex-1 h-full flex items-center justify-center border-b-[3px] border-transparent text-gray-500 dark:text-muted-foreground"
-          >
-            <Play className="w-6 h-6" />
-            {newReelsCount > 0 && (
-              <span className="absolute top-0.5 right-[calc(50%-20px)] min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                {newReelsCount > 99 ? "99+" : newReelsCount}
               </span>
             )}
           </button>

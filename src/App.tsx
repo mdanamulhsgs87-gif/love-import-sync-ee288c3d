@@ -35,11 +35,7 @@ const AdminPanel = lazyRetry(() => import("./pages/AdminPanel"));
 const AddKeys = lazyRetry(() => import("./pages/AddKeys"));
 const Chat = lazyRetry(() => import("./pages/Chat"));
 const Feed = lazyRetry(() => import("./pages/Feed"));
-const Reels = lazyRetry(() => import("./pages/Reels"));
-const ShortReels = lazyRetry(() => import("./pages/ShortReels"));
 const UserProfile = lazyRetry(() => import("./pages/UserProfile"));
-const ChannelPage = lazyRetry(() => import("./pages/ChannelPage"));
-const WatchVideo = lazyRetry(() => import("./pages/WatchVideo"));
 const CallPage = lazyRetry(() => import("./pages/CallPage"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
@@ -111,11 +107,7 @@ function AppInner() {
             <Route path="/add-keys" element={<AddKeys />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/feed" element={<Feed />} />
-            <Route path="/reels" element={<Reels />} />
-            <Route path="/short-reels" element={<ShortReels />} />
             <Route path="/user/:userId" element={<UserProfile />} />
-            <Route path="/channel/:userId" element={<ChannelPage />} />
-            <Route path="/watch/:postId" element={<WatchVideo />} />
             <Route path="/call/:userId" element={<CallPage />} />
             <Route path="/install" element={<Install />} />
             <Route path="/reset-password" element={<ResetPassword />} />

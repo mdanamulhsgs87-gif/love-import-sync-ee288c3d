@@ -544,20 +544,17 @@ export default function Dashboard() {
           {/* 3-dot menu with all features */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                animate={{ boxShadow: ["0 0 15px hsl(152 56% 38% / 0.3), 0 0 30px hsl(187 72% 50% / 0.15)", "0 0 25px hsl(152 56% 38% / 0.5), 0 0 50px hsl(187 72% 50% / 0.25)", "0 0 15px hsl(152 56% 38% / 0.3), 0 0 30px hsl(187 72% 50% / 0.15)"] }}
-                transition={{ duration: 2, repeat: Infinity }}
+              <button
                 className="flex h-13 w-13 items-center justify-center rounded-2xl border-2 border-[hsl(var(--cyan))]/50 text-foreground transition-transform hover:scale-[1.08] relative overflow-hidden"
                 style={{ background: "linear-gradient(135deg, hsl(152 56% 30%), hsl(187 72% 40%), hsl(217 91% 50%))" }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[btn-shine_2s_ease-in-out_infinite]" />
                 <MoreVertical className="h-6 w-6 text-white relative z-10 drop-shadow-lg" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-black rounded-full flex items-center justify-center px-1 animate-pulse shadow-lg shadow-destructive/40">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
-              </motion.button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 rounded-2xl border-primary/20 bg-card/98 p-2 backdrop-blur-xl shadow-2xl shadow-primary/10">
               {/* Navigation */}
@@ -568,10 +565,6 @@ export default function Dashboard() {
               <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--amber))]/10" onClick={() => navigate("/feed")}>
                 <Newspaper className="mr-3 h-5 w-5 text-[hsl(var(--amber))]" />
                 <span className="text-[15px] font-black text-foreground">📰 নিউজ ফিড</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/reels")}>
-                <Play className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
-                <span className="text-[15px] font-black text-foreground">🎬 ভিডিও দেখুন</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--cyan))]/10 relative" onClick={() => navigate("/chat")}>
                 <MessageCircle className="mr-3 h-5 w-5 text-[hsl(var(--cyan))]" />
@@ -642,80 +635,38 @@ export default function Dashboard() {
               return (
             <motion.div custom={-0.5} variants={cardVariants} initial="hidden" animate="visible"
               className="relative rounded-[28px] p-[1.5px] overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--purple)/0.5)]">
-              {/* Rotating conic gradient border */}
-              <motion.div
+              {/* Static gradient border (perf) */}
+              <div
                 className="absolute inset-0 rounded-[28px]"
-                style={{ background: "conic-gradient(from 0deg, hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--emerald)), hsl(var(--amber)), hsl(var(--pink)), hsl(var(--purple)))" }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                style={{ background: "linear-gradient(135deg, hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--emerald)), hsl(var(--amber)))" }}
               />
               <div className="relative rounded-[27px] glass-card overflow-hidden">
-                {/* Animated aurora background */}
-                <motion.div className="pointer-events-none absolute -inset-1 opacity-70"
-                  style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.25), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.20), transparent 60%), radial-gradient(50% 60% at 50% 50%, hsl(var(--amber)/0.14), transparent 70%)" }}
-                  animate={{ opacity: [0.5, 0.95, 0.5] }} transition={{ duration: 5, repeat: Infinity }} />
-                {/* Floating sparkles */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div key={i} className="pointer-events-none absolute"
-                    style={{ left: `${10 + i * 15}%`, top: `${15 + (i % 3) * 25}%` }}
-                    animate={{ y: [0, -8, 0], opacity: [0.2, 0.9, 0.2], scale: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}>
-                    <Sparkles className="w-2.5 h-2.5 text-[hsl(var(--amber))]" />
-                  </motion.div>
-                ))}
+                {/* Static aurora background (perf) */}
+                <div className="pointer-events-none absolute -inset-1 opacity-70"
+                  style={{ background: "radial-gradient(60% 60% at 20% 0%, hsl(var(--purple)/0.25), transparent 60%), radial-gradient(60% 60% at 100% 100%, hsl(var(--cyan)/0.20), transparent 60%)" }} />
                 <div className="relative z-10 p-5">
                 {/* Header — Premium Crown */}
                 <div className="w-full flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {/* Ultra-premium 3D crown badge */}
                     <div className="relative w-14 h-14 shrink-0">
-                      {/* Outer pulsing aura */}
-                      <motion.div
-                        className="absolute -inset-2 rounded-[20px] blur-xl"
-                        style={{ background: "radial-gradient(circle, hsl(var(--amber)/0.6), hsl(var(--orange)/0.3), transparent 70%)" }}
-                        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 2.2, repeat: Infinity }}
-                      />
-                      {/* Rotating conic ring */}
-                      <motion.div
+                      {/* Static ring (perf) */}
+                      <div
                         className="absolute inset-0 rounded-[18px] p-[2px]"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                        style={{ background: "conic-gradient(from 0deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)), hsl(var(--cyan)), hsl(var(--amber)))" }}
+                        style={{ background: "linear-gradient(135deg, hsl(var(--amber)), hsl(var(--orange)), hsl(var(--pink)), hsl(var(--purple)))" }}
                       >
                         <div className="w-full h-full rounded-[16px] bg-background" />
-                      </motion.div>
+                      </div>
                       {/* Inner gold gradient */}
                       <div className="absolute inset-[3px] rounded-[15px] bg-gradient-to-br from-[hsl(45,95%,55%)] via-[hsl(35,90%,50%)] to-[hsl(25,85%,40%)] flex items-center justify-center overflow-hidden shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_8px_rgba(0,0,0,0.3)]">
-                        {/* Shine sweep */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                          animate={{ x: ["-150%", "150%"] }}
-                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                        />
-                        {/* Crown with bounce + glow */}
-                        <motion.div
-                          animate={{ y: [0, -2, 0], rotate: [0, -5, 5, 0] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                          className="relative z-10"
-                        >
+                        <div className="relative z-10">
                           <Crown
                             className="w-7 h-7 text-white"
                             fill="white"
                             strokeWidth={2.2}
                             style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
                           />
-                        </motion.div>
-                        {/* Mini sparkles inside */}
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white rounded-full"
-                            style={{ left: `${20 + i * 28}%`, top: `${15 + i * 20}%` }}
-                            animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.5 }}
-                          />
-                        ))}
+                        </div>
                       </div>
                       {/* Pending notif dot */}
                       {pendingCount > 0 && (

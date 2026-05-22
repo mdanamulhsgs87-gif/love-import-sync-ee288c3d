@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home } from "lucide-react";
 
-const SHOW_ON_ROUTES = ["/feed", "/reels", "/short-reels"];
+const SHOW_ON_ROUTES = ["/feed"];
 
 export default function FloatingDashboardButton() {
   const location = useLocation();
