@@ -17,6 +17,8 @@ import { ReferralCard } from "@/components/ReferralCard";
 import { LevelCard } from "@/components/LevelCard";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { Leaderboard } from "@/components/Leaderboard";
+import { LiveEarningFeed } from "@/components/LiveEarningFeed";
+import { MonthlyReferralContest } from "@/components/MonthlyReferralContest";
 import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
@@ -796,6 +798,16 @@ export default function Dashboard() {
             {/* Leaderboard */}
             <motion.div custom={2.9} variants={cardVariants} initial="hidden" animate="visible">
               <Leaderboard />
+            </motion.div>
+
+            {/* Live Earning Feed */}
+            <motion.div custom={3.1} variants={cardVariants} initial="hidden" animate="visible">
+              <LiveEarningFeed />
+            </motion.div>
+
+            {/* Monthly Referral Contest */}
+            <motion.div custom={3.3} variants={cardVariants} initial="hidden" animate="visible">
+              <MonthlyReferralContest />
             </motion.div>
           </>
         )}
