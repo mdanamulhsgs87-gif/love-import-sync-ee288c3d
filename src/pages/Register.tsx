@@ -57,7 +57,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
       return;
     }
@@ -148,12 +148,13 @@ export default function Register() {
       case 1: return displayName.trim().length >= 2;
       case 2: return password.length >= 6;
       case 3: return phone.trim().length >= 10;
+      case 4: return true; // optional
       default: return false;
     }
   };
 
-  const stepLabels = ["আপনার নাম", "পাসওয়ার্ড", "ফোন নম্বর"];
-  const stepIcons = [User, Lock, Phone];
+  const stepLabels = ["আপনার নাম", "পাসওয়ার্ড", "ফোন নম্বর", "Reffer / Promo Code"];
+  const stepIcons = [User, Lock, Phone, Gift];
   const StepIcon = stepIcons[step - 1];
 
   return (
@@ -200,11 +201,11 @@ export default function Register() {
           <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent mb-2">
             নতুন অ্যাকাউন্ট
           </h1>
-          <p className="text-muted-foreground">ধাপ {step}/3 — {stepLabels[step - 1]}</p>
+          <p className="text-muted-foreground">ধাপ {step}/4 — {stepLabels[step - 1]}</p>
         </div>
 
         <div className="flex gap-2 mb-6">
-          {[1, 2, 3].map(s => (
+          {[1, 2, 3, 4].map(s => (
             <motion.div
               key={s}
               initial={false}
@@ -240,10 +241,12 @@ export default function Register() {
                     placeholder="কমপক্ষে ৬ অক্ষর..." className="input-field text-lg py-4" autoFocus />
                 )}
                 {step === 3 && (
-                  <>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                      placeholder="01XXXXXXXXX" className="input-field text-lg py-4" autoFocus />
-                    <div className="mt-4 rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/5 p-3">
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                    placeholder="01XXXXXXXXX" className="input-field text-lg py-4" autoFocus />
+                )}
+                {step === 4 && (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-[hsl(var(--emerald))]/30 bg-[hsl(var(--emerald))]/5 p-3">
                       <label className="text-[11px] font-bold text-[hsl(var(--emerald))] flex items-center gap-1.5 mb-2 uppercase tracking-wider">
                         <Gift className="w-3.5 h-3.5" /> Reffer code (Optional)
                       </label>
@@ -254,12 +257,13 @@ export default function Register() {
                         placeholder="ABCD1234"
                         maxLength={12}
                         className="input-field font-mono uppercase tracking-widest"
+                        autoFocus
                       />
                       <p className="text-[10px] text-muted-foreground mt-1.5">
-                        Bondhur reffer code thakle din — verify korle she 0.05$ bonus paabe.
+                        Bondhur reffer code thakle din — apni Re-verify korle she 0.05$ bonus paabe.
                       </p>
                     </div>
-                    <div className="mt-3 rounded-xl border border-[hsl(var(--rose))]/30 bg-[hsl(var(--rose))]/5 p-3">
+                    <div className="rounded-xl border border-[hsl(var(--rose))]/30 bg-[hsl(var(--rose))]/5 p-3">
                       <label className="text-[11px] font-bold text-[hsl(var(--rose))] flex items-center gap-1.5 mb-2 uppercase tracking-wider">
                         <Youtube className="w-3.5 h-3.5" /> Promo Code (Optional)
                       </label>
@@ -275,7 +279,10 @@ export default function Register() {
                         YouTuber/Telegram admin theke code thakle din — prottek account e <b>5% extra bonus</b> paben 🎁
                       </p>
                     </div>
-                  </>
+                    <p className="text-[10px] text-center text-muted-foreground">
+                      Code na thakle khali rekhe register korun
+                    </p>
+                  </div>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -292,12 +299,12 @@ export default function Register() {
                 whileTap={{ scale: 0.93 }}
                 whileHover={{ scale: 1.04, y: -3 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className={`${step < 3 ? "btn-primary btn-neon-pulse" : "btn-accent"} py-4 text-lg flex-1 rounded-2xl`}>
+                className={`${step < 4 ? "btn-primary btn-neon-pulse" : "btn-accent"} py-4 text-lg flex-1 rounded-2xl`}>
                 {isSubmitting ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
                     <Loader2 className="w-6 h-6" />
                   </motion.div>
-                ) : step < 3 ? (
+                ) : step < 4 ? (
                   <motion.span className="inline-flex items-center gap-2.5 font-black relative z-10"
                     animate={{ x: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}>
                     পরবর্তী <ArrowRight className="w-5 h-5" />
