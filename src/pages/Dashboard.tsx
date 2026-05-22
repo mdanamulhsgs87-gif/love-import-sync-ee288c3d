@@ -827,26 +827,22 @@ export default function Dashboard() {
                 <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
                   className="rounded-3xl border-2 border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
                   {/* TOP: Pending (faded, locked) */}
-                  <div className="relative px-5 pt-5 pb-4 border-b-2 border-dashed border-slate-200 bg-slate-50/70">
-                    <div className="flex items-center justify-between gap-3">
+                  <div className="relative px-5 pt-5 pb-5 border-b border-dashed border-slate-200 bg-white">
+                    <div className={`flex items-center justify-between gap-3 ${pCount === 0 ? "opacity-40 grayscale" : "opacity-55"}`}>
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <motion.div
-                          animate={pCount > 0 ? { rotate: [0, -6, 6, 0] } : {}}
-                          transition={{ duration: 2.5, repeat: Infinity }}
-                          className="w-11 h-11 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0"
-                        >
-                          <Lock className="w-5 h-5 text-amber-600" />
-                        </motion.div>
+                        <div className="w-11 h-11 rounded-2xl bg-slate-100 border border-slate-300 flex items-center justify-center shrink-0">
+                          <Lock className="w-5 h-5 text-slate-500" />
+                        </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-amber-700 flex items-center gap-1.5">
+                          <p className="text-xs font-black text-slate-600 flex items-center gap-1.5">
                             ⏳ Pending Balance
                             {pCount > 0 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-800">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
                                 {pCount} Account
                               </span>
                             )}
                           </p>
-                          <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                          <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
                             Re-verify দিলেই নিচে যোগ হবে 👇
                           </p>
                         </div>
@@ -855,8 +851,7 @@ export default function Dashboard() {
                         key={`pb-${pendingBdt}`}
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-3xl font-black text-amber-500/60 tabular-nums shrink-0 blur-[0.6px]"
-                        style={{ textShadow: "0 0 8px rgba(245,158,11,0.25)" }}
+                        className="text-3xl font-black text-slate-400 tabular-nums shrink-0"
                       >
                         {pendingBdt}
                         <span className="text-base ml-0.5">৳</span>
@@ -876,7 +871,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* BOTTOM: Main / Re-verify balance (bright, ready) */}
-                  <div className="relative px-5 pt-5 pb-5 bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
+                  <div className="relative px-5 pt-5 pb-5 bg-white">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <motion.div
@@ -909,7 +904,7 @@ export default function Dashboard() {
                       </motion.p>
                     </div>
 
-                    <div className="mt-3 rounded-xl bg-white border border-slate-200 px-3 py-2 text-center">
+                    <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-center">
                       <p className="text-[11px] font-bold text-slate-600">
                         💸 এই Balance দিয়ে এখনই <span className="text-emerald-600">Withdraw</span> বা <span className="text-cyan-600">Recharge</span> করুন
                       </p>
