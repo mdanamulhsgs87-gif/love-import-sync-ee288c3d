@@ -12,6 +12,7 @@ import { getPublicSettings, updateUserPaymentStatus } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { createUserTransferRequest, getIncomingTransferRequests, submitIncomingTransferRequests, cancelIncomingRequest } from "@/lib/user-requests";
 import { ReverifySection } from "@/components/ReverifySection";
+import { MaturingWallet } from "@/components/MaturingWallet";
 import { ReferralCard } from "@/components/ReferralCard";
 import { hasUserPosted } from "@/lib/feed-api";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
