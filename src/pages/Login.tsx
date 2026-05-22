@@ -59,14 +59,6 @@ const FEATURES = [
   { icon: Sparkles, title: "আয় করুন", desc: "অ্যাপ ব্যবহার করে ব্যালেন্স অর্জন ও উইথড্র করুন" },
 ];
 
-const TERMS = [
-  "আমাদের অ্যাপে কাজ করতে হলে অবশ্যই একজন নির্দিষ্ট অ্যাডমিনের মাধ্যমে কাজ শিখে তারপর কাজ করতে হবে। কোনো অ্যাডমিন না পেলে আমাদের টেলিগ্রাম গ্রুপে জয়েন করে অ্যাডমিনকে মেসেজ দিতে পারবেন। সেখানে অনেক অ্যাডমিন আছেন যারা আপনাকে সাহায্য করবে।",
-  "সকল ব্যবহারকারীকে অ্যাপের নিয়ম-কানুন মানতে হবে। অ্যাপ কর্তৃপক্ষের সব সিদ্ধান্ত মানতে হবে।",
-  "একটি ডিভাইসে একাধিক অ্যাকাউন্ট তৈরি করা যায়, তবে নিয়ম লঙ্ঘন করলে অ্যাডমিন অ্যাকাউন্ট ব্লক করতে পারেন।",
-  "কোনো প্রকার প্রতারণা, হ্যাকিং, বা অসৎ উপায়ে ব্যালেন্স অর্জনের চেষ্টা করলে অ্যাকাউন্ট স্থায়ীভাবে বন্ধ করা হবে।",
-  "অ্যাপ কর্তৃপক্ষ যেকোনো সময় নিয়ম পরিবর্তন করার অধিকার রাখে।",
-];
-
 export default function Login() {
   const [tab, setTab] = useState<"login" | "register">("login");
   // Login states
@@ -78,8 +70,6 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
-  const [agreedTerms, setAgreedTerms] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -195,10 +185,6 @@ export default function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!agreedTerms) {
-      toast({ title: "শর্তাবলী", description: "রেজিস্ট্রেশন করতে শর্তাবলীতে সম্মতি দিন", variant: "destructive" });
-      return;
-    }
     const normalizedPhone = normalizePhone(regPhone.trim());
     if (!normalizedPhone) {
       toast({ title: "রেজিস্ট্রেশন ব্যর্থ", description: "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)", variant: "destructive" });
@@ -436,25 +422,8 @@ export default function Login() {
                         placeholder="কমপক্ষে ৬ অক্ষর..." className="input-field text-base py-3" />
                     </div>
 
-                    {/* Terms checkbox */}
-                    <div className="flex items-start gap-2.5 pt-1">
-                      <button type="button" onClick={() => setAgreedTerms(!agreedTerms)}
-                        className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                          agreedTerms ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40 hover:border-primary/60"
-                        }`}>
-                        {agreedTerms && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      </button>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        আমি{" "}
-                        <button type="button" onClick={() => setShowTerms(true)} className="text-primary font-bold underline underline-offset-2">
-                          শর্তাবলী ও নীতিমালা
-                        </button>{" "}
-                        পড়েছি এবং সম্মতি দিচ্ছি
-                      </p>
-                    </div>
-
                     <motion.button type="submit"
-                      disabled={isSubmitting || !displayName.trim() || !regPhone || regPassword.length < 6 || !agreedTerms}
+                      disabled={isSubmitting || !displayName.trim() || !regPhone || regPassword.length < 6}
                       className="register-btn-rose py-4 text-lg w-full rounded-2xl" whileTap={{ scale: 0.95 }}
                       whileHover={{ scale: 1.02, y: -2 }}>
                       {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
@@ -546,60 +515,11 @@ export default function Login() {
           </AnimatePresence>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mt-3 mb-8">
-          <motion.button whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} onClick={() => setShowTerms(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border border-[hsl(var(--amber))]/20 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(var(--amber) / 0.08), hsl(var(--orange) / 0.06))" }}>
-            <span className="text-sm font-black bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] bg-clip-text text-transparent relative z-10">📜 শর্তাবলী ও নীতিমালা</span>
-            <ArrowRight className="w-4 h-4 text-[hsl(var(--amber))]" />
-          </motion.button>
-        </motion.div>
-
-        <div className="text-center pb-6 mt-auto">
+        <div className="text-center pb-6 mt-8">
           <p className="text-[10px] text-muted-foreground/50">© {new Date().getFullYear()} Good App. সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
 
-      {/* Terms Modal */}
-      <AnimatePresence>
-        {showTerms && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
-            onClick={() => setShowTerms(false)}>
-            <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }} onClick={(e) => e.stopPropagation()}
-              className="bg-background rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto border border-border/50">
-              <div className="sticky top-0 bg-background/95 backdrop-blur-md p-5 border-b border-border/30">
-                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-3 sm:hidden" />
-                <h3 className="text-lg font-bold text-foreground text-center">📜 শর্তাবলী ও নীতিমালা</h3>
-              </div>
-              <div className="p-5 space-y-4">
-                {TERMS.map((term, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex gap-3">
-                    <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-[10px] font-bold text-primary">{i + 1}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{term}</p>
-                  </motion.div>
-                ))}
-                <div className="mt-4 p-3 rounded-2xl bg-[hsl(200,80%,50%)]/10 border border-[hsl(200,80%,50%)]/20">
-                  <p className="text-sm text-foreground font-bold mb-2">👥 টেলিগ্রাম গ্রুপে জয়েন করুন:</p>
-                  <a href="https://t.me/goodappbuy" target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-[hsl(200,80%,50%)] font-bold underline flex items-center gap-1">
-                    t.me/goodappbuy <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-              <div className="sticky bottom-0 p-4 bg-background/95 backdrop-blur-md border-t border-border/30">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowTerms(false)}
-                  className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-2xl">
-                  বুঝেছি, বন্ধ করুন
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
