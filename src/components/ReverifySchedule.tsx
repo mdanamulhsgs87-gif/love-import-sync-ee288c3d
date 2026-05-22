@@ -1,14 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Sparkles, ShieldCheck, Lock, Unlock, X, Wallet as WalletIcon } from "lucide-react";
+import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getPublicSettings } from "@/lib/api";
-import { formatCountdown } from "@/lib/countdown";
-
-const WAIT_HOURS = 96; // 4 দিন
-const WAIT_MS = WAIT_HOURS * 60 * 60 * 1000;
 
 type QueueItem = {
   id: string;
@@ -20,14 +16,8 @@ type QueueItem = {
 
 export function ReverifySchedule() {
   const { user } = useAuth();
-  const [now, setNow] = useState(Date.now());
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; wallet: string } | null>(null);
   const [showAll, setShowAll] = useState(false);
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const { data: queue = [] } = useQuery<QueueItem[]>({
     queryKey: ["reverify-schedule", user?.id],
@@ -53,18 +43,15 @@ export function ReverifySchedule() {
 
   const rows = useMemo(() => {
     return queue
-      .map((q) => {
-        const unlockAt = new Date(q.created_at).getTime() + WAIT_MS;
-        const remainingMs = unlockAt - now;
-        const ready = remainingMs <= 0;
-        const progress = ready ? 100 : Math.max(0, Math.min(100, ((WAIT_MS - remainingMs) / WAIT_MS) * 100));
-        return { ...q, remainingMs, ready, progress };
-      })
-      .sort((a, b) => a.remainingMs - b.remainingMs); // সবার আগে যেটার সময় কম
-  }, [queue, now]);
+      .map((q) => ({ ...q, ready: true, progress: 100 }))
+      .sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+  }, [queue]);
 
   const readyCount = rows.filter((r) => r.ready).length;
-  const growingCount = rows.length - readyCount;
+  const growingCount = 0;
 
   if (rows.length === 0) return null;
 
@@ -98,11 +85,7 @@ export function ReverifySchedule() {
               transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
               className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--cyan))] to-[hsl(var(--emerald))] flex items-center justify-center shadow-lg shadow-[hsl(var(--cyan))]/30"
             >
-              {readyCount > 0 ? (
-                <Unlock className="w-5 h-5 text-primary-foreground" />
-              ) : (
-                <Clock className="w-5 h-5 text-primary-foreground" />
-              )}
+              <Unlock className="w-5 h-5 text-primary-foreground" />
             </motion.div>
             <div className="flex-1 min-w-0">
               <h2 className="text-sm font-black text-[hsl(var(--cyan))] flex items-center gap-1.5">
@@ -118,7 +101,7 @@ export function ReverifySchedule() {
                 )}
               </h2>
               <p className="text-[10px] text-muted-foreground">
-                ৪ দিন পর প্রতিটি Account Re-verify দিতে হবে · ৳{rewardRate}/Account
+                GoodDollar Re-verify চাইছে — এখনই Re-verify করুন · ৳{rewardRate}/Account
               </p>
             </div>
           </div>
@@ -215,16 +198,9 @@ export function ReverifySchedule() {
                     <span className="text-[11px] font-mono font-bold text-foreground/80 truncate">
                       {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
                     </span>
-                    {r.ready ? (
-                      <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" /> READY
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-black text-[hsl(var(--amber))] flex items-center gap-1 tabular-nums">
-                        <Lock className="w-3 h-3" />
-                        {formatCountdown(r.remainingMs)}
-                      </span>
-                    )}
+                    <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> READY
+                    </span>
                   </div>
                   {/* Progress bar */}
                   <div className="mt-1.5 h-1.5 rounded-full bg-muted/50 overflow-hidden">
@@ -232,16 +208,12 @@ export function ReverifySchedule() {
                       initial={false}
                       animate={{ width: `${r.progress}%` }}
                       transition={{ duration: 0.5 }}
-                      className={`h-full rounded-full ${
-                        r.ready
-                          ? "bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
-                          : "bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
-                      }`}
+                      className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
                     />
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-[9px] text-muted-foreground">
-                      {r.ready ? "🎉 এখনই Re-verify করুন" : "👆 ছবি দেখতে ক্লিক করুন"}
+                      🎉 এখনই Re-verify করুন
                     </span>
                     <span className="text-[9px] font-bold text-[hsl(var(--emerald))]">
                       +৳{rewardRate}
@@ -264,7 +236,7 @@ export function ReverifySchedule() {
           )}
 
           <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
-            💡 যেটার সময় সবচেয়ে কম সেটা সবার উপরে। ছবি দেখে পরিচিত মানুষ চিনে রাখুন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
+            💡 এই Account গুলোর জন্য GoodDollar Re-verify চাইছে। ছবি দেখে চিনে নিন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
           </p>
         </div>
       </motion.div>
