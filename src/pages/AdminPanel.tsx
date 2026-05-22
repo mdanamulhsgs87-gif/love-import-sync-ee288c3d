@@ -1685,6 +1685,161 @@ export default function AdminPanel() {
 
 
         {activeCategory === "pool" && (<>
+        </>)}
+
+        {activeCategory === "promo" && (<>
+        <div className="pt-4">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Gift className="w-4 h-4" /> প্রোমো কোড সিস্টেম
+          </h2>
+        </div>
+
+        <div className="glass-card p-5 rounded-2xl border-2 border-[hsl(var(--rose))]/30">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-[hsl(var(--rose))]/20">
+              <Zap className="w-5 h-5 text-[hsl(var(--rose))]" />
+            </div>
+            <div>
+              <h3 className="font-bold">Bonus Rates (% of Reward Rate)</h3>
+              <p className="text-[10px] text-muted-foreground">User je rate paabe + promo owner (YouTuber) je commission paabe</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">User Bonus % (per account)</label>
+              <input type="number" step="0.1" value={promoUserPctSetting} onChange={(e) => setPromoUserPctSetting(e.target.value)} className="input-field text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Promo Owner Commission %</label>
+              <input type="number" step="0.1" value={promoOwnerPctSetting} onChange={(e) => setPromoOwnerPctSetting(e.target.value)} className="input-field text-sm" />
+            </div>
+            <div className="col-span-2">
+              <button
+                type="button"
+                disabled={promoPctSaving}
+                onClick={async () => {
+                  setPromoPctSaving(true);
+                  try {
+                    await updateSetting("promoUserBonusPct", String(parseFloat(promoUserPctSetting) || 5));
+                    await updateSetting("promoOwnerCommissionPct", String(parseFloat(promoOwnerPctSetting) || 5));
+                    queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+                    queryClient.invalidateQueries({ queryKey: ["public-settings"] });
+                    toast({ title: "Promo bonus rate সেভ হয়েছে" });
+                  } catch (err: any) {
+                    toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
+                  } finally {
+                    setPromoPctSaving(false);
+                  }
+                }}
+                className="btn-primary w-full text-sm py-2.5 bg-[hsl(var(--rose))]"
+              >
+                {promoPctSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "সেভ"}
+              </button>
+            </div>
+            <div className="col-span-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 leading-relaxed">
+              💡 Reward Rate = ৳{settingsData?.rewardRate ?? 40}/account. Per account user paabe ৳{Math.floor(((settingsData?.rewardRate ?? 40) * (parseFloat(promoUserPctSetting) || 0)) / 100)} bonus, promo owner paabe ${(((settingsData?.rewardRate ?? 40) * (parseFloat(promoOwnerPctSetting) || 0)) / 100 / (settingsData?.usdtToBdtRate ?? 124)).toFixed(4)} USDT commission.
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-5 rounded-2xl border-2 border-[hsl(var(--emerald))]/30 mt-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-[hsl(var(--emerald))]/20">
+              <Gift className="w-5 h-5 text-[hsl(var(--emerald))]" />
+            </div>
+            <div>
+              <h3 className="font-bold">নতুন Promo Code create করুন</h3>
+              <p className="text-[10px] text-muted-foreground">YouTuber / Telegram admin er jonno alada code</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Code (uppercase)</label>
+              <input type="text" value={promoNewCode} onChange={(e) => setPromoNewCode(e.target.value.toUpperCase())} placeholder="RAKIB50" maxLength={20} className="input-field text-sm font-mono uppercase tracking-widest" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Owner UID / Phone (guest_id)</label>
+              <input type="text" value={promoNewOwnerGuest} onChange={(e) => setPromoNewOwnerGuest(e.target.value)} placeholder="01XXXXXXXXX" className="input-field text-sm" />
+            </div>
+            <button
+              type="button"
+              disabled={promoCreating}
+              onClick={async () => {
+                setPromoCreating(true);
+                try {
+                  await createPromoCode(promoNewCode, promoNewOwnerGuest);
+                  setPromoNewCode("");
+                  setPromoNewOwnerGuest("");
+                  await refetchPromoCodes();
+                  toast({ title: "Promo code তৈরি হয়েছে" });
+                } catch (err: any) {
+                  toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
+                } finally {
+                  setPromoCreating(false);
+                }
+              }}
+              className="btn-primary w-full text-sm py-2.5 bg-[hsl(var(--emerald))]"
+            >
+              {promoCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Promo Code"}
+            </button>
+          </div>
+        </div>
+
+        <Section icon={Gift} title="All Promo Codes" count={promoCodes?.length || 0} color="rose" defaultOpen>
+          <div className="mt-4 space-y-3">
+            {(promoCodes || []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">এখনো কোনো promo code নেই</p>
+            ) : (
+              promoCodes!.map((pc) => (
+                <div key={pc.id} className="bg-secondary/50 border border-border rounded-xl p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-mono font-bold text-lg tracking-widest text-[hsl(var(--rose))]">{pc.code}</div>
+                      <div className="text-xs text-muted-foreground">Owner: <b>{pc.owner_display_name || "—"}</b> ({pc.owner_guest_id || "—"})</div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${pc.is_active ? "bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))]" : "bg-destructive/20 text-destructive"}`}>
+                      {pc.is_active ? "ACTIVE" : "INACTIVE"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-background/50 rounded-lg p-2">
+                      <div className="text-muted-foreground">Total Uses</div>
+                      <div className="font-bold">{pc.total_uses}</div>
+                    </div>
+                    <div className="bg-background/50 rounded-lg p-2">
+                      <div className="text-muted-foreground">Earned (USDT)</div>
+                      <div className="font-bold">${Number(pc.total_earned_usdt || 0).toFixed(4)}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try { await togglePromoCode(pc.id, !pc.is_active); await refetchPromoCodes(); }
+                        catch (err: any) { toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" }); }
+                      }}
+                      className="flex-1 text-xs py-2 rounded-lg border border-border hover:bg-secondary transition-colors font-bold"
+                    >
+                      {pc.is_active ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Delete code ${pc.code}?`)) return;
+                        try { await deletePromoCode(pc.id); await refetchPromoCodes(); toast({ title: "Delete হয়েছে" }); }
+                        catch (err: any) { toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" }); }
+                      }}
+                      className="px-3 text-xs py-2 rounded-lg bg-destructive/20 text-destructive hover:bg-destructive/30 transition-colors font-bold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Section>
+        </>)}
+
+        {activeCategory === "pool" && (<>
         {/* ═══════════════════════════════════════ */}
         {/* 🔑 SECTION 5: পুল ও ইউজার */}
         {/* ═══════════════════════════════════════ */}
