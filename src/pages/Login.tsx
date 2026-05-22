@@ -422,25 +422,8 @@ export default function Login() {
                         placeholder="কমপক্ষে ৬ অক্ষর..." className="input-field text-base py-3" />
                     </div>
 
-                    {/* Terms checkbox */}
-                    <div className="flex items-start gap-2.5 pt-1">
-                      <button type="button" onClick={() => setAgreedTerms(!agreedTerms)}
-                        className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                          agreedTerms ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40 hover:border-primary/60"
-                        }`}>
-                        {agreedTerms && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      </button>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        আমি{" "}
-                        <button type="button" onClick={() => setShowTerms(true)} className="text-primary font-bold underline underline-offset-2">
-                          শর্তাবলী ও নীতিমালা
-                        </button>{" "}
-                        পড়েছি এবং সম্মতি দিচ্ছি
-                      </p>
-                    </div>
-
                     <motion.button type="submit"
-                      disabled={isSubmitting || !displayName.trim() || !regPhone || regPassword.length < 6 || !agreedTerms}
+                      disabled={isSubmitting || !displayName.trim() || !regPhone || regPassword.length < 6}
                       className="register-btn-rose py-4 text-lg w-full rounded-2xl" whileTap={{ scale: 0.95 }}
                       whileHover={{ scale: 1.02, y: -2 }}>
                       {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
