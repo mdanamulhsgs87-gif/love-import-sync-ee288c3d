@@ -229,15 +229,6 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    if ((user as any).request_password) {
-      setShowRequestPasswordSetup(false);
-      return;
-    }
-    setShowRequestPasswordSetup(true);
-  }, [user]);
-
-  useEffect(() => {
     if (user?.key_count != null) {
       if (prevKeyCount !== null && user.key_count > prevKeyCount) {
         setShowCelebration(true);
@@ -322,33 +313,6 @@ export default function Dashboard() {
       setCopied(true);
       toast({ title: "আইডি কপি হয়েছে" });
       setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleSaveRequestPassword = async () => {
-    if (!user) return;
-    const nextPassword = requestPasswordDraft.trim();
-    if (nextPassword.length < 4) {
-      toast({ title: "পাসওয়ার্ড ছোট", description: "কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড দিন", variant: "destructive" });
-      return;
-    }
-    if (nextPassword !== requestPasswordConfirm.trim()) {
-      toast({ title: "পাসওয়ার্ড মিলেনি", description: "দুইবার একই পাসওয়ার্ড লিখুন", variant: "destructive" });
-      return;
-    }
-    setRequestPasswordSaving(true);
-    try {
-      await supabase.from("users").update({ request_password: nextPassword } as any).eq("id", user.id);
-      setUserRequestPassword(nextPassword);
-      setRequestPasswordDraft("");
-      setRequestPasswordConfirm("");
-      await refreshUser();
-      setShowRequestPasswordSetup(false);
-      toast({ title: "✅ পাসওয়ার্ড সেভ হয়েছে" });
-    } catch (err: any) {
-      toast({ title: "সেভ ব্যর্থ", description: err.message || "আবার চেষ্টা করুন", variant: "destructive" });
-    } finally {
-      setRequestPasswordSaving(false);
     }
   };
 
