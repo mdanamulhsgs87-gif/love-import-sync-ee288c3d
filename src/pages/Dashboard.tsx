@@ -545,15 +545,17 @@ export default function Dashboard() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="relative flex h-12 w-12 items-center justify-center rounded-2xl text-white transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/30 active:scale-95"
-                style={{ background: "linear-gradient(135deg, hsl(152 56% 32%), hsl(187 72% 42%), hsl(217 91% 55%))" }}
+                className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white transition-all duration-300 hover:scale-110 active:scale-95"
+                style={{
+                  background: "linear-gradient(140deg, hsl(152 60% 35%) 0%, hsl(187 72% 45%) 50%, hsl(217 91% 58%) 100%)",
+                  boxShadow: "0 8px 24px -6px hsl(187 72% 45% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.25)",
+                }}
               >
-                {/* Animated glow ring */}
-                <span className="absolute inset-0 rounded-2xl animate-ping opacity-20 bg-white" />
-                <span className="absolute -inset-1 rounded-[20px] opacity-40 blur-md" style={{ background: "linear-gradient(135deg, hsl(152 56% 40%), hsl(187 72% 50%))" }} />
-                <MoreVertical className="h-6 w-6 relative z-10 drop-shadow-md" />
+                <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(140deg, hsl(217 91% 58%), hsl(270 70% 60%))" }} />
+                <span className="absolute inset-[2px] rounded-full ring-1 ring-white/20" />
+                <MoreVertical className="h-5 w-5 relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-lg shadow-red-500/40 animate-bounce z-20">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-gradient-to-br from-rose-500 to-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 ring-2 ring-background shadow-lg shadow-red-500/40 z-20">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -561,8 +563,12 @@ export default function Dashboard() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              sideOffset={10}
-              className="w-80 rounded-[28px] border border-white/10 bg-[hsl(220_30%_10%)]/95 p-3 backdrop-blur-2xl shadow-2xl shadow-black/40 overflow-hidden"
+              sideOffset={12}
+              className="w-[300px] rounded-3xl border border-white/10 p-2.5 shadow-2xl shadow-black/60 overflow-hidden relative"
+              style={{
+                background: "linear-gradient(165deg, hsl(222 35% 12%) 0%, hsl(228 40% 9%) 100%)",
+                backdropFilter: "blur(24px)",
+              }}
             >
               {/* Header gradient strip */}
               <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: "linear-gradient(90deg, hsl(152 56% 45%), hsl(187 72% 55%), hsl(217 91% 60%), hsl(270 70% 60%))" }} />
