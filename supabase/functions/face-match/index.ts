@@ -260,7 +260,7 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-pro",
+          model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content }],
         }),
       }
