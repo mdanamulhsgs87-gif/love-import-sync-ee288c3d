@@ -515,60 +515,11 @@ export default function Login() {
           </AnimatePresence>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mt-3 mb-8">
-          <motion.button whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} onClick={() => setShowTerms(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border border-[hsl(var(--amber))]/20 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(var(--amber) / 0.08), hsl(var(--orange) / 0.06))" }}>
-            <span className="text-sm font-black bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] bg-clip-text text-transparent relative z-10">📜 শর্তাবলী ও নীতিমালা</span>
-            <ArrowRight className="w-4 h-4 text-[hsl(var(--amber))]" />
-          </motion.button>
-        </motion.div>
-
-        <div className="text-center pb-6 mt-auto">
+        <div className="text-center pb-6 mt-8">
           <p className="text-[10px] text-muted-foreground/50">© {new Date().getFullYear()} Good App. সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
 
-      {/* Terms Modal */}
-      <AnimatePresence>
-        {showTerms && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
-            onClick={() => setShowTerms(false)}>
-            <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }} onClick={(e) => e.stopPropagation()}
-              className="bg-background rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto border border-border/50">
-              <div className="sticky top-0 bg-background/95 backdrop-blur-md p-5 border-b border-border/30">
-                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-3 sm:hidden" />
-                <h3 className="text-lg font-bold text-foreground text-center">📜 শর্তাবলী ও নীতিমালা</h3>
-              </div>
-              <div className="p-5 space-y-4">
-                {TERMS.map((term, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex gap-3">
-                    <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-[10px] font-bold text-primary">{i + 1}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{term}</p>
-                  </motion.div>
-                ))}
-                <div className="mt-4 p-3 rounded-2xl bg-[hsl(200,80%,50%)]/10 border border-[hsl(200,80%,50%)]/20">
-                  <p className="text-sm text-foreground font-bold mb-2">👥 টেলিগ্রাম গ্রুপে জয়েন করুন:</p>
-                  <a href="https://t.me/goodappbuy" target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-[hsl(200,80%,50%)] font-bold underline flex items-center gap-1">
-                    t.me/goodappbuy <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-              <div className="sticky bottom-0 p-4 bg-background/95 backdrop-blur-md border-t border-border/30">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowTerms(false)}
-                  className="w-full py-3 bg-primary text-primary-foreground font-bold rounded-2xl">
-                  বুঝেছি, বন্ধ করুন
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
