@@ -265,18 +265,20 @@ export function ReferralCard() {
         {/* Referral history */}
         {history && history.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border/60">
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.97 }}
               onClick={() => setShowHistory((v) => !v)}
-              className="w-full flex items-center justify-between mb-2"
+              className="w-full mb-3 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--purple))] text-white font-black flex items-center justify-between shadow-lg shadow-[hsl(var(--emerald))]/40 border border-white/20"
             >
-              <p className="text-[11px] font-black uppercase tracking-wider text-[hsl(var(--emerald))]">
-                📋 Refer History ({history.length})
-              </p>
-              <span className="text-[10px] font-bold text-muted-foreground">
+              <span className="flex items-center gap-2 text-sm">
+                📋 Refer History
+                <span className="px-2 py-0.5 rounded-full bg-white/25 text-[11px] font-black">{history.length}</span>
+              </span>
+              <span className="text-xs font-black bg-white/20 px-2.5 py-1 rounded-lg">
                 {showHistory ? "▲ লুকান" : "▼ দেখুন"}
               </span>
-            </button>
+            </motion.button>
             {showHistory && (
               <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                 {history.map((h) => (

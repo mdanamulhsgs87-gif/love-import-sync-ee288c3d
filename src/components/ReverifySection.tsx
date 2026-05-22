@@ -265,7 +265,8 @@ export function ReverifySection() {
             📌 Re-verify করলেই ১টি অ্যাকাউন্ট Complete হয় এবং টাকা/USDT যোগ হয়
           </p>
           <p className="text-[10px] text-muted-foreground leading-relaxed text-center">
-            ১ম ভেরিফাই শুধু গণনা হয় — টাকা যোগ হয় না। ৩-৪ দিন পর ফেস স্ক্যান করে Re-verify করুন, তখনই Account Complete হবে এবং Balance যোগ হবে।
+            ✨ প্রতিবার Re-verify করলেই আপনার Balance বাড়বে — যত বেশি Re-verify, তত বেশি ইনকাম! 💰<br/>
+            ⏰ ৩-৪ দিন পর পর ফেস স্ক্যান করে Re-verify করুন, সাথে সাথে টাকা/USDT ওয়ালেটে যোগ হবে।
           </p>
         </div>
 
