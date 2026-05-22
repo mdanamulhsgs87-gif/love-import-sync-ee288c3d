@@ -10,14 +10,15 @@ import { Trophy, Lock, Check, Sparkles, Loader2 } from "lucide-react";
 type Tier = { key: string; need: number; bonusUsdt: number; emoji: string; label: string };
 
 const TIERS: Tier[] = [
-  { key: "t2",   need: 2,   bonusUsdt: 0.05, emoji: "🎯", label: "Starter" },
-  { key: "t5",   need: 5,   bonusUsdt: 0.15, emoji: "🔥", label: "Hot" },
-  { key: "t10",  need: 10,  bonusUsdt: 0.30, emoji: "⚡", label: "Power" },
-  { key: "t20",  need: 20,  bonusUsdt: 0.60, emoji: "💎", label: "Pro" },
-  { key: "t50",  need: 50,  bonusUsdt: 1.50, emoji: "🏆", label: "Master" },
-  { key: "t100", need: 100, bonusUsdt: 3.00, emoji: "👑", label: "King" },
-  { key: "t250", need: 250, bonusUsdt: 8.00, emoji: "🌟", label: "Legend" },
-  { key: "t500", need: 500, bonusUsdt: 18.0, emoji: "🚀", label: "Elite" },
+  // USDT amounts mapped from original BDT plan (rate ~124 BDT/USDT)
+  { key: "t2",   need: 2,   bonusUsdt: 0.02, emoji: "🎯", label: "Starter" },  // ~2৳
+  { key: "t5",   need: 5,   bonusUsdt: 0.06, emoji: "🔥", label: "Hot" },      // ~7৳
+  { key: "t10",  need: 10,  bonusUsdt: 0.12, emoji: "⚡", label: "Power" },    // ~15৳
+  { key: "t20",  need: 20,  bonusUsdt: 0.24, emoji: "💎", label: "Pro" },      // ~30৳
+  { key: "t50",  need: 50,  bonusUsdt: 0.65, emoji: "🏆", label: "Master" },   // ~80৳
+  { key: "t100", need: 100, bonusUsdt: 1.60, emoji: "👑", label: "King" },     // ~200৳
+  { key: "t250", need: 250, bonusUsdt: 4.00, emoji: "🌟", label: "Legend" },   // ~500৳
+  { key: "t500", need: 500, bonusUsdt: 8.00, emoji: "🚀", label: "Elite" },    // ~1000৳
 ];
 
 function UsdtIcon({ size = 14 }: { size?: number }) {
