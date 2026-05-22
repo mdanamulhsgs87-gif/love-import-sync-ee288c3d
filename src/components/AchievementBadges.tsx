@@ -107,11 +107,11 @@ export function AchievementBadges() {
                 onClick={() => isReady && handleClaim(t)}
                 disabled={!isReady || !!claimingKey}
                 title={`${t.need} Re-verify → ${t.bonusUsdt} USDT`}
-                className={`relative aspect-square rounded-xl border flex flex-col items-center justify-center p-1.5 text-center overflow-hidden ${
+                className={`relative rounded-xl border flex flex-col items-center justify-center p-1.5 pb-2 text-center overflow-hidden ${
                   isClaimed
                     ? "border-[hsl(var(--emerald))]/50 bg-[hsl(var(--emerald))]/15"
                     : isReady
-                    ? "border-[hsl(var(--amber))]/60 bg-gradient-to-br from-[hsl(var(--amber))]/25 to-[hsl(var(--orange))]/15 shadow-lg shadow-[hsl(var(--amber))]/20 cursor-pointer"
+                    ? "border-[hsl(var(--amber))]/70 bg-gradient-to-br from-[hsl(var(--amber))]/30 to-[hsl(var(--orange))]/20 shadow-lg shadow-[hsl(var(--amber))]/30 cursor-pointer"
                     : "border-white/5 bg-background/30 opacity-70"
                 }`}
               >
@@ -130,16 +130,26 @@ export function AchievementBadges() {
                   {t.bonusUsdt} USDT
                 </div>
                 {isClaimed ? (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--emerald))] border border-background flex items-center justify-center text-[8px] font-black text-white">
-                    ✓
+                  <div className="mt-1.5 w-full rounded-md bg-[hsl(var(--emerald))] text-white text-[10px] font-black py-1 flex items-center justify-center gap-1 shadow-sm">
+                    <Check className="w-3 h-3" /> Claimed
                   </div>
                 ) : isReady ? (
-                  <div className="absolute -top-1 -right-1 px-1 h-4 rounded-full bg-[hsl(var(--amber))] border border-background flex items-center justify-center text-[7px] font-black text-white animate-pulse">
-                    {claimingKey === t.key ? "…" : "Claim"}
-                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.06, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    className="relative mt-1.5 w-full rounded-md bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-white text-[10px] font-black py-1 flex items-center justify-center gap-1 shadow-md shadow-[hsl(var(--amber))]/40 overflow-hidden"
+                  >
+                    {claimingKey === t.key ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3" /> CLAIM
+                      </>
+                    )}
+                  </motion.div>
                 ) : (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-white/10 flex items-center justify-center">
-                    <Lock className="w-2 h-2 text-muted-foreground" />
+                  <div className="mt-1.5 w-full rounded-md bg-background/60 border border-white/10 text-muted-foreground text-[10px] font-bold py-1 flex items-center justify-center gap-1">
+                    <Lock className="w-3 h-3" /> Locked
                   </div>
                 )}
               </motion.button>
