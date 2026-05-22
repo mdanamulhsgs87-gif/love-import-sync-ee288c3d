@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, ChevronRight, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, ChevronRight, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -20,14 +20,6 @@ import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 import { getUnreadCount } from "@/lib/chat-api";
 import { calculateSharedBalance } from "@/lib/balance";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
-const DASHBOARD_TERMS = [
-  "অ্যাপে কাজ করতে হলে নির্দিষ্ট অ্যাডমিনের মাধ্যমে কাজ শিখে নিতে হবে।",
-  "সব ব্যবহারকারীকে অ্যাপের নিয়ম-কানুন ও কর্তৃপক্ষের সিদ্ধান্ত মানতে হবে।",
-  "একটি ডিভাইসে একাধিক অ্যাকাউন্ট থাকলে নিয়ম ভাঙার ক্ষেত্রে অ্যাডমিন ব্যবস্থা নিতে পারেন।",
-  "প্রতারণা, হ্যাকিং, বা অসৎভাবে ব্যালেন্স নেওয়ার চেষ্টা করলে অ্যাকাউন্ট বন্ধ হতে পারে।",
-  "অ্যাপ কর্তৃপক্ষ প্রয়োজনে নিয়ম পরিবর্তন করতে পারে।",
-];
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
