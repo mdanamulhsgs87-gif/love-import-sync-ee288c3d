@@ -892,21 +892,6 @@ export default function Dashboard() {
                             {isMax ? "🏆 MAX" : "⚡ LIVE"}
                           </span>
                         </div>
-                      </<parameter name="new_content">                    <div className="relative z-10 p-5">
-                      {/* Header row */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/40">
-                          <span className="text-2xl">🎁</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-foreground">বোনাস সিস্টেম চালু আছে! 🔥</p>
-                          <p className="text-[11px] text-muted-foreground font-bold">রি-ভেরিফাই করতে থাকুন — বোনাস বাড়তে থাকবে</p>
-                        </div>
-                        <div className="ml-auto">
-                          <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${isMax ? "bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-white shadow-lg" : "bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))]"}`}>
-                            {isMax ? "🏆 MAX" : "⚡ LIVE"}
-                          </span>
-                        </div>
                       </div>
 
                       {/* Rules */}
