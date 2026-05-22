@@ -258,7 +258,7 @@ export function ReverifySchedule() {
                   <span className="text-sm font-black text-[hsl(var(--blue))]">১</span>
                 </div>
                 <p className="text-sm text-foreground/90 leading-relaxed pt-0.5">
-                  <b className="text-foreground">প্রথম Verify</b> করলে আপনার <b className="text-[hsl(var(--amber))]">৳{rewardRate}</b> <b className="text-[hsl(var(--amber))]">Pending</b> এ জমা থাকবে — চিন্তার কিছু নেই, টাকা নিরাপদে আছে ✨
+                  <b className="text-foreground">প্রথম Verify</b> করলেই আপনার <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> টাকা <b className="text-[hsl(var(--amber))]">Locked Vault</b> এ সুরক্ষিত হয়ে যাবে 🔒 — টাকা আপনারই, শুধু Re-verify এর অপেক্ষায় 💎
                 </p>
               </div>
 
@@ -282,7 +282,7 @@ export function ReverifySchedule() {
 
               <div className="flex gap-3 items-start">
                 <div className="w-7 h-7 rounded-lg bg-[hsl(var(--rose))]/25 flex items-center justify-center shrink-0 border border-[hsl(var(--rose))]/40">
-                  <span className="text-sm font-black text-[hsl(var(--rose))]">৪</span>
+                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৪</span>
                 </div>
                 <p className="text-sm text-foreground/90 leading-relaxed pt-1">
                   Re-verify <b className="text-[hsl(var(--emerald))]">Success</b> হলেই Pending থেকে <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> বা USDT সরাসরি আপনার Main Balance এ যোগ হয়ে যাবে 🎉
