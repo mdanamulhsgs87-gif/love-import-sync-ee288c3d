@@ -46,16 +46,6 @@ export function SpinWheel() {
 
   const segAngle = 360 / SEGMENTS.length;
 
-  const wheelGradient = useMemo(() => {
-    let acc = 0;
-    const stops = SEGMENTS.map((s) => {
-      const start = acc;
-      acc += segAngle;
-      return `${s.color} ${start}deg ${acc}deg`;
-    }).join(", ");
-    return `conic-gradient(${stops})`;
-  }, [segAngle]);
-
   const handleSpin = async () => {
     if (!user || spinning || available <= 0) return;
     setSpinning(true);
