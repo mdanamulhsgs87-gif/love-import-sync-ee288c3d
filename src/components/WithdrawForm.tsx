@@ -80,6 +80,9 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
   const completedAccounts = sharedBalance.completedAccounts;
   const availableCount = sharedBalance.spendableAccounts;
   const referralEarnings = sharedBalance.referralUsdt;
+  const bonusGroups = sharedBalance.bonusGroups;
+  const bonusBdt = sharedBalance.bonusBdt;
+  const accountsToNextBonus = sharedBalance.accountsToNextBonus;
   const accountsUsdt = +(availableCount * usdtRate).toFixed(4);
   const usdtBalance = sharedBalance.availableUsdt;
   const computedBdtBalance = sharedBalance.availableBdt;
@@ -217,6 +220,37 @@ export function WithdrawForm({ balance, onSystemChange }: { balance: number; onS
           </button>
         </div>
       )}
+
+      {/* Bonus banner — visible regardless of system */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/15 to-[hsl(var(--orange))]/8 p-3"
+      >
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">🎁</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-black text-[hsl(var(--amber))]">
+              ১০-Account Bonus সিস্টেম
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+              প্রতি ১০টি Re-verify পূর্ণ হলে — প্রতিটি account এ +১০৳ extra (= +১০০৳)। BDT/USDT দুটোতেই auto যোগ হবে।
+            </p>
+          </div>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-[hsl(var(--emerald))]/10 border border-[hsl(var(--emerald))]/30 px-2 py-1.5 text-center">
+            <p className="text-[9px] text-muted-foreground font-bold">আজ পর্যন্ত Bonus</p>
+            <p className="text-sm font-black text-[hsl(var(--emerald))]">+৳{bonusBdt}</p>
+            <p className="text-[8px] text-muted-foreground">{bonusGroups} × ১০ Account</p>
+          </div>
+          <div className="rounded-lg bg-[hsl(var(--cyan))]/10 border border-[hsl(var(--cyan))]/30 px-2 py-1.5 text-center">
+            <p className="text-[9px] text-muted-foreground font-bold">পরবর্তী Bonus এ লাগবে</p>
+            <p className="text-sm font-black text-[hsl(var(--cyan))]">{accountsToNextBonus} Account</p>
+            <p className="text-[8px] text-muted-foreground">আরও +১০০৳</p>
+          </div>
+        </div>
+      </motion.div>
 
       {system === "usdt" ? (
         <>
