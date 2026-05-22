@@ -544,20 +544,17 @@ export default function Dashboard() {
           {/* 3-dot menu with all features */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                animate={{ boxShadow: ["0 0 15px hsl(152 56% 38% / 0.3), 0 0 30px hsl(187 72% 50% / 0.15)", "0 0 25px hsl(152 56% 38% / 0.5), 0 0 50px hsl(187 72% 50% / 0.25)", "0 0 15px hsl(152 56% 38% / 0.3), 0 0 30px hsl(187 72% 50% / 0.15)"] }}
-                transition={{ duration: 2, repeat: Infinity }}
+              <button
                 className="flex h-13 w-13 items-center justify-center rounded-2xl border-2 border-[hsl(var(--cyan))]/50 text-foreground transition-transform hover:scale-[1.08] relative overflow-hidden"
                 style={{ background: "linear-gradient(135deg, hsl(152 56% 30%), hsl(187 72% 40%), hsl(217 91% 50%))" }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[btn-shine_2s_ease-in-out_infinite]" />
                 <MoreVertical className="h-6 w-6 text-white relative z-10 drop-shadow-lg" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-black rounded-full flex items-center justify-center px-1 animate-pulse shadow-lg shadow-destructive/40">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
-              </motion.button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 rounded-2xl border-primary/20 bg-card/98 p-2 backdrop-blur-xl shadow-2xl shadow-primary/10">
               {/* Navigation */}
