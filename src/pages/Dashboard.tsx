@@ -569,10 +569,6 @@ export default function Dashboard() {
                 <Newspaper className="mr-3 h-5 w-5 text-[hsl(var(--amber))]" />
                 <span className="text-[15px] font-black text-foreground">📰 নিউজ ফিড</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/reels")}>
-                <Play className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
-                <span className="text-[15px] font-black text-foreground">🎬 ভিডিও দেখুন</span>
-              </DropdownMenuItem>
               <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--cyan))]/10 relative" onClick={() => navigate("/chat")}>
                 <MessageCircle className="mr-3 h-5 w-5 text-[hsl(var(--cyan))]" />
                 <span className="text-[15px] font-black text-foreground">💬 মেসেজ</span>
