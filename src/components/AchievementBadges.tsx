@@ -121,13 +121,12 @@ export function AchievementBadges() {
                     transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
                   />
                 )}
-                <div className="text-lg leading-none">{t.emoji}</div>
+                <UsdtIcon size={36} />
                 <div className="text-[10px] font-black mt-1 leading-tight text-muted-foreground">
                   {t.need} Re-verify
                 </div>
-                <div className="mt-0.5 flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full bg-[#26A17B]/15 border border-[#26A17B]/40">
-                  <UsdtIcon size={11} />
-                  <span className="text-[10px] font-black text-[#26A17B]">{t.bonusUsdt}</span>
+                <div className="text-[11px] font-black text-[#26A17B] leading-tight">
+                  {t.bonusUsdt} USDT
                 </div>
                 {isClaimed ? (
                   <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--emerald))] border border-background flex items-center justify-center text-[8px] font-black text-white">
