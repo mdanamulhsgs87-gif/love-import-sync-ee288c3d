@@ -1516,14 +1516,16 @@ export default function AdminPanel() {
             {/* Bonus */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">বোনাস</label>
+                <label className="text-xs text-muted-foreground mb-1 block">বোনাস সিস্টেম (১০% / ২০%)</label>
                 <select value={bonusStatus} onChange={(e) => setBonusStatus(e.target.value)} className="input-field text-sm">
                   <option value="on">On</option><option value="off">Off</option>
                 </select>
+                <p className="text-[10px] text-muted-foreground mt-1">On হলে user dashboard এ bonus widget দেখাবে এবং balance এ auto যোগ হবে। Off হলে কিছুই হবে না।</p>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">বোনাস টার্গেট</label>
+                <label className="text-xs text-muted-foreground mb-1 block">টার্গেট (display only)</label>
                 <input type="number" value={bonusTarget} onChange={(e) => setBonusTarget(e.target.value)} className="input-field text-sm" />
+                <p className="text-[10px] text-muted-foreground mt-1">বর্তমান logic: ১০ Acc=১০%, ২০ Acc=২০% (cap)। Withdraw করলে reset।</p>
               </div>
             </div>
 
