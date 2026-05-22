@@ -296,7 +296,7 @@ export function ReferralCard() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-bold truncate">{h.name}</p>
+                      <p className="text-[12px] font-bold leading-snug whitespace-normal break-words">{h.name}</p>
                       <p className="text-[9px] text-muted-foreground">
                         {h.verified_count} Re-verify
                       </p>
