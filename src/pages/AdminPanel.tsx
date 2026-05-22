@@ -1493,6 +1493,22 @@ export default function AdminPanel() {
         </div>
 
         {/* System Settings */}
+        <Section icon={Zap} title="🎁 বোনাস সিস্টেম (১০% / ২০%)" color="amber" defaultOpen>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50">
+              <div>
+                <div className="text-sm font-bold text-amber-900">বোনাস {bonusStatus === "on" ? "চালু আছে ✅" : "বন্ধ আছে ❌"}</div>
+                <div className="text-[11px] text-amber-700 mt-0.5">১০ Account = +১০% · ২০ Account = +২০% (Cap)। Withdraw করলে reset।</div>
+              </div>
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-amber-300">
+                <button onClick={() => { setBonusStatus("on"); rateMutation.mutate({ bonusStatus: "on" }); }} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${bonusStatus === "on" ? "bg-amber-500 text-white shadow" : "text-muted-foreground"}`}>ON</button>
+                <button onClick={() => { setBonusStatus("off"); rateMutation.mutate({ bonusStatus: "off" }); }} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${bonusStatus === "off" ? "bg-destructive text-destructive-foreground shadow" : "text-muted-foreground"}`}>OFF</button>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">On হলে user dashboard এ bonus widget দেখাবে এবং balance এ auto যোগ হবে। Off হলে কিছুই হবে না।</p>
+          </div>
+        </Section>
+
         <Section icon={Settings} title="সিস্টেম সেটিংস" color="primary">
           <div className="mt-4 space-y-5">
             {/* Buy Status */}
