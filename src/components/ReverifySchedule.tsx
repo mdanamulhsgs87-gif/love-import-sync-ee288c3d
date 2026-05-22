@@ -101,7 +101,7 @@ export function ReverifySchedule() {
                 )}
               </h2>
               <p className="text-[10px] text-muted-foreground">
-                GoodDollar Re-verify চাইছে — এখনই Re-verify করুন · ৳{rewardRate}/Account
+                Good-App Re-verify চাইছে — এখনই Re-verify করুন · ৳{rewardRate}/Account
               </p>
             </div>
           </div>
@@ -236,8 +236,21 @@ export function ReverifySchedule() {
           )}
 
           <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
-            💡 এই Account গুলোর জন্য GoodDollar Re-verify চাইছে। ছবি দেখে চিনে নিন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
+            💡 এই Account গুলোর জন্য Good-App Re-verify চাইছে। ছবি দেখে চিনে নিন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
           </p>
+
+          {/* How the system works — helps users understand timing */}
+          <div className="rounded-2xl border border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/10 to-[hsl(var(--orange))]/5 p-3 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-black text-[hsl(var(--amber))]">
+              ⏰ Re-verify সিস্টেম কীভাবে কাজ করে?
+            </div>
+            <ul className="text-[10px] text-foreground/80 leading-relaxed space-y-1 pl-1">
+              <li>✅ <b>১ম verify</b> করলে শুধু গণনা হয় — টাকা/USDT যোগ হয় না।</li>
+              <li>📅 প্রতিটি Account এর <b>৩-৪ দিন পর</b> Good-App আবার Re-verify চাইতে পারে।</li>
+              <li>🔔 যখনই Re-verify চাইবে, ঐ Account টা এখানে স্বয়ংক্রিয়ভাবে <b className="text-[hsl(var(--emerald))]">READY</b> হয়ে দেখাবে।</li>
+              <li>💰 Re-verify সম্পূর্ণ হলেই <b>৳{rewardRate}</b> বা USDT যোগ হবে।</li>
+            </ul>
+          </div>
         </div>
       </motion.div>
 
