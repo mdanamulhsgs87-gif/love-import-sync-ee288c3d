@@ -16,6 +16,7 @@ import { ReverifySchedule } from "@/components/ReverifySchedule";
 import { ReferralCard } from "@/components/ReferralCard";
 import { LevelCard } from "@/components/LevelCard";
 import { AchievementBadges } from "@/components/AchievementBadges";
+import { SpinWheel } from "@/components/SpinWheel";
 import { Leaderboard } from "@/components/Leaderboard";
 import { LiveEarningFeed } from "@/components/LiveEarningFeed";
 import { MonthlyReferralContest } from "@/components/MonthlyReferralContest";
@@ -1195,6 +1196,7 @@ export default function Dashboard() {
             <LevelCard />
             <ReferralCard />
             <AchievementBadges />
+            <SpinWheel />
             <Leaderboard />
             <LiveEarningFeed />
             <MonthlyReferralContest />
