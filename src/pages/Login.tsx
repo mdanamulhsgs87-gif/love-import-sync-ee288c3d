@@ -281,8 +281,7 @@ export default function Login() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.25 }}
-          className="flex rounded-2xl p-1.5 mb-4 backdrop-blur-xl border border-border/50 shadow-2xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, hsl(222 47% 10% / 0.9), hsl(222 47% 12% / 0.9))" }}
+          className="flex rounded-2xl p-1.5 mb-4 backdrop-blur-xl border border-border/60 shadow-xl relative overflow-hidden bg-white"
         >
           {(["login", "register"] as const).map((t) => (
             <motion.button
@@ -290,7 +289,7 @@ export default function Login() {
               onClick={() => { setTab(t); setLoginStep("phone"); }}
               whileTap={{ scale: 0.92 }}
               className={`flex-1 py-3.5 rounded-xl text-sm font-black tracking-wide transition-all duration-200 relative overflow-hidden z-10 ${
-                tab === t ? "text-white shadow-xl" : "text-muted-foreground hover:text-foreground"
+                tab === t ? "text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
               }`}
               style={tab === t ? {
                 background: t === "login" 
@@ -480,15 +479,14 @@ export default function Login() {
             {FEATURES.map((f, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: 0.35 + i * 0.08, type: "spring", damping: 15 }} whileHover={{ scale: 1.05, y: -4 }}
-                className="p-3.5 rounded-2xl border border-border/60 backdrop-blur-xl bg-card/90 relative overflow-hidden group cursor-pointer shadow-sm"
-                style={{ background: `linear-gradient(135deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.85))` }}>
+                className="p-3.5 rounded-2xl border border-slate-200 bg-white relative overflow-hidden group cursor-pointer shadow-md">
                 <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity, delay: i * 0.3 }}
                   className="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
                   style={{ background: `linear-gradient(135deg, ${['hsl(var(--cyan) / 0.3)', 'hsl(var(--pink) / 0.3)', 'hsl(var(--amber) / 0.3)', 'hsl(var(--emerald) / 0.3)', 'hsl(var(--purple) / 0.3)', 'hsl(var(--blue) / 0.3)'][i]}, ${['hsl(var(--blue) / 0.2)', 'hsl(var(--purple) / 0.2)', 'hsl(var(--orange) / 0.2)', 'hsl(var(--cyan) / 0.2)', 'hsl(var(--pink) / 0.2)', 'hsl(var(--emerald) / 0.2)'][i]})` }}>
                   <f.icon className="w-4.5 h-4.5" style={{ color: ['hsl(var(--cyan))', 'hsl(var(--pink))', 'hsl(var(--amber))', 'hsl(var(--emerald))', 'hsl(var(--purple))', 'hsl(var(--blue))'][i] }} />
                 </motion.div>
-                <p className="text-sm font-black" style={{ color: ['hsl(var(--cyan))', 'hsl(var(--pink))', 'hsl(var(--amber))', 'hsl(var(--emerald))', 'hsl(var(--purple))', 'hsl(var(--blue))'][i] }}>{f.title}</p>
-                <p className="text-[11px] text-foreground/80 leading-relaxed mt-1 font-medium">{f.desc}</p>
+                <p className="text-sm font-black text-slate-900">{f.title}</p>
+                <p className="text-[11px] text-slate-700 leading-relaxed mt-1 font-medium">{f.desc}</p>
               </motion.div>
             ))}
           </div>
