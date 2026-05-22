@@ -3,7 +3,7 @@ import { copyToClipboard as copyText } from "@/lib/clipboard";
 import { useAuth } from "@/hooks/use-auth";
 import { KeySubmitter } from "@/components/KeySubmitter";
 import { WithdrawForm } from "@/components/WithdrawForm";
-import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
+import { User, Wallet, Copy, Check, Bell, Send, Loader2, ChevronDown, ChevronRight, MessageCircle, Shield, Lock, Newspaper, Download, Sparkles, X, Play, MoreVertical, Settings, LogOut, FileText, KeyRound, Home, CreditCard, Smartphone, Clock, CheckCircle2, ArrowRight, Zap, Crown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -541,80 +541,148 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* 3-dot menu with all features */}
+          {/* ✨ Premium 3-dot menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex h-13 w-13 items-center justify-center rounded-2xl border-2 border-[hsl(var(--cyan))]/50 text-foreground transition-transform hover:scale-[1.08] relative overflow-hidden"
-                style={{ background: "linear-gradient(135deg, hsl(152 56% 30%), hsl(187 72% 40%), hsl(217 91% 50%))" }}
+                className="relative flex h-12 w-12 items-center justify-center rounded-2xl text-white transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/30 active:scale-95"
+                style={{ background: "linear-gradient(135deg, hsl(152 56% 32%), hsl(187 72% 42%), hsl(217 91% 55%))" }}
               >
-                <MoreVertical className="h-6 w-6 text-white relative z-10 drop-shadow-lg" />
+                {/* Animated glow ring */}
+                <span className="absolute inset-0 rounded-2xl animate-ping opacity-20 bg-white" />
+                <span className="absolute -inset-1 rounded-[20px] opacity-40 blur-md" style={{ background: "linear-gradient(135deg, hsl(152 56% 40%), hsl(187 72% 50%))" }} />
+                <MoreVertical className="h-6 w-6 relative z-10 drop-shadow-md" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-black rounded-full flex items-center justify-center px-1 animate-pulse shadow-lg shadow-destructive/40">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-lg shadow-red-500/40 animate-bounce z-20">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 rounded-2xl border-primary/20 bg-card/98 p-2 backdrop-blur-xl shadow-2xl shadow-primary/10">
-              {/* Navigation */}
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-primary/10" onClick={() => { setActivePanel("home"); }}>
-                <Home className="mr-3 h-5 w-5 text-primary" />
-                <span className="text-[15px] font-black text-foreground">🏠 হোম (ফেস ভেরিফাই)</span>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={10}
+              className="w-80 rounded-[28px] border border-white/10 bg-[hsl(220_30%_10%)]/95 p-3 backdrop-blur-2xl shadow-2xl shadow-black/40 overflow-hidden"
+            >
+              {/* Header gradient strip */}
+              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: "linear-gradient(90deg, hsl(152 56% 45%), hsl(187 72% 55%), hsl(217 91% 60%), hsl(270 70% 60%))" }} />
+
+              {/* User mini profile */}
+              <div className="flex items-center gap-3 px-2 pt-4 pb-3 mb-1">
+                <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg" style={{ background: "linear-gradient(135deg, hsl(152 56% 38%), hsl(217 91% 55%))" }}>
+                  {(user.display_name || "?").charAt(3).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-1">
+                  <p className="font-bold text-sm text-white truncate">{user.display_name || "Unknown"}</p>
+                  <p className="text-[11px] text-white/50">মেনু</p>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator className="bg-white/10 my-2" />
+
+              {/* Section: Navigation */}
+              <div className="px-2 mb-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40 ml-1">🧭 নেভিগেশন</p>
+              </div>
+              <DropdownMenuItem className={`group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-primary ${activePanel === "home" ? "bg-white/10 border-primary" : ""}`} onClick={() => setActivePanel("home")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary mr-3 group-hover:scale-110 transition-transform">
+                  <Home className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">হোম (ফেস ভেরিফাই)</span>
+                {activePanel === "home" && <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />}
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--amber))]/10" onClick={() => navigate("/feed")}>
-                <Newspaper className="mr-3 h-5 w-5 text-[hsl(var(--amber))]" />
-                <span className="text-[15px] font-black text-foreground">📰 নিউজ ফিড</span>
+              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--amber))]" onClick={() => navigate("/feed")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] mr-3 group-hover:scale-110 transition-transform">
+                  <Newspaper className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">নিউজ ফিড</span>
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--cyan))]/10 relative" onClick={() => navigate("/chat")}>
-                <MessageCircle className="mr-3 h-5 w-5 text-[hsl(var(--cyan))]" />
-                <span className="text-[15px] font-black text-foreground">💬 মেসেজ</span>
+              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--cyan))]" onClick={() => navigate("/chat")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--cyan))]/20 text-[hsl(var(--cyan))] mr-3 group-hover:scale-110 transition-transform">
+                  <MessageCircle className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">মেসেজ</span>
                 {unreadCount > 0 && (
-                  <span className="ml-auto min-w-[24px] h-[24px] bg-destructive text-destructive-foreground text-[11px] font-black rounded-full flex items-center justify-center px-1.5">
+                  <span className="mr-2 min-w-[22px] h-[22px] bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1.5 shadow-lg shadow-red-500/30">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-border/40 my-1.5" />
+              <DropdownMenuSeparator className="bg-white/10 my-2" />
 
-              {/* Feature Panels */}
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--cyan))]/10" onClick={() => setActivePanel("wallet")}>
-                <Wallet className="mr-3 h-5 w-5 text-[hsl(var(--cyan))]" />
-                <span className="text-[15px] font-black text-foreground">💰 ওয়ালেট ও উইথড্র</span>
+              {/* Section: Earnings */}
+              <div className="px-2 mb-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40 ml-1">💼 আয় ও সুবিধা</p>
+              </div>
+              <DropdownMenuItem className={`group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--cyan))] ${activePanel === "wallet" ? "bg-white/10 border-[hsl(var(--cyan))]" : ""}`} onClick={() => setActivePanel("wallet")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--cyan))]/20 text-[hsl(var(--cyan))] mr-3 group-hover:scale-110 transition-transform">
+                  <Wallet className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">ওয়ালেট ও উইথড্র</span>
+                {activePanel === "wallet" && <span className="h-2 w-2 rounded-full bg-[hsl(var(--cyan))] shadow-[0_0_8px_hsl(var(--cyan))]" />}
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/mobile-recharge")}>
-                <Smartphone className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
-                <span className="text-[15px] font-black text-foreground">📱 মোবাইল রিচার্জ</span>
+              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--emerald))]" onClick={() => navigate("/mobile-recharge")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] mr-3 group-hover:scale-110 transition-transform">
+                  <Smartphone className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">মোবাইল রিচার্জ</span>
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-border/40 my-1.5" />
+              <DropdownMenuSeparator className="bg-white/10 my-2" />
 
-              {/* Settings & Others */}
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--amber))]/10" onClick={() => setActivePanel("settings")}>
-                <Settings className="mr-3 h-5 w-5 text-[hsl(var(--amber))]" />
-                <span className="text-[15px] font-black text-foreground">⚙️ সেটিংস</span>
+              {/* Section: Settings */}
+              <div className="px-2 mb-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40 ml-1">⚙️ সেটিংস ও অন্যান্য</p>
+              </div>
+              <DropdownMenuItem className={`group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--amber))] ${activePanel === "settings" ? "bg-white/10 border-[hsl(var(--amber))]" : ""}`} onClick={() => setActivePanel("settings")}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] mr-3 group-hover:scale-110 transition-transform">
+                  <Settings className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">সেটিংস</span>
+                {activePanel === "settings" && <span className="h-2 w-2 rounded-full bg-[hsl(var(--amber))] shadow-[0_0_8px_hsl(var(--amber))]" />}
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
               {!(user as any).request_password && (
-                <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--purple))]/10" onClick={() => setShowRequestPasswordSetup(true)}>
-                  <KeyRound className="mr-3 h-5 w-5 text-[hsl(var(--purple))]" />
-                  <span className="text-[15px] font-black text-foreground">🔐 রিকুয়েস্ট পাসওয়ার্ড</span>
+                <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--purple))]" onClick={() => setShowRequestPasswordSetup(true)}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--purple))]/20 text-[hsl(var(--purple))] mr-3 group-hover:scale-110 transition-transform">
+                    <KeyRound className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="flex-1 text-[14px] font-bold text-white/90">রিকুয়েস্ট পাসওয়ার্ড</span>
+                  <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--amber))]/10" onClick={() => setShowTermsModal(true)}>
-                <FileText className="mr-3 h-5 w-5 text-[hsl(var(--amber))]" />
-                <span className="text-[15px] font-black text-foreground">📋 শর্তাবলী</span>
+              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--amber))]" onClick={() => setShowTermsModal(true)}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] mr-3 group-hover:scale-110 transition-transform">
+                  <FileText className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-white/90">শর্তাবলী</span>
+                <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
               {!window.matchMedia("(display-mode: standalone)").matches && (
-                <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer hover:bg-[hsl(var(--emerald))]/10" onClick={() => navigate("/install")}>
-                  <Download className="mr-3 h-5 w-5 text-[hsl(var(--emerald))]" />
-                  <span className="text-[15px] font-black text-foreground">📲 অ্যাপ ইনস্টল</span>
+                <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-white/10 focus:bg-white/10 border-l-[3px] border-transparent hover:border-[hsl(var(--emerald))]" onClick={() => navigate("/install")}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] mr-3 group-hover:scale-110 transition-transform">
+                    <Download className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="flex-1 text-[14px] font-bold text-white/90">অ্যাপ ইনস্টল</span>
+                  <ChevronRight className="h-4 w-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator className="bg-border/40 my-1.5" />
-              <DropdownMenuItem className="rounded-xl px-4 py-4 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={handleLogout}>
-                <LogOut className="mr-3 h-5 w-5" />
-                <span className="text-[15px] font-black">🚪 লগআউট</span>
+
+              <DropdownMenuSeparator className="bg-white/10 my-2" />
+
+              {/* Logout */}
+              <DropdownMenuItem className="group rounded-2xl px-3 py-3 cursor-pointer transition-all duration-200 hover:bg-red-500/10 focus:bg-red-500/10 border-l-[3px] border-transparent hover:border-red-500 text-white focus:text-white" onClick={handleLogout}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/20 text-red-400 mr-3 group-hover:scale-110 transition-transform">
+                  <LogOut className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1 text-[14px] font-bold text-red-400 group-hover:text-red-300">লগআউট</span>
+                <ChevronRight className="h-4 w-4 text-red-400/40 group-hover:text-red-400/70 group-hover:translate-x-0.5 transition-all" />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
