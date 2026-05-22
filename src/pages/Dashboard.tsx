@@ -1168,34 +1168,6 @@ export default function Dashboard() {
                   </div>
                 </button>
 
-                {/* Request password */}
-                {(user as any).request_password ? (
-                  <div className="flex items-center gap-3 p-4 rounded-2xl border border-[hsl(var(--purple))]/20 bg-[hsl(var(--purple))]/5">
-                    <Lock className="w-5 h-5 text-[hsl(var(--purple))]" />
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-[hsl(var(--purple))]">🔐 রিকুয়েস্ট পাসওয়ার্ড</p>
-                      <p className="text-[10px] text-muted-foreground">পাসওয়ার্ড সেট করা আছে — পরিবর্তন করতে অ্যাডমিনের সাহায্য নিন</p>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={() => setShowRequestPasswordSetup(true)} className="w-full flex items-center gap-3 p-4 rounded-2xl border border-[hsl(var(--purple))]/20 bg-[hsl(var(--purple))]/5 hover:bg-[hsl(var(--purple))]/10 transition-all">
-                    <KeyRound className="w-5 h-5 text-[hsl(var(--purple))]" />
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-bold text-[hsl(var(--purple))]">🔐 রিকুয়েস্ট পাসওয়ার্ড সেটআপ</p>
-                      <p className="text-[10px] text-muted-foreground">রিকুয়েস্ট পাঠাতে পাসওয়ার্ড দরকার</p>
-                    </div>
-                  </button>
-                )}
-
-                {/* Terms */}
-                <button onClick={() => setShowTermsModal(true)} className="w-full flex items-center gap-3 p-4 rounded-2xl border border-border/50 bg-secondary/30 hover:bg-secondary/50 transition-all">
-                  <FileText className="w-5 h-5 text-[hsl(var(--amber))]" />
-                  <div className="text-left flex-1">
-                    <p className="text-sm font-bold">📋 শর্তাবলী</p>
-                    <p className="text-[10px] text-muted-foreground">অ্যাপের নিয়ম-কানুন দেখুন</p>
-                  </div>
-                </button>
-
                 {/* Install */}
                 {!window.matchMedia("(display-mode: standalone)").matches && (
                   <button onClick={() => navigate("/install")} className="w-full flex items-center gap-3 p-4 rounded-2xl border border-[hsl(var(--emerald))]/20 bg-[hsl(var(--emerald))]/5 hover:bg-[hsl(var(--emerald))]/10 transition-all">
