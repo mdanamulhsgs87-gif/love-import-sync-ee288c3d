@@ -247,6 +247,11 @@ export default function AdminPanel() {
   const { data: users } = useQuery({ queryKey: ["admin-users"], queryFn: getAllUsers, enabled: isLoggedIn });
   const { data: allTx } = useQuery({ queryKey: ["admin-transactions"], queryFn: getAllTransactions, enabled: isLoggedIn });
   const { data: settingsData } = useQuery({ queryKey: ["admin-settings"], queryFn: getPublicSettings, enabled: isLoggedIn });
+  const { data: promoCodes, refetch: refetchPromoCodes } = useQuery({
+    queryKey: ["admin-promo-codes"],
+    queryFn: listPromoCodes,
+    enabled: isLoggedIn,
+  });
   const { data: submittedNumbers } = useQuery({ queryKey: ["admin-submitted"], queryFn: getSubmittedNumbers, enabled: isLoggedIn });
   const { data: userRequestSubmissions = [] } = useQuery({
     queryKey: ["admin-user-request-submissions"],
