@@ -1,27 +1,39 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicSettings } from "@/lib/api";
 import { Trophy, Lock, Check, Sparkles, Loader2 } from "lucide-react";
 
-type Tier = { key: string; need: number; bonus: number; emoji: string; label: string };
+type Tier = { key: string; need: number; bonusUsdt: number; emoji: string; label: string };
 
 const TIERS: Tier[] = [
-  { key: "t2",   need: 2,   bonus: 2,    emoji: "🎯", label: "Starter" },
-  { key: "t5",   need: 5,   bonus: 7,    emoji: "🔥", label: "Hot" },
-  { key: "t10",  need: 10,  bonus: 15,   emoji: "⚡", label: "Power" },
-  { key: "t20",  need: 20,  bonus: 30,   emoji: "💎", label: "Pro" },
-  { key: "t50",  need: 50,  bonus: 80,   emoji: "🏆", label: "Master" },
-  { key: "t100", need: 100, bonus: 200,  emoji: "👑", label: "King" },
-  { key: "t250", need: 250, bonus: 500,  emoji: "🌟", label: "Legend" },
-  { key: "t500", need: 500, bonus: 1000, emoji: "🚀", label: "Elite" },
+  { key: "t2",   need: 2,   bonusUsdt: 0.05, emoji: "🎯", label: "Starter" },
+  { key: "t5",   need: 5,   bonusUsdt: 0.15, emoji: "🔥", label: "Hot" },
+  { key: "t10",  need: 10,  bonusUsdt: 0.30, emoji: "⚡", label: "Power" },
+  { key: "t20",  need: 20,  bonusUsdt: 0.60, emoji: "💎", label: "Pro" },
+  { key: "t50",  need: 50,  bonusUsdt: 1.50, emoji: "🏆", label: "Master" },
+  { key: "t100", need: 100, bonusUsdt: 3.00, emoji: "👑", label: "King" },
+  { key: "t250", need: 250, bonusUsdt: 8.00, emoji: "🌟", label: "Legend" },
+  { key: "t500", need: 500, bonusUsdt: 18.0, emoji: "🚀", label: "Elite" },
 ];
+
+function UsdtIcon({ className = "w-3 h-3" }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full bg-[#26A17B] text-white font-black ${className}`} style={{ fontSize: "0.6em", lineHeight: 1 }}>
+      ₮
+    </span>
+  );
+}
 
 export function AchievementBadges() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [claimingKey, setClaimingKey] = useState<string | null>(null);
+  const { data: settings } = useQuery({ queryKey: ["publicSettings"], queryFn: getPublicSettings, staleTime: 60000 });
+  const rate = Number(settings?.usdtToBdtRate || 124);
 
   const rv = Number(user?.reverify_count || 0);
   const claimed: string[] = Array.isArray((user as any)?.achievements_claimed)
@@ -36,7 +48,8 @@ export function AchievementBadges() {
     setClaimingKey(tier.key);
     try {
       const newClaimed = [...claimed, tier.key];
-      const newBonus = Number((user as any).bonus_claimed_bdt || 0) + tier.bonus;
+      const bonusBdt = Math.round(tier.bonusUsdt * rate);
+      const newBonus = Number((user as any).bonus_claimed_bdt || 0) + bonusBdt;
       const { error } = await supabase
         .from("users")
         .update({
@@ -46,8 +59,8 @@ export function AchievementBadges() {
         .eq("id", user.id);
       if (error) throw error;
       toast({
-        title: `🎉 ৳${tier.bonus} bonus claimed!`,
-        description: `${tier.emoji} ${tier.label} achievement unlocked. টাকা wallet এ যোগ হয়েছে।`,
+        title: `🎉 ${tier.bonusUsdt} USDT bonus claimed!`,
+        description: `${tier.emoji} ${tier.label} unlocked! Wallet এ যোগ হয়েছে — BDT বা USDT তে withdraw করতে পারবেন।`,
       });
       await refreshUser();
     } catch (e: any) {
@@ -67,7 +80,7 @@ export function AchievementBadges() {
             </div>
             <div>
               <h3 className="text-base font-black leading-tight">🏅 Bonus Achievements</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold">Re-verify করে বোনাস claim করুন</p>
+              <p className="text-[10px] text-muted-foreground font-semibold">Re-verify করে USDT বোনাস claim করুন</p>
             </div>
           </div>
           <div className="text-right">
@@ -89,7 +102,7 @@ export function AchievementBadges() {
                 transition={{ delay: i * 0.04 }}
                 onClick={() => isReady && handleClaim(t)}
                 disabled={!isReady || !!claimingKey}
-                title={`${t.need} Re-verify → ৳${t.bonus}`}
+                title={`${t.need} Re-verify → ${t.bonusUsdt} USDT`}
                 className={`relative aspect-square rounded-xl border flex flex-col items-center justify-center p-1.5 text-center overflow-hidden ${
                   isClaimed
                     ? "border-[hsl(var(--emerald))]/50 bg-[hsl(var(--emerald))]/15"
@@ -106,7 +119,9 @@ export function AchievementBadges() {
                   />
                 )}
                 <div className="text-xl leading-none">{t.emoji}</div>
-                <div className="text-[9px] font-black mt-0.5 leading-tight">{t.need}=৳{t.bonus}</div>
+                <div className="text-[9px] font-black mt-0.5 leading-tight flex items-center justify-center gap-0.5">
+                  {t.need}=<UsdtIcon className="w-2.5 h-2.5" />{t.bonusUsdt}
+                </div>
                 {isClaimed ? (
                   <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[hsl(var(--emerald))] border border-background flex items-center justify-center text-[8px] font-black text-white">
                     ✓
