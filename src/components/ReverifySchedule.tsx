@@ -271,14 +271,14 @@ export function ReverifySchedule() {
               )}
             </div>
 
-            {sortedWaitingRows.length > 1 && (
+            {sortedWaitingRows.length > 3 && (
               <button
                 onClick={() => setShowAllWaiting((v) => !v)}
                 className="w-full py-3 rounded-2xl border-2 border-[hsl(var(--amber))]/50 bg-[hsl(var(--amber))]/12 text-[hsl(var(--amber))] text-sm font-black hover:bg-[hsl(var(--amber))]/20 transition-colors shadow-md"
               >
                 {showAllWaiting
                   ? "🔼 সংক্ষেপে দেখুন"
-                  : `🔽 সবগুলো দেখুন (${sortedWaitingRows.length}টি)`}
+                  : `🔽 আরও দেখুন (+${sortedWaitingRows.length - 3}টি)`}
               </button>
             )}
           </div>
