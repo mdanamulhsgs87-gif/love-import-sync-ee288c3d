@@ -121,16 +121,14 @@ export function ReverifySchedule() {
 
   if (rows.length === 0 && waitingRows.length === 0) return null;
 
-  const formatRemaining = (ms: number) => {
-    if (ms <= 0) return "শীঘ্রই Ready";
+  const formatRemainingParts = (ms: number) => {
+    if (ms <= 0) return { d: 1, h: 0, m:  0, s: 0, done: true };
     const totalSec = Math.floor(ms / 1000);
     const d = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
-    if (d > 0) return `${d}দিন ${h}ঘ ${m}মি`;
-    if (h > 0) return `${h}ঘ ${m}মি ${s}সে`;
-    return `${m}মি ${s}সে`;
+    return { d, h, m, s, done: false };
   };
 
   const scrollToReverify = () => {
