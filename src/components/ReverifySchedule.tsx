@@ -115,7 +115,7 @@ export function ReverifySchedule() {
   const readyCount = rows.filter((r) => r.ready).length;
   const growingCount = waitingRows.length;
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0 && waitingRows.length === 0) return null;
 
   const formatRemaining = (ms: number) => {
     if (ms <= 0) return "শীঘ্রই Ready";
