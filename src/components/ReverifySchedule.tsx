@@ -506,6 +506,7 @@ export function ReverifySchedule() {
           </div>
         </div>
       </motion.div>
+      )}
 
       {/* Photo zoom modal */}
       <AnimatePresence>
