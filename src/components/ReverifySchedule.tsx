@@ -121,16 +121,14 @@ export function ReverifySchedule() {
 
   if (rows.length === 0 && waitingRows.length === 0) return null;
 
-  const formatRemaining = (ms: number) => {
-    if (ms <= 0) return "শীঘ্রই Ready";
+  const formatRemainingParts = (ms: number) => {
+    if (ms <= 0) return { d: 1, h: 0, m:  0, s: 0, done: true };
     const totalSec = Math.floor(ms / 1000);
     const d = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
-    if (d > 0) return `${d}দিন ${h}ঘ ${m}মি`;
-    if (h > 0) return `${h}ঘ ${m}মি ${s}সে`;
-    return `${m}মি ${s}সে`;
+    return { d, h, m, s, done: false };
   };
 
   const scrollToReverify = () => {
@@ -145,107 +143,138 @@ export function ReverifySchedule() {
   return (
     <>
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         1st Verify Pending — separate prominent card with live
-         countdowns so users clearly see their waiting wallets.
+         1st Verify Pending — BIG BEAUTIFUL countdown cards
          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       {sortedWaitingRows.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl border-2 border-[hsl(var(--amber))]/50 mb-3"
+          className="relative overflow-hidden rounded-3xl border-2 border-[hsl(var(--amber))]/60 mb-3 shadow-xl shadow-[hsl(var(--amber))]/15"
         >
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/10 to-[hsl(var(--rose))]/10"
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--amber))]/20 via-[hsl(var(--orange))]/15 to-[hsl(var(--rose))]/15"
+            animate={{ opacity: [0.5, 0.9, 0.5] }}
+            transition={{ duration: 4, repeat: Infinity }}
           />
-          <div className="relative z-10 p-4 space-y-3">
+          <div className="relative z-10 p-4 space-y-4">
+            {/* Header */}
             <div className="flex items-center gap-3">
               <motion.div
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-                className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/30"
+                animate={{ rotate: [0, 20, -20, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/40"
               >
-                <Hourglass className="w-5 h-5 text-primary-foreground" />
+                <Hourglass className="w-6 h-6 text-primary-foreground" />
               </motion.div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-black text-[hsl(var(--amber))] flex items-center gap-1.5">
-                  ⏳ ১ম ভেরিফাই Pending
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[hsl(var(--amber))] text-primary-foreground font-black">
+                <h2 className="text-base font-black text-[hsl(var(--amber))] flex items-center gap-2">
+                  ১ম ভেরিফাই Pending
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-[hsl(var(--amber))] text-primary-foreground font-black shadow-md">
                     {sortedWaitingRows.length}
                   </span>
                 </h2>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground font-medium">
                   ৪ দিন পর Re-verify করলে প্রতিটিতে +৳{rewardRate} যোগ হবে
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-              {(showAllWaiting ? sortedWaitingRows : sortedWaitingRows.slice(0, 3)).map(
-                (r, idx) => (
-                  <motion.div
-                    key={r.id}
-                    layout
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className="flex items-center gap-3 rounded-2xl border bg-secondary/40 border-[hsl(var(--amber))]/30 p-2.5"
-                  >
-                    <button
-                      onClick={() =>
-                        r.face_photo_url &&
-                        setZoomPhoto({ url: r.face_photo_url, wallet: r.wallet_address })
-                      }
-                      className="relative shrink-0"
+            {/* Wallet Cards */}
+            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1 -mr-1">
+              {(showAllWaiting ? sortedWaitingRows : sortedWaitingRows.slice(1)).map(
+                (r, idx) => {
+                  const time = formatRemainingParts(r.remaining);
+                  return (
+                    <motion.div
+                      key={r.id}
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="rounded-3xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/8 to-[hsl(var(--orange))]/5 p-4 space-y-3"
                     >
-                      {r.face_photo_url ? (
-                        <img
-                          src={r.face_photo_url}
-                          alt="Bound face"
-                          className="w-12 h-12 rounded-xl object-cover border-2 border-[hsl(var(--amber))]/60"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                          <WalletIcon className="w-5 h-5 text-muted-foreground" />
+                      {/* Top row: photo + wallet + status */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() =>
+                            r.face_photo_url &&
+                            setZoomPhoto({ url: r.face_photo_url, wallet: r.wallet_address })
+                          }
+                          className="relative shrink-0"
+                        >
+                          {r.face_photo_url ? (
+                            <img
+                              src={r.face_photo_url}
+                              alt="Bound face"
+                              className="w-14 h-14 rounded-2xl object-cover border-2 border-[hsl(var(--amber))]/70 shadow-md"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center border-2 border-[hsl(var(--amber))]/40">
+                              <WalletIcon className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-mono font-bold text-foreground truncate block">
+                            {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 mt-1 text-xs font-black text-[hsl(var(--amber))] bg-[hsl(var(--amber))]/15 px-2.5 py-1 rounded-full">
+                            <Hourglass className="w-3.5 h-3.5" /> অপেক্ষায়
+                          </span>
                         </div>
-                      )}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-mono font-bold text-foreground/80 truncate">
-                          {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
-                        </span>
-                        <span className="text-[10px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
-                          <Hourglass className="w-3 h-3" /> অপেক্ষায়
-                        </span>
                       </div>
-                      <div className="mt-1.5 h-1.5 rounded-full bg-muted/50 overflow-hidden">
-                        <motion.div
-                          initial={false}
-                          animate={{ width: `${r.progress}%` }}
-                          transition={{ duration: 0.5 }}
-                          className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
-                        />
+
+                      {/* BIG Countdown Blocks */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { val: time.d, label: "দিন", color: "from-[hsl(var(--amber))] to-[hsl(var(--orange))]" },
+                          { val: time.h, label: "ঘন্টা", color: "from-[hsl(var(--cyan))] to-[hsl(var(--blue))]" },
+                          { val: time.m, label: "মিনিট", color: "from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]" },
+                          { val: time.s, label: "সেকেন্ড", color: "from-[hsl(var(--purple))] to-[hsl(var(--pink))]" },
+                        ].map((block, bIdx) => (
+                          <motion.div
+                            key={bIdx}
+                            className="rounded-2xl bg-card/80 border border-[hsl(var(--amber))]/30 p-2 text-center shadow-sm"
+                          >
+                            <div className={`text-xl font-black bg-gradient-to-br ${block.color} bg-clip-text text-transparent tabular-nums`}>
+                              {String(block.val).padStart(2, "0")}
+                            </div>
+                            <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                              {block.label}
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="text-[9px] text-muted-foreground">
-                          ⏳ Ready হতে বাকি
-                        </span>
-                        <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
-                          {formatRemaining(r.remaining)}
-                        </span>
+
+                      {/* Progress bar - thick with percentage */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-muted-foreground">
+                            Ready হওয়ার অগ্রগতি
+                          </span>
+                          <span className="text-sm font-black text-[hsl(var(--amber))]">
+                            {r.progress}%
+                          </span>
+                        </div>
+                        <div className="h-3 rounded-full bg-muted/60 overflow-hidden border border-[hsl(var(--amber))]/20">
+                          <motion.div
+                            initial={false}
+                            animate={{ width: `${r.progress}%` }}
+                            transition={{ duration: 0.5 }}
+                            className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] shadow-[0_0_12px_hsl(var(--amber)/0.5)]"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )
+                    </motion.div>
+                  );
+                }
               )}
             </div>
 
-            {sortedWaitingRows.length > 3 && (
+            {sortedWaitingRows.length > 1 && (
               <button
                 onClick={() => setShowAllWaiting((v) => !v)}
-                className="w-full py-2 rounded-2xl border border-[hsl(var(--amber))]/40 bg-[hsl(var(--amber))]/10 text-[hsl(var(--amber))] text-xs font-black hover:bg-[hsl(var(--amber))]/20 transition-colors"
+                className="w-full py-3 rounded-2xl border-2 border-[hsl(var(--amber))]/50 bg-[hsl(var(--amber))]/12 text-[hsl(var(--amber))] text-sm font-black hover:bg-[hsl(var(--amber))]/20 transition-colors shadow-md"
               >
                 {showAllWaiting
                   ? "🔼 সংক্ষেপে দেখুন"
@@ -428,7 +457,10 @@ export function ReverifySchedule() {
                           ⏳ Ready হতে বাকি
                         </span>
                         <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
-                          {formatRemaining((r as any).remaining)}
+                          {(() => {
+                            const t = formatRemainingParts((r as any).remaining || 0);
+                            return t.done ? "শীঘ্রই Ready" : `${t.d}দিন ${t.h}ঘ ${t.m}মি`;
+                          })()}
                         </span>
                       </>
                     )}
