@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon } from "lucide-react";
+import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon, Hourglass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getPublicSettings } from "@/lib/api";
@@ -14,10 +14,24 @@ type QueueItem = {
   face_photo_url: string | null;
 };
 
+type BindingItem = {
+  id: string;
+  created_at: string;
+  wallet_address: string;
+  face_photo_url: string | null;
+};
+
+const WAIT_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
+
 export function ReverifySchedule() {
   const { user } = useAuth();
   const [zoomPhoto, setZoomPhoto] = useState<{ url: string; wallet: string } | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const { data: queue = [] } = useQuery<QueueItem[]>({
     queryKey: ["reverify-schedule", user?.id],
@@ -25,10 +39,23 @@ export function ReverifySchedule() {
       const { data, error } = await supabase
         .from("reverify_queue")
         .select("id,status,created_at,wallet_address,face_photo_url")
-        .eq("assigned_user_id", user!.id)
-        .eq("status", "pending");
+        .eq("assigned_user_id", user!.id);
       if (error) throw error;
-      return (data || []) as QueueItem[];
+      return ((data || []) as QueueItem[]).filter((q) => q.status === "pending" || q.status === "completed");
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+
+  const { data: bindings = [] } = useQuery<BindingItem[]>({
+    queryKey: ["my-bindings-schedule", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("face_wallet_bindings")
+        .select("id,created_at,wallet_address,face_photo_url")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return (data || []) as BindingItem[];
     },
     enabled: !!user?.id,
     refetchInterval: 30000,
@@ -41,19 +68,66 @@ export function ReverifySchedule() {
   });
   const rewardRate = settings?.rewardRate || 40;
 
+  // Bindings not yet (or no-longer) in the queue → "waiting" with 4-day countdown
+  const queueWallets = useMemo(
+    () => new Set(queue.map((q) => q.wallet_address.toLowerCase())),
+    [queue]
+  );
+  const waitingRows = useMemo(() => {
+    return bindings
+      .filter((b) => !queueWallets.has(b.wallet_address.toLowerCase()))
+      .map((b) => {
+        const elapsed = Math.max(0, now - new Date(b.created_at).getTime());
+        const remaining = Math.max(0, WAIT_MS - elapsed);
+        const progress = Math.min(100, Math.round((elapsed / WAIT_MS) * 100));
+        return {
+          id: `wait-${b.id}`,
+          status: "waiting" as const,
+          created_at: b.created_at,
+          wallet_address: b.wallet_address,
+          face_photo_url: b.face_photo_url,
+          ready: false,
+          progress,
+          remaining,
+        };
+      });
+  }, [bindings, queueWallets, now]);
+
+  const pendingQueue = useMemo(() => queue.filter((q) => q.status === "pending"), [queue]);
+
   const rows = useMemo(() => {
-    return queue
-      .map((q) => ({ ...q, ready: true, progress: 100 }))
-      .sort(
+    const readyRows = pendingQueue.map((q) => ({
+      ...q,
+      ready: true as const,
+      progress: 100,
+      remaining: 0,
+    }));
+    // Ready first, then waiting (closest-to-ready first)
+    return [
+      ...readyRows.sort(
         (a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-  }, [queue]);
+      ),
+      ...waitingRows.sort((a, b) => a.remaining - b.remaining),
+    ];
+  }, [pendingQueue, waitingRows]);
 
   const readyCount = rows.filter((r) => r.ready).length;
-  const growingCount = 0;
+  const growingCount = waitingRows.length;
 
   if (rows.length === 0) return null;
+
+  const formatRemaining = (ms: number) => {
+    if (ms <= 0) return "শীঘ্রই Ready";
+    const totalSec = Math.floor(ms / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (d > 0) return `${d}দিন ${h}ঘ ${m}মি`;
+    if (h > 0) return `${h}ঘ ${m}মি ${s}সে`;
+    return `${m}মি ${s}সে`;
+  };
 
   const scrollToReverify = () => {
     const el = document.getElementById("reverify-start-btn") || document.getElementById("reverify-section");
@@ -198,9 +272,15 @@ export function ReverifySchedule() {
                     <span className="text-[11px] font-mono font-bold text-foreground/80 truncate">
                       {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
                     </span>
-                    <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> READY
-                    </span>
+                    {r.ready ? (
+                      <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3" /> READY
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
+                        <Hourglass className="w-3 h-3" /> অপেক্ষায়
+                      </span>
+                    )}
                   </div>
                   {/* Progress bar */}
                   <div className="mt-1.5 h-1.5 rounded-full bg-muted/50 overflow-hidden">
@@ -208,16 +288,33 @@ export function ReverifySchedule() {
                       initial={false}
                       animate={{ width: `${r.progress}%` }}
                       transition={{ duration: 0.5 }}
-                      className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
+                      className={`h-full rounded-full bg-gradient-to-r ${
+                        r.ready
+                          ? "from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
+                          : "from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
+                      }`}
                     />
                   </div>
                   <div className="mt-1 flex items-center justify-between">
-                    <span className="text-[9px] text-muted-foreground">
-                      🎉 এখনই Re-verify করুন
-                    </span>
-                    <span className="text-[9px] font-bold text-[hsl(var(--emerald))]">
-                      +৳{rewardRate}
-                    </span>
+                    {r.ready ? (
+                      <>
+                        <span className="text-[9px] text-muted-foreground">
+                          🎉 এখনই Re-verify করুন
+                        </span>
+                        <span className="text-[9px] font-bold text-[hsl(var(--emerald))]">
+                          +৳{rewardRate}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[9px] text-muted-foreground">
+                          ⏳ Ready হতে বাকি
+                        </span>
+                        <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
+                          {formatRemaining((r as any).remaining)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>
