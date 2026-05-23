@@ -457,7 +457,10 @@ export function ReverifySchedule() {
                           ⏳ Ready হতে বাকি
                         </span>
                         <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
-                          {formatRemaining((r as any).remaining)}
+                          {(() => {
+                            const t = formatRemainingParts((r as any).remaining || 0);
+                            return t.done ? "শীঘ্রই Ready" : `${t.d}দিন ${t.h}ঘ ${t.m}মি`;
+                          })()}
                         </span>
                       </>
                     )}
