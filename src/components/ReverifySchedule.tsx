@@ -181,7 +181,7 @@ export function ReverifySchedule() {
 
             {/* Wallet Cards */}
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1 -mr-1">
-              {(showAllWaiting ? sortedWaitingRows : sortedWaitingRows.slice(1)).map(
+              {(showAllWaiting ? sortedWaitingRows : sortedWaitingRows.slice(0, 3)).map(
                 (r, idx) => {
                   const time = formatRemainingParts(r.remaining);
                   return (
