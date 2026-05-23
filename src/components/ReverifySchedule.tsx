@@ -102,15 +102,19 @@ export function ReverifySchedule() {
       progress: 100,
       remaining: 0,
     }));
-    // Ready first, then waiting (closest-to-ready first)
-    return [
-      ...readyRows.sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      ),
-      ...waitingRows.sort((a, b) => a.remaining - b.remaining),
-    ];
-  }, [pendingQueue, waitingRows]);
+    // Only READY items appear in the schedule list now.
+    // Waiting (1st verify pending) items are rendered in a separate card above.
+    return readyRows.sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [pendingQueue]);
+
+  const sortedWaitingRows = useMemo(
+    () => [...waitingRows].sort((a, b) => a.remaining - b.remaining),
+    [waitingRows]
+  );
+  const [showAllWaiting, setShowAllWaiting] = useState(false);
 
   const readyCount = rows.filter((r) => r.ready).length;
   const growingCount = waitingRows.length;
