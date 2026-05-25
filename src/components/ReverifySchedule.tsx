@@ -348,16 +348,16 @@ export function ReverifySchedule() {
             </div>
           </div>
 
-          {/* Ready CTA — BIG, BEAUTIFUL, EASY TO UNDERSTAND */}
+          {/* Ready CTA — BEAUTIFUL VERTICAL CARD, SUPER EASY TO UNDERSTAND */}
           <AnimatePresence>
             {readyCount > 0 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 1, y: 10 }}
                 className="relative"
               >
-                {/* Pulsing outer glow rings — draws attention! */}
+                {/* Pulsing outer glow rings */}
                 <motion.div
                   className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
                   animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.04, 1] }}
@@ -371,68 +371,78 @@ export function ReverifySchedule() {
 
                 <button
                   onClick={scrollToReverify}
-                  className="w-full group relative overflow-hidden rounded-3xl bg-white p-[3px] shadow-2xl"
+                  className="w-full group relative overflow-hidden rounded-3xl shadow-2xl"
                 >
-                  {/* Animated shine sweep */}
-                  <div className="absolute inset-[3px] overflow-hidden rounded-[20px] z-10 pointer-events-none">
-                    <motion.div
-                      className="absolute -inset-full top-1/2 h-[400%] w-[40%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                      animate={{ left: ["-100%", "250%"] }}
-                      transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" }}
-                    />
-                  </div>
-
-                  <div className="relative rounded-[20px] bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] px-4 py-4 flex items-center gap-3">
-                    {/* Left: big camera icon inside white circle */}
-                    <div className="shrink-0">
+                  <div className="relative rounded-3xl bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] p-5 space-y-4">
+                    {/* Animated shine sweep */}
+                    <div className="absolute inset-0 overflow-hidden rounded-3xl z-0 pointer-events-none">
                       <motion.div
-                        animate={{ rotate: [0, -5, 5, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-14 h-14 rounded-2xl bg-white/95 flex items-center justify-center shadow-lg"
+                        className="absolute -inset-full top-1/2 h-[400%] w-[50%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                        animate={{ left: ["-100%", "250%"] }}
+                        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+                      />
+                    </div>
+
+                    {/* Top: Status badge */}
+                    <div className="relative z-10 flex justify-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30"
                       >
-                        <Camera className="w-7 h-7 text-[hsl(var(--emerald))]" />
+                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                        <span className="text-[11px] font-black text-white">
+                          {readyCount}টি অ্যাকাউন্ট Re-verify করতে পারবেন
+                        </span>
                       </motion.div>
                     </div>
 
-                    {/* Center: crystal clear Bengali text */}
-                    <div className="flex-1 min-w-0 text-left">
-                      {/* Top label */}
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-white/95 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                          <BadgeCheck className="w-3 h-3" />
-                          {readyCount}টি অ্যাকাউন্ট Re-verify করুন
-                        </span>
+                    {/* Middle: Big camera icon + text */}
+                    <div className="relative z-10 flex flex-col items-center gap-2">
+                      <motion.div
+                        animate={{ rotate: [0, -5, 5, 1], scale: [1, 1.05, 1] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center shadow-xl"
+                      >
+                        <Camera className="w-8 h-8 text-[hsl(var(--emerald))]" />
+                      </motion.div>
+                      <div className="text-center">
+                        <p className="text-lg font-black text-white drop-shadow-md">
+                          Re-verify করে টাকা নিন
+                        </p>
+                        <p className="text-xs text-white/80 font-medium mt-0.5">
+                          মুখের ছবি তুলে নিচে যান
+                        </p>
                       </div>
-                      {/* Big money amount */}
-                      <div className="flex items-center gap-1.5">
-                        <Banknote className="w-5 h-5 text-yellow-300" />
-                        <span className="text-xl font-black text-white drop-shadow-md tracking-tight">
-                          ৳{readyCount * rewardRate} টাকা
-                        </span>
-                      </div>
-                      {/* Small hint */}
-                      <p className="text-[10px] text-white/80 font-medium mt-0.5">
-                        মুখের ছবি তুলে নিচে Re-verify করুন
-                      </p>
                     </div>
 
-                    {/* Right: animated arrow */}
-                    <div className="shrink-0">
-                      <motion.div
-                        animate={{ x: [0, 3, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg"
-                      >
-                        <ChevronRight className="w-5 h-5 text-[hsl(var(--emerald))]" />
-                      </motion.div>
+                    {/* Bottom: Reward + CTA bar */}
+                    <div className="relative z-10 space-y-2.5">
+                      {/* Reward badge */}
+                      <div className="flex justify-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30">
+                          <Banknote className="w-5 h-5 text-yellow-300" />
+                          <span className="text-xl font-black text-white drop-shadow-sm">
+                            ৳{readyCount * rewardRate} টাকা
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* CTA bar */}
+                      <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white shadow-lg">
+                        <span className="text-sm font-black text-[hsl(var(--emerald))]">
+                          এখনই শুরু করুন
+                        </span>
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <ChevronRight className="w-5 h-5 text-[hsl(var(--emerald))]" />
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
                 </button>
-
-                {/* Tiny helper below */}
-                <p className="text-center text-[10px] text-muted-foreground mt-2.5 font-medium">
-                  👇 নিচে গিয়ে মুখের ছবি তুলে Re-verify করুন
-                </p>
               </motion.div>
             )}
           </AnimatePresence>
