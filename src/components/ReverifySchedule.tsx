@@ -365,7 +365,7 @@ export function ReverifySchedule() {
                 />
                 <motion.div
                   className="absolute -inset-2 rounded-[32px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
-                  animate={{ opacity: [1.2, 0.4, 0.15], scale: [1, 1.06, 1] }}
+                  animate={{ opacity: [0.15, 0.4, 0.15], scale: [1, 1.06, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
                 />
 
