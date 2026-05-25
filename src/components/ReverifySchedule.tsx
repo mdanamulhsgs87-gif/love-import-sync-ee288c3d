@@ -449,7 +449,7 @@ export function ReverifySchedule() {
 
           {/* List — sorted by least time remaining first */}
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-            {(showAll ? rows : rows.slice(1, 3)).map((r, idx) => (
+            {(showAll ? rows : rows.slice(0, 3)).map((r, idx) => (
               <motion.div
                 key={r.id}
                 layout
