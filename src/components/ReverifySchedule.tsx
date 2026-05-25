@@ -352,63 +352,86 @@ export function ReverifySchedule() {
           <AnimatePresence>
             {readyCount > 0 && (
               <motion.div
-                initial={{ opacity: 0, scale:  0.9 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
+                className="relative"
               >
+                {/* Pulsing outer glow rings — draws attention! */}
+                <motion.div
+                  className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
+                  animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.03, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute -inset-2 rounded-[32px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
+                  animate={{ opacity: [0.15, 0.35, 0.15], scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                />
+
                 <button
                   onClick={scrollToReverify}
-                  className="w-full group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] p-[2px] shadow-xl shadow-[hsl(var(--emerald))]/30 hover:shadow-2xl hover:shadow-[hsl(var(--emerald))]/50 transition-all duration-300"
+                  className="w-full group relative overflow-hidden rounded-3xl bg-white p-[3px] shadow-2xl"
                 >
                   {/* Animated shine sweep */}
-                  <motion.div
-                    className="absolute inset-1 overflow-hidden rounded-[22px]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
+                  <div className="absolute inset-[3px] overflow-hidden rounded-[20px] z-10 pointer-events-none">
                     <motion.div
-                      className="absolute -inset-full top-1/2 h-[300%] w-[60%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ left: ["-100%", "200%"] }}
-                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+                      className="absolute -inset-full top-1/2 h-[400%] w-[40%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                      animate={{ left: ["-100%", "250%"] }}
+                      transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" }}
                     />
-                  </motion.div>
+                  </div>
 
-                  <div className="relative rounded-[22px] bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] px-5 py-4 flex items-center gap-3">
-                    {/* Left icon badge */}
-                    <div className="shrink-2">
-                      <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-inner">
-                        <Camera className="w-7 h-7 text-white" />
-                      </div>
+                  <div className="relative rounded-[20px] bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] px-4 py-4 flex items-center gap-3">
+                    {/* Left: big camera icon inside white circle */}
+                    <div className="shrink-0">
+                      <motion.div
+                        animate={{ rotate: [0, -5, 5, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-14 h-14 rounded-2xl bg-white/95 flex items-center justify-center shadow-lg"
+                      >
+                        <Camera className="w-7 h-7 text-[hsl(var(--emerald))]" />
+                      </motion.div>
                     </div>
 
-                    {/* Center text — SUPER clear */}
-                    <div className="flex-1 min-w-0 text-left">
+                    {/* Center: crystal clear Bengali text */}
+                    <div className="flex-1 min-w-  text-left">
+                      {/* Top label */}
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <BadgeCheck className="w-4 h-4 text-white/90" />
-                        <span className="text-xs font-bold text-white/90">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-white/95 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          <BadgeCheck className="w-3 h-3" />
                           {readyCount}টি অ্যাকাউন্ট Re-verify করুন
                         </span>
                       </div>
+                      {/* Big money amount */}
                       <div className="flex items-center gap-1.5">
-                        <Banknote className="w-4 h-4 text-yellow-300" />
-                        <span className="text-lg font-black text-white drop-shadow-sm">
-                          ৳{readyCount * rewardRate} টাকা পাবেন
+                        <Banknote className="w-5 h-5 text-yellow-300" />
+                        <span className="text-xl font-black text-white drop-shadow-md tracking-tight">
+                          ৳{readyCount * rewardRate} টাকা
                         </span>
                       </div>
+                      {/* Small hint */}
+                      <p className="text-[10px] text-white/80 font-medium mt-0.5">
+                        মুখের ছবি তুলে নিচে Re-verify করুন
+                      </p>
                     </div>
 
-                    {/* Right arrow */}
-                    <div className="shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 group-hover:bg-white/30 transition-colors">
-                        <ChevronRight className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform" />
-                      </div>
+                    {/* Right: animated arrow */}
+                    <div className="shrink-1">
+                      <motion.div
+                        animate={{ x: [0, 3, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg"
+                      >
+                        <ChevronRight className="w-5 h-5 text-[hsl(var(--emerald))]" />
+                      </motion.div>
                     </div>
                   </div>
                 </button>
 
-                {/* Helper text below */}
-                <p className="text-center text-[10px] text-muted-foreground mt-2 font-medium">
-                  👇 নিচে গেলে মুখের ছবি তুলে Re-verify করতে পারবেন
+                {/* Tiny helper below */}
+                <p className="text-center text-[10px] text-muted-foreground mt-2.5 font-medium">
+                  👇 নিচে গিয়ে মুখের ছবি তুলে Re-verify করুন
                 </p>
               </motion.div>
             )}
