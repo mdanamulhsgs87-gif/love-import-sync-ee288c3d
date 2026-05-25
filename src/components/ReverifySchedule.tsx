@@ -417,7 +417,7 @@ export function ReverifySchedule() {
                     </div>
 
                     {/* Right: animated arrow */}
-                    <div className="shrink-0">
+                    <div className="shrink-1">
                       <motion.div
                         animate={{ x: [0, 3, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
