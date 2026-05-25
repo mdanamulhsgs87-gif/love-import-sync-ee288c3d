@@ -360,12 +360,12 @@ export function ReverifySchedule() {
                 {/* Pulsing outer glow rings — draws attention! */}
                 <motion.div
                   className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
-                  animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.03, 1] }}
+                  animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.04, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
                   className="absolute -inset-2 rounded-[32px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
-                  animate={{ opacity: [0.15, 0.35, 0.15], scale: [1, 1.05, 1] }}
+                  animate={{ opacity: [1.2, 0.4, 0.15], scale: [1, 1.06, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
                 />
 
