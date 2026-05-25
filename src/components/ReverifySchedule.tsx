@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon, Hourglass } from "lucide-react";
+import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon, Hourglass, Camera, Banknote, ChevronRight, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getPublicSettings } from "@/lib/api";
@@ -348,20 +348,95 @@ export function ReverifySchedule() {
             </div>
           </div>
 
-          {/* Ready CTA */}
+          {/* Ready CTA — STUNNING, IMPOSSIBLE TO MISS */}
           <AnimatePresence>
             {readyCount > 0 && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={scrollToReverify}
-                className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] text-primary-foreground text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-[hsl(var(--emerald))]/40"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 1, y: 10 }}
+                className="relative"
               >
-                <Sparkles className="w-4 h-4" />
-                {readyCount}টি Account এখন Re-verify করুন · ৳{readyCount * rewardRate}
-              </motion.button>
+                {/* Animated border glow */}
+                <motion.div
+                  className="absolute -inset-[2px] rounded-[26px] bg-gradient-to-r from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))]"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                <button
+                  onClick={scrollToReverify}
+                  className="w-full group relative overflow-hidden rounded-3xl shadow-2xl shadow-[hsl(var(--emerald))]/30"
+                >
+                  <div className="relative rounded-3xl bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] p-1">
+                    <div className="rounded-[20px] bg-gradient-to-b from-white/10 to-transparent p-4 space-y-3.5">
+                      {/* Shine sweep */}
+                      <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                        <motion.div
+                          className="absolute -inset-full top-1/2 h-[400%] w-[40%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          animate={{ left: ["-100%", "250%"] }}
+                          transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+                        />
+                      </div>
+
+                      {/* TOP: Status pill */}
+                      <div className="relative flex justify-center">
+                        <motion.div
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 shadow-md"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-[hsl(var(--emerald))]" />
+                          <span className="text-[11px] font-black text-[hsl(var(--emerald))]">
+                            {readyCount}টি অ্যাকাউন্ট Re-verify করতে পারবেন
+                          </span>
+                        </motion.div>
+                      </div>
+
+                      {/* MIDDLE: Big icon + crystal clear text */}
+                      <div className="relative flex flex-col items-center gap-2.5">
+                        <motion.div
+                          animate={{ y: [0, -3, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                          className="w-[72px] h-[72px] rounded-[24px] bg-white flex items-center justify-center shadow-xl shadow-black/10"
+                        >
+                          <Camera className="w-9 h-9 text-[hsl(var(--emerald))]" />
+                        </motion.div>
+                        <div className="text-center space-y-0.5">
+                          <p className="text-xl font-black text-white drop-shadow-sm">
+                            মুখ দিয়ে Re-verify করুন
+                          </p>
+                          <p className="text-sm text-white/90 font-bold">
+                            ৳{readyCount * rewardRate} টাকা পাবেন
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* BOTTOM: Big tap bar */}
+                      <div className="relative">
+                        <motion.div
+                          animate={{ scale: [1, 1.02, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                          className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white shadow-lg"
+                        >
+                          <span className="text-base font-black text-[hsl(var(--emerald))]">
+                            এখনই শুরু করুন
+                          </span>
+                          <motion.div
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <ChevronRight className="w-6 h-6 text-[hsl(var(--emerald))]" />
+                          </motion.div>
+                        </motion.div>
+                        <p className="text-center text-[10px] text-white/70 font-medium mt-2">
+                          👇 নিচে গিয়ে মুখের ছবি তুলুন
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
             )}
           </AnimatePresence>
 
@@ -418,51 +493,20 @@ export function ReverifySchedule() {
                     <span className="text-[11px] font-mono font-bold text-foreground/80 truncate">
                       {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
                     </span>
+
+                    {/* Status */}
                     {r.ready ? (
-                      <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" /> READY
-                      </span>
+                      <motion.span
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-[hsl(var(--emerald))] text-primary-foreground font-black shrink-0"
+                      >
+                        Ready
+                      </motion.span>
                     ) : (
-                      <span className="text-[10px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
-                        <Hourglass className="w-3 h-3" /> অপেক্ষায়
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-bold shrink-0">
+                        অপেক্ষায়
                       </span>
-                    )}
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mt-1.5 h-1.5 rounded-full bg-muted/50 overflow-hidden">
-                    <motion.div
-                      initial={false}
-                      animate={{ width: `${r.progress}%` }}
-                      transition={{ duration: 0.5 }}
-                      className={`h-full rounded-full bg-gradient-to-r ${
-                        r.ready
-                          ? "from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
-                          : "from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
-                      }`}
-                    />
-                  </div>
-                  <div className="mt-1 flex items-center justify-between">
-                    {r.ready ? (
-                      <>
-                        <span className="text-[9px] text-muted-foreground">
-                          🎉 এখনই Re-verify করুন
-                        </span>
-                        <span className="text-[9px] font-bold text-[hsl(var(--emerald))]">
-                          +৳{rewardRate}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-[9px] text-muted-foreground">
-                          ⏳ Ready হতে বাকি
-                        </span>
-                        <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
-                          {(() => {
-                            const t = formatRemainingParts((r as any).remaining || 0);
-                            return t.done ? "শীঘ্রই Ready" : `${t.d}দিন ${t.h}ঘ ${t.m}মি`;
-                          })()}
-                        </span>
-                      </>
                     )}
                   </div>
                 </div>
@@ -473,69 +517,13 @@ export function ReverifySchedule() {
           {rows.length > 3 && (
             <button
               onClick={() => setShowAll((v) => !v)}
-              className="w-full py-2 rounded-2xl border border-[hsl(var(--emerald))]/40 bg-[hsl(var(--emerald))]/8 text-[hsl(var(--emerald))] text-xs font-black hover:bg-[hsl(var(--emerald))]/15 transition-colors"
+              className="w-full py-2.5 rounded-2xl border-2 border-[hsl(var(--cyan))]/40 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] text-sm font-black hover:bg-[hsl(var(--cyan))]/20 transition-colors"
             >
               {showAll
                 ? "🔼 সংক্ষেপে দেখুন"
-                : `🔽 সবগুলো দেখুন (${rows.length}টি)`}
+                : `🔽 আরও দেখুন (+${rows.length - 3}টি)`}
             </button>
           )}
-
-          <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
-            💡 এই Account গুলোর জন্য Good-App Re-verify চাইছে। ছবি দেখে চিনে নিন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
-          </p>
-
-          {/* How the system works — helps users understand timing */}
-          <div className="rounded-3xl border-2 border-[hsl(var(--amber))]/50 bg-gradient-to-br from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/8 to-[hsl(var(--rose))]/10 p-5 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/30">
-                <svg className="w-5 h-5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 1 1 1-18 0 9 9 0 1 1 18 0Z" />
-                </svg>
-              </div>
-              <h3 className="text-base font-black text-[hsl(var(--amber))]">
-                Re-verify কীভাবে কাজ করে?
-              </h3>
-            </div>
-
-            <div className="space-y-3.5">
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--blue))]/20 flex items-center justify-center shrink-1">
-                  <span className="text-sm font-black text-[hsl(var(--blue))]">১</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-0.5">
-                  <b className="text-foreground">প্রথম Verify</b> করলেই আপনার <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> টাকা <b className="text-[hsl(var(--amber))]">Locked Vault</b> এ সুরক্ষিত হয়ে যাবে 🔒 — টাকা আপনারই, শুধু Re-verify এর অপেক্ষায় 💎
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--cyan))]/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-[hsl(var(--cyan))]">২</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  <b className="text-foreground">৩-৪ দিন পর</b> Good-App আবার Re-verify চাইবে।
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--emerald))]/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৩</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  Re-verify চাইলে Account এ <b className="text-[hsl(var(--emerald))]">READY</b> লেখা দেখাবে — তখনই করতে পারবেন।
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--rose))]/25 flex items-center justify-center shrink-0 border border-[hsl(var(--rose))]/40">
-                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৪</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  Re-verify <b className="text-[hsl(var(--emerald))]">Success</b> হলেই Pending থেকে <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> বা USDT সরাসরি আপনার Main Balance এ যোগ হয়ে যাবে 🎉
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </motion.div>
       )}
@@ -547,31 +535,32 @@ export function ReverifySchedule() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setZoomPhoto(null)}
-            className="fixed inset-0 z-[200] bg-background/90 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              onClick={(e) => e.stopPropagation()}
               className="relative max-w-sm w-full"
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setZoomPhoto(null)}
-                className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center shadow-lg"
+                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center z-10"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-foreground" />
               </button>
-              <img
-                src={zoomPhoto.url}
-                alt="Bound face"
-                className="w-full rounded-3xl border-2 border-[hsl(var(--cyan))]/40 shadow-2xl"
-              />
-              <div className="mt-3 text-center">
-                <p className="text-[10px] text-muted-foreground">Bound Wallet</p>
-                <p className="text-xs font-mono font-bold break-all">{zoomPhoto.wallet}</p>
+              <div className="rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl">
+                <img
+                  src={zoomPhoto.url}
+                  alt="Face"
+                  className="w-full aspect-square object-cover"
+                />
               </div>
+              <p className="text-center text-white/80 text-xs font-mono mt-3">
+                {zoomPhoto.wallet.slice(0, 6)}…{zoomPhoto.wallet.slice(-4)}
+              </p>
             </motion.div>
           </motion.div>
         )}
