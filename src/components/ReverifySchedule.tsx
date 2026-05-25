@@ -395,7 +395,7 @@ export function ReverifySchedule() {
                     </div>
 
                     {/* Center: crystal clear Bengali text */}
-                    <div className="flex-1 min-w-  text-left">
+                    <div className="flex-1 min-w-0 text-left">
                       {/* Top label */}
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span className="inline-flex items-center gap-1 text-[10px] font-black text-white/95 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -417,7 +417,7 @@ export function ReverifySchedule() {
                     </div>
 
                     {/* Right: animated arrow */}
-                    <div className="shrink-1">
+                    <div className="shrink-0">
                       <motion.div
                         animate={{ x: [0, 3, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
