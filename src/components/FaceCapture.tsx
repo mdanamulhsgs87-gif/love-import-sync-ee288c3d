@@ -331,7 +331,7 @@ export function FaceCapture({ onCapture, onCancel, isUploading }: FaceCapturePro
               disabled={!cameraReady}
               className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--cyan))] to-[hsl(var(--blue))] text-primary-foreground text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Camera className="w-4 h-4" /> ম্যানুয়াল ফটো
+              <Camera className="w-4 h-4" /> ফটো তুলুন
             </button>
           </>
         )}
