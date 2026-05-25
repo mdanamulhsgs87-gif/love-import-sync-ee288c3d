@@ -348,20 +348,69 @@ export function ReverifySchedule() {
             </div>
           </div>
 
-          {/* Ready CTA */}
+          {/* Ready CTA — BIG, BEAUTIFUL, EASY TO UNDERSTAND */}
           <AnimatePresence>
             {readyCount > 0 && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
+              <motion.div
+                initial={{ opacity: 0, scale:  0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={scrollToReverify}
-                className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] text-primary-foreground text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-[hsl(var(--emerald))]/40"
               >
-                <Sparkles className="w-4 h-4" />
-                {readyCount}টি Account এখন Re-verify করুন · ৳{readyCount * rewardRate}
-              </motion.button>
+                <button
+                  onClick={scrollToReverify}
+                  className="w-full group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] p-[2px] shadow-xl shadow-[hsl(var(--emerald))]/30 hover:shadow-2xl hover:shadow-[hsl(var(--emerald))]/50 transition-all duration-300"
+                >
+                  {/* Animated shine sweep */}
+                  <motion.div
+                    className="absolute inset-1 overflow-hidden rounded-[22px]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <motion.div
+                      className="absolute -inset-full top-1/2 h-[300%] w-[60%] -translate-y-1/2 rotate-[25deg] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ left: ["-100%", "200%"] }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+                    />
+                  </motion.div>
+
+                  <div className="relative rounded-[22px] bg-gradient-to-br from-[hsl(var(--emerald))] via-[hsl(var(--cyan))] to-[hsl(var(--blue))] px-5 py-4 flex items-center gap-3">
+                    {/* Left icon badge */}
+                    <div className="shrink-2">
+                      <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-inner">
+                        <Camera className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+
+                    {/* Center text — SUPER clear */}
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <BadgeCheck className="w-4 h-4 text-white/90" />
+                        <span className="text-xs font-bold text-white/90">
+                          {readyCount}টি অ্যাকাউন্ট Re-verify করুন
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Banknote className="w-4 h-4 text-yellow-300" />
+                        <span className="text-lg font-black text-white drop-shadow-sm">
+                          ৳{readyCount * rewardRate} টাকা পাবেন
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right arrow */}
+                    <div className="shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 group-hover:bg-white/30 transition-colors">
+                        <ChevronRight className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Helper text below */}
+                <p className="text-center text-[10px] text-muted-foreground mt-2 font-medium">
+                  👇 নিচে গেলে মুখের ছবি তুলে Re-verify করতে পারবেন
+                </p>
+              </motion.div>
             )}
           </AnimatePresence>
 
