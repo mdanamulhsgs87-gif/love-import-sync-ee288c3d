@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon, Hourglass } from "lucide-react";
+import { Sparkles, ShieldCheck, Unlock, X, Wallet as WalletIcon, Hourglass, Camera, Banknote, ChevronRight, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getPublicSettings } from "@/lib/api";
