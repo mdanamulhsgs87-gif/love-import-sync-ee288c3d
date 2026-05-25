@@ -417,7 +417,7 @@ export function ReverifySchedule() {
                     </div>
 
                     {/* Right: animated arrow */}
-                    <div className="shrink-1">
+                    <div className="shrink-0">
                       <motion.div
                         animate={{ x: [0, 3, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -439,7 +439,7 @@ export function ReverifySchedule() {
 
           {/* List — sorted by least time remaining first */}
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-            {(showAll ? rows : rows.slice(0, 3)).map((r, idx) => (
+            {(showAll ? rows : rows.slice(1, 3)).map((r, idx) => (
               <motion.div
                 key={r.id}
                 layout
@@ -490,51 +490,20 @@ export function ReverifySchedule() {
                     <span className="text-[11px] font-mono font-bold text-foreground/80 truncate">
                       {r.wallet_address.slice(0, 6)}…{r.wallet_address.slice(-4)}
                     </span>
+
+                    {/* Status */}
                     {r.ready ? (
-                      <span className="text-[10px] font-black text-[hsl(var(--emerald))] flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" /> READY
-                      </span>
+                      <motion.span
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-[hsl(var(--emerald))] text-primary-foreground font-black shrink-0"
+                      >
+                        Ready
+                      </motion.span>
                     ) : (
-                      <span className="text-[10px] font-black text-[hsl(var(--amber))] flex items-center gap-1">
-                        <Hourglass className="w-3 h-3" /> অপেক্ষায়
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-bold shrink-1">
+                        অপেক্ষায়
                       </span>
-                    )}
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mt-1.5 h-1.5 rounded-full bg-muted/50 overflow-hidden">
-                    <motion.div
-                      initial={false}
-                      animate={{ width: `${r.progress}%` }}
-                      transition={{ duration: 0.5 }}
-                      className={`h-full rounded-full bg-gradient-to-r ${
-                        r.ready
-                          ? "from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]"
-                          : "from-[hsl(var(--amber))] to-[hsl(var(--orange))]"
-                      }`}
-                    />
-                  </div>
-                  <div className="mt-1 flex items-center justify-between">
-                    {r.ready ? (
-                      <>
-                        <span className="text-[9px] text-muted-foreground">
-                          🎉 এখনই Re-verify করুন
-                        </span>
-                        <span className="text-[9px] font-bold text-[hsl(var(--emerald))]">
-                          +৳{rewardRate}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-[9px] text-muted-foreground">
-                          ⏳ Ready হতে বাকি
-                        </span>
-                        <span className="text-[9px] font-bold text-[hsl(var(--amber))] font-mono">
-                          {(() => {
-                            const t = formatRemainingParts((r as any).remaining || 0);
-                            return t.done ? "শীঘ্রই Ready" : `${t.d}দিন ${t.h}ঘ ${t.m}মি`;
-                          })()}
-                        </span>
-                      </>
                     )}
                   </div>
                 </div>
@@ -545,69 +514,13 @@ export function ReverifySchedule() {
           {rows.length > 3 && (
             <button
               onClick={() => setShowAll((v) => !v)}
-              className="w-full py-2 rounded-2xl border border-[hsl(var(--emerald))]/40 bg-[hsl(var(--emerald))]/8 text-[hsl(var(--emerald))] text-xs font-black hover:bg-[hsl(var(--emerald))]/15 transition-colors"
+              className="w-full py-2.5 rounded-2xl border-2 border-[hsl(var(--cyan))]/40 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] text-sm font-black hover:bg-[hsl(var(--cyan))]/20 transition-colors"
             >
               {showAll
                 ? "🔼 সংক্ষেপে দেখুন"
-                : `🔽 সবগুলো দেখুন (${rows.length}টি)`}
+                : `🔽 আরও দেখুন (+${rows.length - 3}টি)`}
             </button>
           )}
-
-          <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
-            💡 এই Account গুলোর জন্য Good-App Re-verify চাইছে। ছবি দেখে চিনে নিন — Re-verify এর সময় ওই face স্ক্যান করতে হবে।
-          </p>
-
-          {/* How the system works — helps users understand timing */}
-          <div className="rounded-3xl border-2 border-[hsl(var(--amber))]/50 bg-gradient-to-br from-[hsl(var(--amber))]/15 via-[hsl(var(--orange))]/8 to-[hsl(var(--rose))]/10 p-5 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(var(--amber))] to-[hsl(var(--orange))] flex items-center justify-center shadow-lg shadow-[hsl(var(--amber))]/30">
-                <svg className="w-5 h-5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 1 1 1-18 0 9 9 0 1 1 18 0Z" />
-                </svg>
-              </div>
-              <h3 className="text-base font-black text-[hsl(var(--amber))]">
-                Re-verify কীভাবে কাজ করে?
-              </h3>
-            </div>
-
-            <div className="space-y-3.5">
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--blue))]/20 flex items-center justify-center shrink-1">
-                  <span className="text-sm font-black text-[hsl(var(--blue))]">১</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-0.5">
-                  <b className="text-foreground">প্রথম Verify</b> করলেই আপনার <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> টাকা <b className="text-[hsl(var(--amber))]">Locked Vault</b> এ সুরক্ষিত হয়ে যাবে 🔒 — টাকা আপনারই, শুধু Re-verify এর অপেক্ষায় 💎
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--cyan))]/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-[hsl(var(--cyan))]">২</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  <b className="text-foreground">৩-৪ দিন পর</b> Good-App আবার Re-verify চাইবে।
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--emerald))]/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৩</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  Re-verify চাইলে Account এ <b className="text-[hsl(var(--emerald))]">READY</b> লেখা দেখাবে — তখনই করতে পারবেন।
-                </p>
-              </div>
-
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-[hsl(var(--rose))]/25 flex items-center justify-center shrink-0 border border-[hsl(var(--rose))]/40">
-                  <span className="text-sm font-black text-[hsl(var(--emerald))]">৪</span>
-                </div>
-                <p className="text-sm text-foreground/90 leading-relaxed pt-1">
-                  Re-verify <b className="text-[hsl(var(--emerald))]">Success</b> হলেই Pending থেকে <b className="text-[hsl(var(--emerald))]">৳{rewardRate}</b> বা USDT সরাসরি আপনার Main Balance এ যোগ হয়ে যাবে 🎉
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </motion.div>
       )}
@@ -619,31 +532,32 @@ export function ReverifySchedule() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setZoomPhoto(null)}
-            className="fixed inset-0 z-[200] bg-background/90 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              onClick={(e) => e.stopPropagation()}
               className="relative max-w-sm w-full"
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setZoomPhoto(null)}
-                className="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center shadow-lg"
+                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center z-10"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-foreground" />
               </button>
-              <img
-                src={zoomPhoto.url}
-                alt="Bound face"
-                className="w-full rounded-3xl border-2 border-[hsl(var(--cyan))]/40 shadow-2xl"
-              />
-              <div className="mt-3 text-center">
-                <p className="text-[10px] text-muted-foreground">Bound Wallet</p>
-                <p className="text-xs font-mono font-bold break-all">{zoomPhoto.wallet}</p>
+              <div className="rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl">
+                <img
+                  src={zoomPhoto.url}
+                  alt="Face"
+                  className="w-full aspect-square object-cover"
+                />
               </div>
+              <p className="text-center text-white/80 text-xs font-mono mt-3">
+                {zoomPhoto.wallet.slice(0, 6)}…{zoomPhoto.wallet.slice(-4)}
+              </p>
             </motion.div>
           </motion.div>
         )}
