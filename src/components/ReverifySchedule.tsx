@@ -504,7 +504,7 @@ export function ReverifySchedule() {
                         Ready
                       </motion.span>
                     ) : (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-bold shrink-1">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-bold shrink-0">
                         অপেক্ষায়
                       </span>
                     )}
