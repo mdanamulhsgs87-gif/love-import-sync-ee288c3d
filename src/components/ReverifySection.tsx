@@ -94,7 +94,7 @@ export function ReverifySection() {
         if (reason === "no_bindings") msg = "❌ কোনো ওয়ালেট বাইন্ডিং নেই।";
         if (reason === "no_match_found") msg = "❌ ফেস ম্যাচ হয়নি। আবার চেষ্টা করুন।";
         if (reason === "low_confidence_face_match") msg = "❌ নিশ্চিতভাবে ফেস ম্যাচ হয়নি—ভুল ম্যাচ এড়াতে বন্ধ করা হয়েছে।";
-        if (reason === "no_pending_reverify_for_user") msg = "⏳ এই মুহূর্তে আপনার জন্য কোনো Re-verify কাজ নেই। কিছুক্ষণ পরে আবার চেষ্টা করুন।";
+        if (reason === "no_pending_reverify_for_user") msg = "⚠️ এই ফেস দিয়ে এখনো প্রথম Verify করা হয়নি। দয়া করে আগে প্রথম Verify করুন, তারপর ৩ দিন পর Re-verify করুন।";
         if (reason === "login_required" || reason === "invalid_login") msg = "❌ আগে লগইন করুন, তারপর re-verify করুন।";
 
         setStep("done_failed");
