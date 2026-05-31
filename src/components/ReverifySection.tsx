@@ -94,7 +94,7 @@ export function ReverifySection() {
         if (reason === "no_bindings") msg = "❌ কোনো ওয়ালেট বাইন্ডিং নেই।";
         if (reason === "no_match_found") msg = "❌ ফেস ম্যাচ হয়নি। আবার চেষ্টা করুন।";
         if (reason === "low_confidence_face_match") msg = "❌ নিশ্চিতভাবে ফেস ম্যাচ হয়নি—ভুল ম্যাচ এড়াতে বন্ধ করা হয়েছে।";
-        if (reason === "no_pending_reverify_for_user") msg = "❌ আপনার নামে কোনো Pending re-verify নেই। Admin panel থেকে আগে queue দিন।";
+        if (reason === "no_pending_reverify_for_user") msg = "⏳ এই মুহূর্তে আপনার জন্য কোনো Re-verify কাজ নেই। কিছুক্ষণ পরে আবার চেষ্টা করুন।";
         if (reason === "login_required" || reason === "invalid_login") msg = "❌ আগে লগইন করুন, তারপর re-verify করুন।";
 
         setStep("done_failed");
@@ -207,15 +207,18 @@ export function ReverifySection() {
       if (rebindError) throw rebindError;
       if (result?.error) throw new Error(result.error);
 
-      await refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
-
+      // Rebind succeeded — show success FIRST so any post-success refresh
+      // hiccups (network/auth refresh) never flip the UI to red.
       const earnedTk = rewardRate;
       const earnedUsdt = +(rewardRate / (settings.usdtToBdtRate || 124)).toFixed(4);
       setStep("done_success");
       setStatusMessage(`🎉 অ্যাকাউন্ট Complete! +${earnedUsdt} USDT (≈ ৳${earnedTk}) যোগ হয়েছে`);
       toast({ title: `🎉 ১টি অ্যাকাউন্ট সম্পন্ন! +${earnedUsdt} USDT (৳${earnedTk}) যোগ হয়েছে` });
       setTimeout(resetState, 4000);
+
+      // Best-effort refresh — never throw
+      try { await refreshUser(); } catch (e) { console.warn("refreshUser failed (non-fatal):", e); }
+      try { queryClient.invalidateQueries({ queryKey: ["user-transactions"] }); } catch (e) { console.warn("invalidate failed (non-fatal):", e); }
     } catch (err: any) {
       toast({ title: "ব্যর্থ", description: err.message, variant: "destructive" });
       setStep("done_failed");
