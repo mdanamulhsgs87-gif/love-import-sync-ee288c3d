@@ -620,10 +620,9 @@ export default function Dashboard() {
 
             {/* Re-verify Balance Card (compact) */}
             {(() => {
-              // Pending = (1st-verified but not yet re-verified) + admin-queued re-verifies
-              const firstVerifyPending = Math.max(0, (Number((user as any).key_count) || 0) - (Number((user as any).reverify_count) || 0));
-              const queuePending = myReverifyQueue.filter((r: any) => r.status === "pending").length;
-              const pCount = firstVerifyPending + queuePending;
+              // Pending = accounts that got 1st-verify but haven't completed re-verify yet.
+              // Re-verify queue pending shares the same account, so don't double-count.
+              const pCount = Math.max(0, (Number((user as any).key_count) || 0) - (Number((user as any).reverify_count) || 0));
               const pendingBdt = pCount * (currentRate || 0);
               return (
                 <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
