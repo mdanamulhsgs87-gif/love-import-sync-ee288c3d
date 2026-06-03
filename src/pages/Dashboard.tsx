@@ -620,41 +620,80 @@ export default function Dashboard() {
 
             {/* Re-verify Balance Card (compact) */}
             {(() => {
-              const pCount = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+              // Pending = (1st-verified but not yet re-verified) + admin-queued re-verifies
+              const firstVerifyPending = Math.max(0, (Number((user as any).key_count) || 0) - (Number((user as any).reverify_count) || 0));
+              const queuePending = myReverifyQueue.filter((r: any) => r.status === "pending").length;
+              const pCount = firstVerifyPending + queuePending;
               const pendingBdt = pCount * (currentRate || 0);
               return (
                 <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
                   className="rounded-3xl border-2 border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
-                  {/* TOP: Pending (faded, locked) */}
-                  <div className="relative px-5 pt-5 pb-5 border-b border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50">
-                    <div className={`flex items-center justify-between gap-3 ${pCount === 0 ? "opacity-50 grayscale" : ""}`}>
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-amber-100 border-2 border-amber-400 flex items-center justify-center shrink-0 shadow-md shadow-amber-300/40">
-                          <Lock className="w-5 h-5 text-amber-700" />
-                        </div>
+                  {/* TOP: Pending (premium glass) */}
+                  <div className="relative px-5 pt-5 pb-6 border-b border-dashed border-amber-300 overflow-hidden">
+                    {/* Layered premium background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50" />
+                    <motion.div
+                      aria-hidden
+                      className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-amber-300/40 to-orange-400/20 blur-2xl"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 5, repeat: Infinity }}
+                    />
+                    <motion.div
+                      aria-hidden
+                      className="absolute -bottom-20 -left-12 w-44 h-44 rounded-full bg-gradient-to-br from-yellow-300/30 to-amber-400/20 blur-2xl"
+                      animate={{ scale: [1.1, 1, 1.1], opacity: [0.4, 0.7, 0.4] }}
+                      transition={{ duration: 6, repeat: Infinity }}
+                    />
+                    {/* Shimmer sweep */}
+                    {pCount > 0 && (
+                      <motion.div
+                        aria-hidden
+                        className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
+                        animate={{ x: ["0%", "400%"] }}
+                        transition={{ duration: 3.2, repeat: Infinity, ease: "linear" }}
+                      />
+                    )}
+
+                    <div className="relative flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <motion.div
+                          animate={pCount > 0 ? { rotate: [0, -8, 8, 0], scale: [1, 1.06, 1] } : {}}
+                          transition={{ duration: 2.4, repeat: Infinity }}
+                          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-yellow-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-400/50 ring-2 ring-white"
+                        >
+                          <Clock className="w-6 h-6 text-white drop-shadow" />
+                        </motion.div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-amber-800 flex items-center gap-1.5">
+                          <p className="text-[13px] font-black text-amber-900 flex items-center gap-1.5 tracking-tight">
                             ⏳ Pending Balance
                             {pCount > 0 && (
-                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+                              <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-400/50"
+                              >
                                 {pCount} Account
-                              </span>
+                              </motion.span>
                             )}
                           </p>
-                          <p className="text-[11px] font-bold text-amber-700/80 mt-0.5">
-                            Re-verify দিলেই নিচে যোগ হবে 👇
+                          <p className="text-[11px] font-bold text-amber-700/90 mt-0.5">
+                            {pCount > 0 ? "Re-verify দিলেই নিচে যোগ হবে 👇" : "Verify করলে এখানে দেখা যাবে"}
                           </p>
                         </div>
                       </div>
-                      <motion.p
+                      <motion.div
                         key={`pb-${pendingBdt}`}
-                        initial={{ scale: 0.85, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-3xl font-black text-amber-600 tabular-nums shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                        initial={{ scale: 0.7, opacity: 0, y: -10 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                        className="relative shrink-0 text-right"
                       >
-                        {pendingBdt}
-                        <span className="text-base ml-0.5 text-orange-500">৳</span>
-                      </motion.p>
+                        <p className="text-4xl font-black bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-600 bg-clip-text text-transparent tabular-nums drop-shadow-[0_2px_6px_rgba(245,158,11,0.3)] leading-none">
+                          {pendingBdt}
+                          <span className="text-lg ml-0.5 text-orange-500">৳</span>
+                        </p>
+                        <p className="text-[10px] font-bold text-amber-600/80 mt-1">আনলক হবে শীঘ্রই</p>
+                      </motion.div>
                     </div>
 
                     {/* Animated arrow flowing down */}
