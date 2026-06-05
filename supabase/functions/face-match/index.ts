@@ -315,7 +315,7 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
         console.error("Failed to parse duplicate check response");
       }
 
-      if (isDuplicate && confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+      if (isDuplicate && confidence < DUPLICATE_THRESHOLD) {
         isDuplicate = false;
         matchedId = null;
       }
@@ -351,7 +351,10 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
       console.error("Failed to parse AI response");
     }
 
-    if (!matchedId || confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+    const reverifyThreshold = bindingsWithPhotos.length === 1
+      ? REVERIFY_THRESHOLD_SINGLE
+      : REVERIFY_THRESHOLD_MULTI;
+    if (!matchedId || confidence < reverifyThreshold) {
       return new Response(
         JSON.stringify({ match: null, reason: confidence > 0 ? "low_confidence_face_match" : "no_match_found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
