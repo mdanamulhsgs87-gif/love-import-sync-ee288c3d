@@ -18,7 +18,14 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
-const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.85;
+// Tunable thresholds:
+// - Duplicate check (1st-verify): STRICT — only block if AI is near-certain it's the same person.
+//   We do NOT want false "already bound" rejections for new users.
+// - Re-verify match: LENIENT — the candidate pool is already restricted to the
+//   logged-in user's own pending wallets, so we just need a reasonable identity match.
+const DUPLICATE_THRESHOLD = 0.92;
+const REVERIFY_THRESHOLD_MULTI = 0.60;
+const REVERIFY_THRESHOLD_SINGLE = 0.45; // when only one candidate, be very lenient
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
