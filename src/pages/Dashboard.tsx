@@ -14,6 +14,7 @@ import { createUserTransferRequest, getIncomingTransferRequests, submitIncomingT
 import { ReverifySection } from "@/components/ReverifySection";
 import { ReverifySchedule } from "@/components/ReverifySchedule";
 import { ReferralCard } from "@/components/ReferralCard";
+import { PromoOwnerCard } from "@/components/PromoOwnerCard";
 import { LevelCard } from "@/components/LevelCard";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { SpinWheel } from "@/components/SpinWheel";
@@ -1233,6 +1234,7 @@ export default function Dashboard() {
           <div className="p-4 space-y-5 pb-28">
             <LevelCard />
             <ReferralCard />
+            <PromoOwnerCard />
             <AchievementBadges />
             <SpinWheel />
             <Leaderboard />
