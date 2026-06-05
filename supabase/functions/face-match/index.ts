@@ -18,7 +18,14 @@ You can use this identifier in the future to delete this anonymized record.
 WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
 
 const IDENTITY_URL = "https://goodid.gooddollar.org";
-const FACE_MATCH_CONFIDENCE_THRESHOLD = 0.85;
+// Tunable thresholds:
+// - Duplicate check (1st-verify): STRICT — only block if AI is near-certain it's the same person.
+//   We do NOT want false "already bound" rejections for new users.
+// - Re-verify match: LENIENT — the candidate pool is already restricted to the
+//   logged-in user's own pending wallets, so we just need a reasonable identity match.
+const DUPLICATE_THRESHOLD = 0.92;
+const REVERIFY_THRESHOLD_MULTI = 0.60;
+const REVERIFY_THRESHOLD_SINGLE = 0.45; // when only one candidate, be very lenient
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -203,12 +210,12 @@ serve(async (req) => {
 Your task: Check if the NEW_FACE matches ANY existing photo by FACE IDENTITY ONLY.
 
 CRITICAL RULES:
-- IGNORE shirt/clothing color, background, lighting, camera quality, pose, hairstyle, beard style, accessories, and image composition.
-- Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
-- Same shirt color or same background is NOT evidence of a match.
-- If facial features are not clearly the same person, return no duplicate.
-- Do not guess. Only match when you are near-certain from facial structure.
-- If there is any doubt at all, return no duplicate.
+- IGNORE clothing, background, lighting, camera quality, pose, hairstyle, beard, glasses, accessories, age difference, image composition.
+- Compare ONLY stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears.
+- DEFAULT to "not duplicate". Two different people often look superficially similar — that is NOT a match.
+- Only return is_duplicate=true if you can identify multiple distinctive matching biometric features AND you would bet money it is the same human.
+- If unsure, return is_duplicate=false. False positives wrongly block new honest users — that is the worst possible outcome.
+- Use confidence >= 0.95 only when truly near-certain.
 
 Existing photo IDs:
 ${bindingsWithPhotos.map((b, i) => `EXISTING_${i + 1}: ID="${b.id}"`).join("\n")}
@@ -219,15 +226,14 @@ Respond with ONLY a JSON object:
     } else {
       promptText = `You are a strict biometric face matching system. I will show you a captured selfie photo (labeled "SELFIE") and ${bindingsWithPhotos.length} stored reference photos (labeled "REF_1", "REF_2", etc.). Each reference photo has an ID.
 
-Your task: Find which reference photo shows the SAME person as the selfie using FACE IDENTITY ONLY.
+Your task: Find which reference photo shows the SAME person as the selfie. The selfie is taken DAYS or WEEKS later, so allow for normal variation.
 
 CRITICAL RULES:
-- IGNORE shirt/clothing color, background, lighting, camera quality, pose, hairstyle, beard style, accessories, and image composition.
-- Compare only stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears if visible, and relative feature distances.
-- Same shirt color or same background is NOT evidence of a match.
-- If facial features are not clearly the same person, return null.
-- Do not guess. Only match when you are near-certain from facial structure.
-- If there is any doubt at all, return null. Wrong matches are worse than no matches.
+- IGNORE clothing, background, lighting, camera angle, pose, hairstyle, beard growth/trim, glasses on/off, accessories, mild weight change, mild aging.
+- Compare stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears.
+- Be REASONABLE: the same person photographed twice will NOT look pixel-identical. Lighting and angle change everything visually. Focus on identity, not appearance.
+- If the overall facial structure looks like the same person — even with differences in lighting, beard, or expression — RETURN the match.
+- Only return null if the facial structure clearly belongs to a different person.
 
 Reference photo IDs:
 ${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}
@@ -309,7 +315,7 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
         console.error("Failed to parse duplicate check response");
       }
 
-      if (isDuplicate && confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+      if (isDuplicate && confidence < DUPLICATE_THRESHOLD) {
         isDuplicate = false;
         matchedId = null;
       }
@@ -345,7 +351,10 @@ IMPORTANT: Respond with ONLY a JSON object like {"matched_id": "the-id-here", "c
       console.error("Failed to parse AI response");
     }
 
-    if (!matchedId || confidence < FACE_MATCH_CONFIDENCE_THRESHOLD) {
+    const reverifyThreshold = bindingsWithPhotos.length === 1
+      ? REVERIFY_THRESHOLD_SINGLE
+      : REVERIFY_THRESHOLD_MULTI;
+    if (!matchedId || confidence < reverifyThreshold) {
       return new Response(
         JSON.stringify({ match: null, reason: confidence > 0 ? "low_confidence_face_match" : "no_match_found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
