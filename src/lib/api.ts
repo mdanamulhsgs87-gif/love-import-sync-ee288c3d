@@ -97,8 +97,8 @@ export type Settings = {
   usdtFeePercent: number;
   referralBonusUsd: number;
   usdtToBdtRate: number;
-  promoUserBonusPct: number;
-  promoOwnerCommissionPct: number;
+  promoUserBonusBdt: number;
+  promoOwnerCommissionUsdt: number;
 };
 
 // Auth / User APIs
@@ -164,8 +164,8 @@ export async function getPublicSettings(): Promise<Settings> {
     usdtFeePercent: 2,
     referralBonusUsd: 0.05,
     usdtToBdtRate: 124,
-    promoUserBonusPct: 5,
-    promoOwnerCommissionPct: 5,
+    promoUserBonusBdt: 2,
+    promoOwnerCommissionUsdt: 0.0157,
   };
 
   data?.forEach((s) => {
@@ -191,8 +191,8 @@ export async function getPublicSettings(): Promise<Settings> {
     if (s.key === "usdtFeePercent") settings.usdtFeePercent = parseFloat(s.value) || 2;
     if (s.key === "referralBonusUsd") settings.referralBonusUsd = parseFloat(s.value) || 0.05;
     if (s.key === "usdtToBdtRate") settings.usdtToBdtRate = parseFloat(s.value) || 124;
-    if (s.key === "promoUserBonusPct") settings.promoUserBonusPct = parseFloat(s.value) || 5;
-    if (s.key === "promoOwnerCommissionPct") settings.promoOwnerCommissionPct = parseFloat(s.value) || 5;
+    if (s.key === "promoUserBonusBdt") settings.promoUserBonusBdt = parseFloat(s.value) || 2;
+    if (s.key === "promoOwnerCommissionUsdt") settings.promoOwnerCommissionUsdt = parseFloat(s.value) || 0.0157;
   });
 
   // Auto-derive USDT rate per account from BDT reward rate ÷ USDT→BDT rate
