@@ -151,8 +151,8 @@ export default function AdminPanel() {
   const [promoNewCode, setPromoNewCode] = useState("");
   const [promoNewOwnerGuest, setPromoNewOwnerGuest] = useState("");
   const [promoCreating, setPromoCreating] = useState(false);
-  const [promoUserPctSetting, setPromoUserPctSetting] = useState("5");
-  const [promoOwnerPctSetting, setPromoOwnerPctSetting] = useState("5");
+  const [promoUserPctSetting, setPromoUserPctSetting] = useState("2");
+  const [promoOwnerPctSetting, setPromoOwnerPctSetting] = useState("0.0157");
   const [promoPctSaving, setPromoPctSaving] = useState(false);
 
   // Auto-load latest reset batch ID from database
@@ -319,8 +319,8 @@ export default function AdminPanel() {
       setUsdtFeeSetting(String(settingsData.usdtFeePercent ?? 2));
       setUsdtToBdtSetting(String((settingsData as any).usdtToBdtRate ?? 124));
       setReferralBonusSetting(String((settingsData as any).referralBonusUsd ?? 0.05));
-      setPromoUserPctSetting(String((settingsData as any).promoUserBonusPct ?? 5));
-      setPromoOwnerPctSetting(String((settingsData as any).promoOwnerCommissionPct ?? 5));
+      setPromoUserPctSetting(String((settingsData as any).promoUserBonusBdt ?? 2));
+      setPromoOwnerPctSetting(String((settingsData as any).promoOwnerCommissionUsdt ?? 0.0157));
     }
   }, [settingsData]);
 
@@ -1697,18 +1697,18 @@ export default function AdminPanel() {
               <Zap className="w-5 h-5 text-[hsl(var(--rose))]" />
             </div>
             <div>
-              <h3 className="font-bold">Bonus Rates (% of Reward Rate)</h3>
-              <p className="text-[10px] text-muted-foreground">User je rate paabe + promo owner (YouTuber) je commission paabe</p>
+              <h3 className="font-bold">Promo Bonus Rates (per re-verified account)</h3>
+              <p className="text-[10px] text-muted-foreground">Direct amount — user koto ৳ pabe & promo owner koto $ pabe set korun</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">User Bonus % (per account)</label>
-              <input type="number" step="0.1" value={promoUserPctSetting} onChange={(e) => setPromoUserPctSetting(e.target.value)} className="input-field text-sm" />
+              <label className="text-xs text-muted-foreground mb-1 block">User Bonus (৳ per account)</label>
+              <input type="number" step="0.5" min="0" value={promoUserPctSetting} onChange={(e) => setPromoUserPctSetting(e.target.value)} placeholder="2" className="input-field text-sm" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Promo Owner Commission %</label>
-              <input type="number" step="0.1" value={promoOwnerPctSetting} onChange={(e) => setPromoOwnerPctSetting(e.target.value)} className="input-field text-sm" />
+              <label className="text-xs text-muted-foreground mb-1 block">Promo Owner Commission ($ USDT per account)</label>
+              <input type="number" step="0.001" min="0" value={promoOwnerPctSetting} onChange={(e) => setPromoOwnerPctSetting(e.target.value)} placeholder="0.0157" className="input-field text-sm" />
             </div>
             <div className="col-span-2">
               <button
@@ -1717,11 +1717,11 @@ export default function AdminPanel() {
                 onClick={async () => {
                   setPromoPctSaving(true);
                   try {
-                    await updateSetting("promoUserBonusPct", String(parseFloat(promoUserPctSetting) || 5));
-                    await updateSetting("promoOwnerCommissionPct", String(parseFloat(promoOwnerPctSetting) || 5));
+                    await updateSetting("promoUserBonusBdt", String(parseFloat(promoUserPctSetting) || 2));
+                    await updateSetting("promoOwnerCommissionUsdt", String(parseFloat(promoOwnerPctSetting) || 0.0157));
                     queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
                     queryClient.invalidateQueries({ queryKey: ["public-settings"] });
-                    toast({ title: "Promo bonus rate সেভ হয়েছে" });
+                    toast({ title: "✅ Promo bonus rate সেভ হয়েছে" });
                   } catch (err: any) {
                     toast({ title: "ব্যর্থ", description: err?.message, variant: "destructive" });
                   } finally {
@@ -1734,7 +1734,7 @@ export default function AdminPanel() {
               </button>
             </div>
             <div className="col-span-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-2.5 leading-relaxed">
-              💡 Reward Rate = ৳{settingsData?.rewardRate ?? 40}/account. Per account user paabe ৳{Math.floor(((settingsData?.rewardRate ?? 40) * (parseFloat(promoUserPctSetting) || 0)) / 100)} bonus, promo owner paabe ${(((settingsData?.rewardRate ?? 40) * (parseFloat(promoOwnerPctSetting) || 0)) / 100 / (settingsData?.usdtToBdtRate ?? 124)).toFixed(4)} USDT commission.
+              💡 Per re-verified account → user ke direct ৳{parseFloat(promoUserPctSetting) || 0} bonus jog hobe, ar promo owner (YouTuber) ke ${(parseFloat(promoOwnerPctSetting) || 0).toFixed(4)} USDT commission jog hobe.
             </div>
           </div>
         </div>

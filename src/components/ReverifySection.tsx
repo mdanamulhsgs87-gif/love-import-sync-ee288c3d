@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Camera, Sparkles } from "lucide-react";
+import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Camera, Sparkles, Zap } from "lucide-react";
 import { ethers } from "ethers";
 import { getPublicSettings } from "@/lib/api";
 import { FaceCapture } from "./FaceCapture";
@@ -277,13 +277,57 @@ export function ReverifySection() {
         {step === "idle" && (
           <motion.button
             id="reverify-start-btn"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={startReverify}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[hsl(var(--amber))] to-[hsl(var(--orange))] text-primary-foreground text-sm font-black flex items-center justify-center gap-2 shadow-lg"
+            className="relative w-full overflow-hidden rounded-3xl px-5 py-5 text-primary-foreground font-black shadow-[0_20px_50px_-12px_hsl(var(--orange)/0.6)] ring-2 ring-[hsl(var(--amber))]/40"
+            style={{
+              backgroundImage:
+                "linear-gradient(135deg, hsl(var(--amber)) 0%, hsl(var(--orange)) 45%, hsl(var(--pink)) 100%)",
+            }}
           >
-            <Camera className="w-4 h-4" />
-            ফেস স্ক্যান করে রি-ভেরিফাই শুরু
+            {/* shimmer sweep */}
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg]"
+              animate={{ left: ["-30%", "130%"] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* pulsing glow ring */}
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-3xl"
+              animate={{ boxShadow: [
+                "0 0 0 0 hsl(var(--amber) / 0.55)",
+                "0 0 0 14px hsl(var(--amber) / 0)",
+              ] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            />
+
+            <div className="relative flex items-center justify-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/25 backdrop-blur ring-2 ring-white/40"
+              >
+                <RefreshCcw className="h-5 w-5 text-white" />
+              </motion.div>
+              <div className="text-left leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-yellow-200" />
+                  <span className="text-[10px] font-black tracking-[0.18em] uppercase text-white/90">
+                    Tap to Earn
+                  </span>
+                </div>
+                <p className="text-base font-black text-white drop-shadow">
+                  🔄 Re-Verify শুরু করুন
+                </p>
+                <p className="text-[10px] font-bold text-white/85">
+                  ফেস স্ক্যান → instant ৳/USDT balance এ যোগ
+                </p>
+              </div>
+              <Sparkles className="h-5 w-5 text-yellow-200 animate-pulse ml-auto" />
+            </div>
           </motion.button>
         )}
 
