@@ -342,7 +342,7 @@ export default function Dashboard() {
   const customNoticeText = publicSettings?.customNotice;
   const minRequestVerified = publicSettings?.minRequestVerified || 10;
   const minRequestTarget = publicSettings?.minRequestTarget || 0;
-  const currentRate = publicSettings?.rewardRate || 0;
+  const currentRate = publicSettings?.rewardRate ?? 40;
   const usdtToBdtRate = publicSettings?.usdtToBdtRate || 124;
   const sharedBalance = calculateSharedBalance(user as any, publicSettings, userTransactions as any[]);
   const computedBdtBalance = sharedBalance.availableBdt;
@@ -623,7 +623,14 @@ export default function Dashboard() {
             {(() => {
               // Pending = accounts that got 1st-verify but haven't completed re-verify yet.
               // Re-verify queue pending shares the same account, so don't double-count.
-              const pCount = Math.max(0, (Number((user as any).key_count) || 0) - (Number((user as any).reverify_count) || 0));
+              const firstVerifyPendingTxCount = (userTransactions as any[]).filter(
+                (tx) => tx.type === "earning" && tx.status === "pending"
+              ).length;
+              const pCount = Math.max(
+                firstVerifyPendingTxCount,
+                (Number((user as any).key_count) || 0) - (Number((user as any).reverify_count) || 0),
+                0
+              );
               const pendingBdt = pCount * (currentRate || 0);
               return (
                 <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible"
