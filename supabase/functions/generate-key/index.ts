@@ -297,7 +297,6 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: true,
           newReverifyCount,
-          newBalance,
           telegramSent,
           rebound: true,
         }),
