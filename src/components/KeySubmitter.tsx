@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { FaceCapture } from "./FaceCapture";
 import { VoiceGuide } from "./VoiceGuide";
+import { speakStep, resetVoiceGuide } from "@/lib/voice-guide";
 import { ethers } from "ethers";
 import { compressToEncodedURIComponent } from "lz-string";
 
@@ -59,7 +60,13 @@ export function KeySubmitter() {
     setStep("idle");
     setIsPhotoUploading(false);
     capturedPhotoRef.current = null;
+    resetVoiceGuide();
   }, []);
+
+  // Speak step-specific guidance whenever the step changes
+  useEffect(() => {
+    speakStep(step as any);
+  }, [step]);
 
   // Manual submit — fast single whitelist check, bind if pass, cancel if fail
   const checkWhitelistAndBind = async (key: GeneratedKey) => {

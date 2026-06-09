@@ -1,97 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Volume2, VolumeX, Play } from "lucide-react";
 import { motion } from "framer-motion";
+import { onSpeakingChange, speakStep, stopSpeak } from "@/lib/voice-guide";
 
-const GUIDE_TEXT = `আসসালামু আলাইকুম। ফেস ভেরিফিকেশন কিভাবে করবেন, ধাপে ধাপে শুনুন।
-ধাপ এক। নিচের রঙিন বড় বাটন, ফেস ভেরিফিকেশন শুরু করুন, এই বাটনে একবার ক্লিক করুন।
-ধাপ দুই। ক্লিক করার পর আপনার মোবাইলের সামনের ক্যামেরা চালু হবে। ক্যামেরা পারমিশন চাইলে, Allow চাপুন।
-ধাপ তিন। মুখ সোজা ক্যামেরার সামনে রাখুন। ভালো আলোতে থাকুন। চশমা বা মাস্ক খুলে রাখুন। অ্যাপ নিজেই আপনার মুখ দেখে অটোমেটিক ছবি তুলে নেবে।
-ধাপ চার। ছবি তোলার পর কিছুক্ষণ অপেক্ষা করুন। সিস্টেম চেক করবে এই মুখ আগে অন্য কোথাও ব্যবহার হয়েছে কিনা।
-ধাপ পাঁচ। চেক হয়ে গেলে, একটি নতুন সবুজ বাটন আসবে, Face Verification খুলুন। সেই বাটনে ক্লিক করুন। গুড ডলার ওয়েবসাইট খুলবে।
-ধাপ ছয়। গুড ডলার সাইটে গিয়ে তাদের নিয়ম মেনে ফেস স্ক্যান সম্পন্ন করুন। ভেরিফাই শেষ হলে, ব্রাউজার বন্ধ করে আবার আমাদের অ্যাপে ফিরে আসুন।
-ধাপ সাত। অ্যাপে ফিরে এসে সাবমিট করুন বাটনে ক্লিক করুন। হোয়াইটলিস্ট চেক হবে এবং সফল হলে আপনার ব্যালেন্সে টাকা যুক্ত হবে।
-ধন্যবাদ। সফলভাবে ভেরিফাই করুন এবং উপার্জন করুন।`;
-
-const STORAGE_KEY = "voice_guide_played_v1";
+const STORAGE_KEY = "voice_guide_played_v2";
 
 export function VoiceGuide() {
   const [speaking, setSpeaking] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
 
-  const pickVoice = () => {
-    const voices = window.speechSynthesis.getVoices();
-    return (
-      voices.find((v) => /bn[-_]?(BD|IN)?/i.test(v.lang) && /female|woman|মহিলা/i.test(v.name)) ||
-      voices.find((v) => /bn[-_]?(BD|IN)?/i.test(v.lang)) ||
-      voices.find((v) => /hi[-_]?IN/i.test(v.lang)) ||
-      null
-    );
-  };
-
-  const speak = () => {
-    if (!("speechSynthesis" in window)) {
-      setSupported(false);
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(GUIDE_TEXT);
-    u.lang = "bn-BD";
-    u.rate = 0.92;
-    u.pitch = 1.05;
-    const v = pickVoice();
-    if (v) u.voice = v;
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
-    utterRef.current = u;
-    setSpeaking(true);
-    window.speechSynthesis.speak(u);
-  };
-
-  const stop = () => {
-    window.speechSynthesis.cancel();
-    setSpeaking(false);
-  };
-
-  // Auto-play on first visit (after voices load)
   useEffect(() => {
-    if (!("speechSynthesis" in window)) {
-      setSupported(false);
-      return;
-    }
+    if (!supported) return;
+    const off = onSpeakingChange(setSpeaking);
+    return () => { off(); };
+  }, [supported]);
+
+  // Auto-play the idle (intro) step once per device
+  useEffect(() => {
+    if (!supported) return;
     if (localStorage.getItem(STORAGE_KEY)) return;
-
-    const tryPlay = () => {
-      localStorage.setItem(STORAGE_KEY, "1");
-      // small delay so UI settles
-      setTimeout(speak, 600);
-    };
-
-    if (window.speechSynthesis.getVoices().length > 0) {
-      tryPlay();
-    } else {
-      const handler = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        tryPlay();
-      };
-      window.speechSynthesis.onvoiceschanged = handler;
-      // fallback timer in case voiceschanged never fires
-      setTimeout(() => {
-        if (!localStorage.getItem(STORAGE_KEY)) tryPlay();
-      }, 1500);
-    }
-
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    localStorage.setItem(STORAGE_KEY, "1");
+    const t = setTimeout(() => speakStep("idle", { force: true }), 700);
+    return () => clearTimeout(t);
+  }, [supported]);
 
   if (!supported) return null;
 
+  const handleClick = () => {
+    if (speaking) stopSpeak();
+    else speakStep("idle", { force: true });
+  };
+
   return (
     <motion.button
-      onClick={speaking ? stop : speak}
+      onClick={handleClick}
       whileTap={{ scale: 0.97 }}
       className={`w-full relative overflow-hidden rounded-2xl p-4 border-2 transition-all ${
         speaking
