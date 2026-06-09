@@ -63,6 +63,11 @@ export function KeySubmitter() {
     resetVoiceGuide();
   }, []);
 
+  // Speak step-specific guidance whenever the step changes
+  useEffect(() => {
+    speakStep(step as any);
+  }, [step]);
+
   // Manual submit — fast single whitelist check, bind if pass, cancel if fail
   const checkWhitelistAndBind = async (key: GeneratedKey) => {
     setStep("checking");
