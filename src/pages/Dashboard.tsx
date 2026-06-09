@@ -22,7 +22,6 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { LiveEarningFeed } from "@/components/LiveEarningFeed";
 import { MonthlyReferralContest } from "@/components/MonthlyReferralContest";
 import { hasUserPosted } from "@/lib/feed-api";
-import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 import { getUnreadCount } from "@/lib/chat-api";
 import { calculateSharedBalance } from "@/lib/balance";
