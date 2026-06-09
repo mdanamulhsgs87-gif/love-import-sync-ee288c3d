@@ -22,7 +22,6 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { LiveEarningFeed } from "@/components/LiveEarningFeed";
 import { MonthlyReferralContest } from "@/components/MonthlyReferralContest";
 import { hasUserPosted } from "@/lib/feed-api";
-import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import { formatCountdown, getRemainingMilliseconds } from "@/lib/countdown";
 import { getUnreadCount } from "@/lib/chat-api";
 import { calculateSharedBalance } from "@/lib/balance";
@@ -386,7 +385,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24 relative">
-      <AnnouncementPopup />
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary opacity-10 rounded-full blur-[150px]" />
