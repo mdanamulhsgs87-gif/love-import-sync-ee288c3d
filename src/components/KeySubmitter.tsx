@@ -8,6 +8,7 @@ import { ShieldCheck, Loader2, ExternalLink, CheckCircle, Video, AlertCircle, Lo
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { FaceCapture } from "./FaceCapture";
+import { VoiceGuide } from "./VoiceGuide";
 import { ethers } from "ethers";
 import { compressToEncodedURIComponent } from "lz-string";
 
