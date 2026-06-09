@@ -409,6 +409,9 @@ export function KeySubmitter() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-4"
             >
+              {/* Bangla voice step-by-step guide */}
+              <VoiceGuide />
+
               {/* Collapsible Instructions */}
               <div className="rounded-2xl border border-[hsl(var(--cyan))]/20 overflow-hidden">
                 <motion.button
