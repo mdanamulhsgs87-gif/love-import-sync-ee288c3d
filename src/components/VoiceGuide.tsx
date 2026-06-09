@@ -33,7 +33,7 @@ export function VoiceGuide() {
 
   return (
     <motion.button
-      onClick={speaking ? stop : speak}
+      onClick={handleClick}
       whileTap={{ scale: 0.97 }}
       className={`w-full relative overflow-hidden rounded-2xl p-4 border-2 transition-all ${
         speaking
