@@ -3,10 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Camera, Sparkles, Zap } from "lucide-react";
+import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Search, Sparkles, Zap, User } from "lucide-react";
 import { ethers } from "ethers";
 import { getPublicSettings } from "@/lib/api";
-import { FaceCapture } from "./FaceCapture";
 import { supabase } from "@/integrations/supabase/client";
 
 const GD_IDENTITY_ADDRESS = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42";
@@ -17,8 +16,8 @@ const GD_IDENTITY_ABI = [
 
 type ReverifyStep =
   | "idle"
-  | "photo_capture"
-  | "matching"
+  | "search"
+  | "loading_url"
   | "generating_url"
   | "verify_link"
   | "checking"
@@ -31,6 +30,14 @@ type MatchedBinding = {
   wallet_address: string;
   face_photo_url: string;
   user_id: number;
+  face_label?: string;
+};
+
+type Candidate = {
+  id: string;
+  wallet_address: string;
+  face_photo_url: string;
+  face_label: string;
 };
 
 export function ReverifySection() {
@@ -41,7 +48,9 @@ export function ReverifySection() {
   const [matchedBinding, setMatchedBinding] = useState<MatchedBinding | null>(null);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [capturedPhotoBase64, setCapturedPhotoBase64] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
 
   // Auto-check whitelist when returning from GoodDollar
   useEffect(() => {
