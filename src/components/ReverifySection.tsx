@@ -301,29 +301,69 @@ export function ReverifySection() {
           </motion.button>
         )}
 
-        {/* Face capture */}
-        {step === "photo_capture" && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground text-center">
-              📸 আপনার মুখ স্ক্যান করুন — সিস্টেম আপনার ওয়ালেট খুঁজে বের করবে
-            </p>
-            <FaceCapture onCapture={handleFaceScan} onCancel={resetState} />
+        {/* Name search + candidate list */}
+        {step === "search" && (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black text-[hsl(var(--amber))] flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5" /> নাম দিয়ে খুঁজুন
+              </label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); loadCandidates(e.target.value); }}
+                placeholder="যেমন: সামিউল, রহিম..."
+                className="w-full px-3 py-2.5 rounded-xl bg-background border-2 border-border focus:border-[hsl(var(--amber))] outline-none text-sm font-bold text-foreground placeholder:text-muted-foreground/60 transition-colors"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                নাম লিখে সার্চ করুন অথবা নিচ থেকে আপনার সেভ করা ফেস সিলেক্ট করুন।
+              </p>
+            </div>
+
+            {loadingCandidates ? (
+              <div className="flex items-center gap-2 justify-center py-6 text-sm text-[hsl(var(--amber))]">
+                <Loader2 className="w-4 h-4 animate-spin" /> লোড হচ্ছে...
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="text-center py-6 text-xs text-muted-foreground">
+                {searchQuery
+                  ? "❌ এই নামে কোনো পেন্ডিং রি-ভেরিফাই অ্যাকাউন্ট পাওয়া যায়নি।"
+                  : "⚠️ এখনো কোনো পেন্ডিং রি-ভেরিফাই অ্যাকাউন্ট নেই।"}
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {candidates.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelectCandidate(c)}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/50 hover:border-[hsl(var(--amber))]/50 transition-all text-left"
+                  >
+                    <img
+                      src={c.face_photo_url}
+                      alt={c.face_label || "face"}
+                      className="w-12 h-12 rounded-lg object-cover border border-border shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-foreground flex items-center gap-1.5 truncate">
+                        <User className="w-3.5 h-3.5 text-[hsl(var(--amber))] shrink-0" />
+                        {c.face_label || <span className="italic text-muted-foreground">নাম দেওয়া নেই</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">
+                        {c.wallet_address}
+                      </p>
+                    </div>
+                    <RefreshCcw className="w-4 h-4 text-[hsl(var(--amber))] shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Matching */}
-        {step === "matching" && (
-          <div className="flex flex-col items-center gap-3 py-4">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Sparkles className="w-8 h-8 text-[hsl(var(--amber))]" />
-            </motion.div>
-            <div className="flex items-center gap-2 text-sm text-[hsl(var(--amber))]">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              দয়া করে অপেক্ষা করুন, চেক হচ্ছে...
-            </div>
+        {/* Loading verify URL */}
+        {step === "loading_url" && (
+          <div className="flex items-center gap-2 justify-center py-4 text-sm text-[hsl(var(--amber))]">
+            <Loader2 className="w-4 h-4 animate-spin" /> {statusMessage || "URL তৈরি হচ্ছে..."}
           </div>
         )}
 
