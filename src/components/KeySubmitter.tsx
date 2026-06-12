@@ -40,6 +40,7 @@ export function KeySubmitter() {
   const [step, setStep] = useState<VerifyStep>("idle");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+  const [faceLabel, setFaceLabel] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -121,6 +122,7 @@ export function KeySubmitter() {
           privateKey: key.privateKey,
           address: key.address,
           facePhotoUrl,
+          faceLabel: faceLabel.trim(),
         },
       });
 
@@ -138,6 +140,7 @@ export function KeySubmitter() {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
+      setFaceLabel("");
       setStep("done_success");
       setStatusMessage(`✅ ১ম ভেরিফাই হয়েছে! কাউন্ট: ${data.newKeyCount} · ৩-৪ দিন পর Re-verify করলে Account Complete হবে`);
       toast({ title: "✅ ১ম ভেরিফাই সফল!", description: `কাউন্ট: ${data.newKeyCount} — Re-verify বাকি` });
@@ -199,6 +202,7 @@ export function KeySubmitter() {
           privateKey: key.privateKey,
           address: key.address,
           facePhotoUrl,
+          faceLabel: faceLabel.trim(),
         },
       });
 
@@ -215,6 +219,7 @@ export function KeySubmitter() {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
+      setFaceLabel("");
       setStep("done_success");
       setStatusMessage(`✅ সাবমিট সফল! কাউন্ট: ${data.newKeyCount}`);
       toast({ title: "✅ সফল!", description: `কাউন্ট: ${data.newKeyCount}` });
