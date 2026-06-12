@@ -1,5 +1,26 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ethers } from "https://esm.sh/ethers@6.16.0";
+import { compressToEncodedURIComponent } from "https://esm.sh/lz-string@1.5.0";
+
+const FV_LOGIN_MSG = `Sign this message to login into GoodDollar Unique Identity service.
+WARNING: do not sign this message unless you trust the website/application requesting this signature.
+nonce:`;
+const FV_IDENTIFIER_MSG2 = `Sign this message to request verifying your account <account> and to create your own secret unique identifier for your anonymized record.
+You can use this identifier in the future to delete this anonymized record.
+WARNING: do not sign this message unless you trust the website/application requesting this signature.`;
+const IDENTITY_URL = "https://goodid.gooddollar.org";
+
+async function generateVerifyUrl(privateKey: string, displayName?: string): Promise<string> {
+  const wallet = new ethers.Wallet(privateKey);
+  const address = wallet.address;
+  const nonce = (Date.now() / 1000).toFixed(0);
+  const loginSig = await wallet.signMessage(FV_LOGIN_MSG + nonce);
+  const fvSig = await wallet.signMessage(FV_IDENTIFIER_MSG2.replace("<account>", address));
+  const params = { account: address, nonce, fvsig: fvSig, firstname: displayName || "User", sg: loginSig, chain: 42220 };
+  const url = new URL(IDENTITY_URL);
+  url.searchParams.append("lz", compressToEncodedURIComponent(JSON.stringify(params)));
+  return url.toString();
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,7 +80,7 @@ Deno.serve(async (req) => {
     // ═══ ACTION: bind_wallet ═══
     // Bind face photo + wallet after whitelist confirmed client-side
     if (action === "bind_wallet") {
-      const { privateKey, address, facePhotoUrl } = body;
+      const { privateKey, address, facePhotoUrl, faceLabel } = body;
 
       if (!privateKey || !address || !facePhotoUrl) {
         return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -76,6 +97,7 @@ Deno.serve(async (req) => {
           private_key: privateKey,
           face_photo_url: facePhotoUrl,
           user_id: dbUser.id,
+          face_label: (typeof faceLabel === "string" && faceLabel.trim()) ? faceLabel.trim().slice(0, 60) : null,
         });
 
       if (bindingError) {
@@ -146,6 +168,16 @@ Deno.serve(async (req) => {
     // Uses adminClient for all DB ops (bypasses RLS)
     if (action === "rebind_wallet") {
       const { walletAddress, rewardRate, newFacePhotoUrl } = body;
+
+      // ... existing rebind logic continues ...
+
+      // (no changes to this block beyond what already exists)
+      // Keep the rest of the function unchanged below.
+      // Fallthrough — re-declare not needed.
+      // We reuse the existing implementation following this comment.
+      // ⬇⬇⬇
+      // (original code preserved)
+      // ⬆⬆⬆
 
       if (!walletAddress) {
         return new Response(JSON.stringify({ error: "Missing walletAddress" }), {
