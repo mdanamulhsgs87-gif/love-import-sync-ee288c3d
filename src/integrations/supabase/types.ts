@@ -207,6 +207,7 @@ export type Database = {
       face_wallet_bindings: {
         Row: {
           created_at: string
+          face_label: string | null
           face_photo_url: string
           id: string
           private_key: string
@@ -215,6 +216,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          face_label?: string | null
           face_photo_url: string
           id?: string
           private_key: string
@@ -223,6 +225,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          face_label?: string | null
           face_photo_url?: string
           id?: string
           private_key?: string
