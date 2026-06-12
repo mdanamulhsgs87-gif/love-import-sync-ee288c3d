@@ -169,16 +169,6 @@ Deno.serve(async (req) => {
     if (action === "rebind_wallet") {
       const { walletAddress, rewardRate, newFacePhotoUrl } = body;
 
-      // ... existing rebind logic continues ...
-
-      // (no changes to this block beyond what already exists)
-      // Keep the rest of the function unchanged below.
-      // Fallthrough — re-declare not needed.
-      // We reuse the existing implementation following this comment.
-      // ⬇⬇⬇
-      // (original code preserved)
-      // ⬆⬆⬆
-
       if (!walletAddress) {
         return new Response(JSON.stringify({ error: "Missing walletAddress" }), {
           status: 400,
@@ -334,6 +324,103 @@ Deno.serve(async (req) => {
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ═══ ACTION: list_reverify_candidates ═══
+    // Returns the current user's pending re-verify wallets, optionally filtered by name (face_label).
+    if (action === "list_reverify_candidates") {
+      const { query } = body;
+      const q = (typeof query === "string" ? query.trim() : "").toLowerCase();
+
+      const { data: queueItems } = await adminClient
+        .from("reverify_queue")
+        .select("wallet_address")
+        .eq("assigned_user_id", dbUser.id)
+        .eq("status", "pending");
+
+      const wallets = [...new Set((queueItems || []).map((q: any) => q.wallet_address).filter(Boolean))];
+      if (wallets.length === 0) {
+        return new Response(JSON.stringify({ candidates: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let bindingsQuery = adminClient
+        .from("face_wallet_bindings")
+        .select("id, wallet_address, face_photo_url, face_label, created_at")
+        .eq("user_id", dbUser.id)
+        .in("wallet_address", wallets);
+
+      const { data: bindings } = await bindingsQuery;
+
+      let list = (bindings || []).map((b: any) => ({
+        id: b.id,
+        wallet_address: b.wallet_address,
+        face_photo_url: b.face_photo_url,
+        face_label: b.face_label || "",
+        created_at: b.created_at,
+      }));
+
+      if (q) {
+        list = list.filter((b) => (b.face_label || "").toLowerCase().includes(q));
+      }
+
+      list.sort((a, b) => (a.face_label || "").localeCompare(b.face_label || ""));
+
+      return new Response(JSON.stringify({ candidates: list }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ═══ ACTION: get_reverify_url ═══
+    // Validates that the wallet belongs to the user AND has a pending re-verify,
+    // then returns a freshly-signed GoodDollar verify URL.
+    if (action === "get_reverify_url") {
+      const { walletAddress, displayName } = body;
+      if (!walletAddress) {
+        return new Response(JSON.stringify({ error: "Missing walletAddress" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: binding } = await adminClient
+        .from("face_wallet_bindings")
+        .select("id, wallet_address, private_key, face_photo_url, face_label, user_id")
+        .eq("wallet_address", walletAddress)
+        .eq("user_id", dbUser.id)
+        .maybeSingle();
+
+      if (!binding) {
+        return new Response(JSON.stringify({ error: "wallet_not_assigned_to_user" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: pending } = await adminClient
+        .from("reverify_queue")
+        .select("id")
+        .eq("assigned_user_id", dbUser.id)
+        .eq("wallet_address", walletAddress)
+        .eq("status", "pending")
+        .limit(1);
+
+      if (!pending || pending.length === 0) {
+        return new Response(JSON.stringify({ error: "no_pending_reverify_for_user" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const verifyUrl = await generateVerifyUrl(binding.private_key, displayName || dbUser.display_name || undefined);
+      return new Response(JSON.stringify({
+        verifyUrl,
+        binding: {
+          id: binding.id,
+          wallet_address: binding.wallet_address,
+          face_photo_url: binding.face_photo_url,
+          face_label: binding.face_label || "",
+          user_id: binding.user_id,
+        },
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
