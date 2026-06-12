@@ -3,10 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Camera, Sparkles, Zap } from "lucide-react";
+import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Search, Sparkles, Zap, User } from "lucide-react";
 import { ethers } from "ethers";
 import { getPublicSettings } from "@/lib/api";
-import { FaceCapture } from "./FaceCapture";
 import { supabase } from "@/integrations/supabase/client";
 
 const GD_IDENTITY_ADDRESS = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42";
@@ -17,8 +16,8 @@ const GD_IDENTITY_ABI = [
 
 type ReverifyStep =
   | "idle"
-  | "photo_capture"
-  | "matching"
+  | "search"
+  | "loading_url"
   | "generating_url"
   | "verify_link"
   | "checking"
@@ -31,6 +30,14 @@ type MatchedBinding = {
   wallet_address: string;
   face_photo_url: string;
   user_id: number;
+  face_label?: string;
+};
+
+type Candidate = {
+  id: string;
+  wallet_address: string;
+  face_photo_url: string;
+  face_label: string;
 };
 
 export function ReverifySection() {
@@ -41,7 +48,9 @@ export function ReverifySection() {
   const [matchedBinding, setMatchedBinding] = useState<MatchedBinding | null>(null);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [capturedPhotoBase64, setCapturedPhotoBase64] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
 
   // Auto-check whitelist when returning from GoodDollar
   useEffect(() => {
@@ -59,61 +68,38 @@ export function ReverifySection() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [matchedBinding, step]);
 
-  const startReverify = () => {
-    setStep("photo_capture");
+  const loadCandidates = async (query: string = "") => {
+    setLoadingCandidates(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-key", {
+        body: { action: "list_reverify_candidates", query },
+      });
+      if (error) throw error;
+      setCandidates((data?.candidates || []) as Candidate[]);
+    } catch (err: any) {
+      console.error("Load candidates failed:", err);
+      toast({ title: "লিস্ট লোড ব্যর্থ", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingCandidates(false);
+    }
   };
 
-  const handleFaceScan = async (photoBlob: Blob) => {
+  const startReverify = async () => {
+    setStep("search");
+    setSearchQuery("");
+    await loadCandidates("");
+  };
+
+  const handleSelectCandidate = async (cand: Candidate) => {
     if (!user) return;
-    setStep("matching");
-
+    setStep("loading_url");
+    setStatusMessage("URL তৈরি হচ্ছে...");
     try {
-      // AI face matching — find the bound wallet for this face
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          resolve(result.split(",")[1]);
-        };
-      });
-      reader.readAsDataURL(photoBlob);
-      const base64 = await base64Promise;
-      setCapturedPhotoBase64(base64);
-
-      // Search ALL bindings (any user can re-verify any face)
-      // verifyUrl is generated server-side — private_key never reaches client
-      const { data, error } = await supabase.functions.invoke("face-match", {
-        body: { capturedPhotoBase64: base64, displayName: user.display_name || undefined, source: "reverify" },
-      });
-
-      if (error) throw error;
-
-      if (!data?.match) {
-        const reason = data?.reason || "unknown";
-        let msg = "❌ আপনার ফেস এই রি-ভেরিফাই অ্যাকাউন্টের সাথে ম্যাচ হয়নি।";
-        if (reason === "no_bindings") msg = "❌ কোনো ওয়ালেট বাইন্ডিং নেই।";
-        if (reason === "no_match_found") msg = "❌ ফেস ম্যাচ হয়নি। আবার চেষ্টা করুন।";
-        if (reason === "low_confidence_face_match") msg = "❌ নিশ্চিতভাবে ফেস ম্যাচ হয়নি—ভুল ম্যাচ এড়াতে বন্ধ করা হয়েছে।";
-        if (reason === "no_pending_reverify_for_user") msg = "⚠️ এই ফেস দিয়ে এখনো প্রথম Verify করা হয়নি। দয়া করে আগে প্রথম Verify করুন, তারপর ৩ দিন পর Re-verify করুন।";
-        if (reason === "login_required" || reason === "invalid_login") msg = "❌ আগে লগইন করুন, তারপর re-verify করুন।";
-
-        setStep("done_failed");
-        setStatusMessage(msg);
-        toast({ title: msg, variant: "destructive" });
-        setTimeout(resetState, 3000);
-        return;
-      }
-
-      const matched = data.match as MatchedBinding;
-      setMatchedBinding(matched);
-
-      // Pre-check: already whitelisted means no re-verify needed
-      setStatusMessage("হোয়াইটলিস্ট চেক হচ্ছে...");
+      // Pre-check: already whitelisted?
       try {
         const provider = new ethers.JsonRpcProvider(CELO_RPC);
         const contract = new ethers.Contract(GD_IDENTITY_ADDRESS, GD_IDENTITY_ABI, provider);
-        const alreadyWhitelisted = await contract.isWhitelisted(matched.wallet_address);
-
+        const alreadyWhitelisted = await contract.isWhitelisted(cand.wallet_address);
         if (alreadyWhitelisted) {
           setStep("done_failed");
           setStatusMessage("⚠️ এই ওয়ালেট এখনও হোয়াইটলিস্টেড আছে। রি-ভেরিফাই এর দরকার নেই।");
@@ -125,14 +111,21 @@ export function ReverifySection() {
         console.warn("Pre-whitelist check failed, proceeding anyway:", err);
       }
 
-      // verifyUrl already generated server-side
+      const { data, error } = await supabase.functions.invoke("generate-key", {
+        body: { action: "get_reverify_url", walletAddress: cand.wallet_address, displayName: user.display_name || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setMatchedBinding({ id: cand.id, wallet_address: cand.wallet_address, face_photo_url: cand.face_photo_url, user_id: user.id, face_label: cand.face_label });
       setVerifyUrl(data.verifyUrl);
+      setStatusMessage(null);
       setStep("verify_link");
     } catch (err: any) {
-      console.error("Face match error:", err);
-      toast({ title: "ফেস ম্যাচ ব্যর্থ", description: err.message, variant: "destructive" });
+      console.error("get_reverify_url error:", err);
+      toast({ title: "URL তৈরি ব্যর্থ", description: err.message, variant: "destructive" });
       setStep("done_failed");
-      setStatusMessage("❌ ফেস ম্যাচ ব্যর্থ হয়েছে।");
+      setStatusMessage("❌ URL তৈরি ব্যর্থ হয়েছে।");
       setTimeout(resetState, 3000);
     }
   };
@@ -171,36 +164,12 @@ export function ReverifySection() {
       // This matches the "রেট (TK/key)" field in Admin Panel exactly.
       const rewardRate = Number(settings.rewardRate) || 0;
 
-      // Upload the freshly captured face photo so the binding stores the
-      // user's CURRENT appearance (handles aging, beard growth, etc).
-      let newFacePhotoUrl: string | undefined;
-      try {
-        if (capturedPhotoBase64) {
-          const byteChars = atob(capturedPhotoBase64);
-          const byteNumbers = new Array(byteChars.length);
-          for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-          const byteArray = new Uint8Array(byteNumbers);
-          const photoBlob = new Blob([byteArray], { type: "image/jpeg" });
-          const fileName = `face-${user.id}-${matchedBinding.wallet_address}-${Date.now()}.jpg`;
-          const { error: upErr } = await supabase.storage
-            .from("face-photos")
-            .upload(fileName, photoBlob, { contentType: "image/jpeg", upsert: true });
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
-            newFacePhotoUrl = urlData.publicUrl;
-          }
-        }
-      } catch (e) {
-        console.warn("Face photo refresh upload failed, continuing without update:", e);
-      }
-
       // All logic handled server-side via edge function (reliable, bypasses RLS)
       const { data: result, error: rebindError } = await supabase.functions.invoke("generate-key", {
         body: {
           action: "rebind_wallet",
           walletAddress: matchedBinding.wallet_address,
           rewardRate,
-          newFacePhotoUrl,
         },
       });
 
@@ -232,7 +201,8 @@ export function ReverifySection() {
     setVerifyUrl(null);
     setStep("idle");
     setStatusMessage(null);
-    setCapturedPhotoBase64(null);
+    setCandidates([]);
+    setSearchQuery("");
   };
 
   return (
@@ -331,29 +301,69 @@ export function ReverifySection() {
           </motion.button>
         )}
 
-        {/* Face capture */}
-        {step === "photo_capture" && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground text-center">
-              📸 আপনার মুখ স্ক্যান করুন — সিস্টেম আপনার ওয়ালেট খুঁজে বের করবে
-            </p>
-            <FaceCapture onCapture={handleFaceScan} onCancel={resetState} />
+        {/* Name search + candidate list */}
+        {step === "search" && (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-black text-[hsl(var(--amber))] flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5" /> নাম দিয়ে খুঁজুন
+              </label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); loadCandidates(e.target.value); }}
+                placeholder="যেমন: সামিউল, রহিম..."
+                className="w-full px-3 py-2.5 rounded-xl bg-background border-2 border-border focus:border-[hsl(var(--amber))] outline-none text-sm font-bold text-foreground placeholder:text-muted-foreground/60 transition-colors"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                নাম লিখে সার্চ করুন অথবা নিচ থেকে আপনার সেভ করা ফেস সিলেক্ট করুন।
+              </p>
+            </div>
+
+            {loadingCandidates ? (
+              <div className="flex items-center gap-2 justify-center py-6 text-sm text-[hsl(var(--amber))]">
+                <Loader2 className="w-4 h-4 animate-spin" /> লোড হচ্ছে...
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="text-center py-6 text-xs text-muted-foreground">
+                {searchQuery
+                  ? "❌ এই নামে কোনো পেন্ডিং রি-ভেরিফাই অ্যাকাউন্ট পাওয়া যায়নি।"
+                  : "⚠️ এখনো কোনো পেন্ডিং রি-ভেরিফাই অ্যাকাউন্ট নেই।"}
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {candidates.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelectCandidate(c)}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/50 hover:border-[hsl(var(--amber))]/50 transition-all text-left"
+                  >
+                    <img
+                      src={c.face_photo_url}
+                      alt={c.face_label || "face"}
+                      className="w-12 h-12 rounded-lg object-cover border border-border shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-foreground flex items-center gap-1.5 truncate">
+                        <User className="w-3.5 h-3.5 text-[hsl(var(--amber))] shrink-0" />
+                        {c.face_label || <span className="italic text-muted-foreground">নাম দেওয়া নেই</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">
+                        {c.wallet_address}
+                      </p>
+                    </div>
+                    <RefreshCcw className="w-4 h-4 text-[hsl(var(--amber))] shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Matching */}
-        {step === "matching" && (
-          <div className="flex flex-col items-center gap-3 py-4">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Sparkles className="w-8 h-8 text-[hsl(var(--amber))]" />
-            </motion.div>
-            <div className="flex items-center gap-2 text-sm text-[hsl(var(--amber))]">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              দয়া করে অপেক্ষা করুন, চেক হচ্ছে...
-            </div>
+        {/* Loading verify URL */}
+        {step === "loading_url" && (
+          <div className="flex items-center gap-2 justify-center py-4 text-sm text-[hsl(var(--amber))]">
+            <Loader2 className="w-4 h-4 animate-spin" /> {statusMessage || "URL তৈরি হচ্ছে..."}
           </div>
         )}
 
@@ -442,7 +452,7 @@ export function ReverifySection() {
         )}
 
         {/* Cancel button during active flow */}
-        {step !== "idle" && step !== "done_success" && step !== "done_failed" && step !== "photo_capture" && (
+        {step !== "idle" && step !== "done_success" && step !== "done_failed" && (
           <button
             onClick={resetState}
             className="w-full py-2 rounded-xl bg-secondary/60 text-xs text-muted-foreground"

@@ -40,6 +40,7 @@ export function KeySubmitter() {
   const [step, setStep] = useState<VerifyStep>("idle");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+  const [faceLabel, setFaceLabel] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -121,6 +122,7 @@ export function KeySubmitter() {
           privateKey: key.privateKey,
           address: key.address,
           facePhotoUrl,
+          faceLabel: faceLabel.trim(),
         },
       });
 
@@ -138,6 +140,7 @@ export function KeySubmitter() {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
+      setFaceLabel("");
       setStep("done_success");
       setStatusMessage(`✅ ১ম ভেরিফাই হয়েছে! কাউন্ট: ${data.newKeyCount} · ৩-৪ দিন পর Re-verify করলে Account Complete হবে`);
       toast({ title: "✅ ১ম ভেরিফাই সফল!", description: `কাউন্ট: ${data.newKeyCount} — Re-verify বাকি` });
@@ -199,6 +202,7 @@ export function KeySubmitter() {
           privateKey: key.privateKey,
           address: key.address,
           facePhotoUrl,
+          faceLabel: faceLabel.trim(),
         },
       });
 
@@ -215,6 +219,7 @@ export function KeySubmitter() {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
+      setFaceLabel("");
       setStep("done_success");
       setStatusMessage(`✅ সাবমিট সফল! কাউন্ট: ${data.newKeyCount}`);
       toast({ title: "✅ সফল!", description: `কাউন্ট: ${data.newKeyCount}` });
@@ -500,16 +505,16 @@ export function KeySubmitter() {
               {/* Start Button */}
               <motion.button
                 onClick={() => generateKeyMutation.mutate()}
-                disabled={generateKeyMutation.isPending || isOff || !hasWatchedVideo}
-                whileHover={!(isOff || !hasWatchedVideo) ? { scale: 1.03, y: -3 } : {}}
-                whileTap={!(isOff || !hasWatchedVideo) ? { scale: 0.97 } : {}}
+                disabled={generateKeyMutation.isPending || isOff || !hasWatchedVideo || faceLabel.trim().length < 2}
+                whileHover={!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) ? { scale: 1.03, y: -3 } : {}}
+                whileTap={!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) ? { scale: 0.97 } : {}}
                 className={`w-full relative py-5 rounded-2xl font-black text-base overflow-hidden transition-all duration-500 ${
-                  isOff || !hasWatchedVideo
+                  isOff || !hasWatchedVideo || faceLabel.trim().length < 2
                     ? "bg-secondary/60 text-muted-foreground cursor-not-allowed border border-border/50"
                     : "text-primary-foreground shadow-2xl"
                 }`}
               >
-                {!(isOff || !hasWatchedVideo) && (
+                {!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) && (
                   <>
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--pink))] to-[hsl(var(--amber))]"
@@ -531,11 +536,31 @@ export function KeySubmitter() {
                     <Loader2 className="animate-spin w-6 h-6" />
                   ) : !hasWatchedVideo ? (
                     <><Lock className="w-5 h-5" /> আগে ভিডিও দেখুন</>
+                  ) : faceLabel.trim().length < 2 ? (
+                    <><Lock className="w-5 h-5" /> উপরে নাম লিখুন</>
                   ) : (
                     <><ShieldCheck className="w-6 h-6" /> ফেস ভেরিফিকেশন শুরু করুন</>
                   )}
                 </span>
               </motion.button>
+
+              {/* Name / Face Label input — required so user can find this wallet later in re-verify */}
+              <div className="rounded-2xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/10 to-[hsl(var(--orange))]/10 p-4 space-y-2">
+                <label className="text-xs font-black text-[hsl(var(--amber))] flex items-center gap-2">
+                  ⚡ যার মুখ দিয়ে ভেরিফাই করছেন, তার নাম লিখুন (বাধ্যতামূলক)
+                </label>
+                <input
+                  type="text"
+                  value={faceLabel}
+                  onChange={(e) => setFaceLabel(e.target.value.slice(0, 60))}
+                  placeholder="যেমন: সামিউল, রহিম, করিম..."
+                  className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-[hsl(var(--amber))] outline-none text-sm font-bold text-foreground placeholder:text-muted-foreground/60 transition-colors"
+                  maxLength={60}
+                />
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  📝 Re-verify করার সময় এই নাম দিয়ে আপনি ওয়ালেট সহজে খুঁজে পাবেন।
+                </p>
+              </div>
             </motion.div>
           )}
 
