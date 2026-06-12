@@ -68,61 +68,38 @@ export function ReverifySection() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [matchedBinding, step]);
 
-  const startReverify = () => {
-    setStep("photo_capture");
+  const loadCandidates = async (query: string = "") => {
+    setLoadingCandidates(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-key", {
+        body: { action: "list_reverify_candidates", query },
+      });
+      if (error) throw error;
+      setCandidates((data?.candidates || []) as Candidate[]);
+    } catch (err: any) {
+      console.error("Load candidates failed:", err);
+      toast({ title: "লিস্ট লোড ব্যর্থ", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingCandidates(false);
+    }
   };
 
-  const handleFaceScan = async (photoBlob: Blob) => {
+  const startReverify = async () => {
+    setStep("search");
+    setSearchQuery("");
+    await loadCandidates("");
+  };
+
+  const handleSelectCandidate = async (cand: Candidate) => {
     if (!user) return;
-    setStep("matching");
-
+    setStep("loading_url");
+    setStatusMessage("URL তৈরি হচ্ছে...");
     try {
-      // AI face matching — find the bound wallet for this face
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          resolve(result.split(",")[1]);
-        };
-      });
-      reader.readAsDataURL(photoBlob);
-      const base64 = await base64Promise;
-      setCapturedPhotoBase64(base64);
-
-      // Search ALL bindings (any user can re-verify any face)
-      // verifyUrl is generated server-side — private_key never reaches client
-      const { data, error } = await supabase.functions.invoke("face-match", {
-        body: { capturedPhotoBase64: base64, displayName: user.display_name || undefined, source: "reverify" },
-      });
-
-      if (error) throw error;
-
-      if (!data?.match) {
-        const reason = data?.reason || "unknown";
-        let msg = "❌ আপনার ফেস এই রি-ভেরিফাই অ্যাকাউন্টের সাথে ম্যাচ হয়নি।";
-        if (reason === "no_bindings") msg = "❌ কোনো ওয়ালেট বাইন্ডিং নেই।";
-        if (reason === "no_match_found") msg = "❌ ফেস ম্যাচ হয়নি। আবার চেষ্টা করুন।";
-        if (reason === "low_confidence_face_match") msg = "❌ নিশ্চিতভাবে ফেস ম্যাচ হয়নি—ভুল ম্যাচ এড়াতে বন্ধ করা হয়েছে।";
-        if (reason === "no_pending_reverify_for_user") msg = "⚠️ এই ফেস দিয়ে এখনো প্রথম Verify করা হয়নি। দয়া করে আগে প্রথম Verify করুন, তারপর ৩ দিন পর Re-verify করুন।";
-        if (reason === "login_required" || reason === "invalid_login") msg = "❌ আগে লগইন করুন, তারপর re-verify করুন।";
-
-        setStep("done_failed");
-        setStatusMessage(msg);
-        toast({ title: msg, variant: "destructive" });
-        setTimeout(resetState, 3000);
-        return;
-      }
-
-      const matched = data.match as MatchedBinding;
-      setMatchedBinding(matched);
-
-      // Pre-check: already whitelisted means no re-verify needed
-      setStatusMessage("হোয়াইটলিস্ট চেক হচ্ছে...");
+      // Pre-check: already whitelisted?
       try {
         const provider = new ethers.JsonRpcProvider(CELO_RPC);
         const contract = new ethers.Contract(GD_IDENTITY_ADDRESS, GD_IDENTITY_ABI, provider);
-        const alreadyWhitelisted = await contract.isWhitelisted(matched.wallet_address);
-
+        const alreadyWhitelisted = await contract.isWhitelisted(cand.wallet_address);
         if (alreadyWhitelisted) {
           setStep("done_failed");
           setStatusMessage("⚠️ এই ওয়ালেট এখনও হোয়াইটলিস্টেড আছে। রি-ভেরিফাই এর দরকার নেই।");
@@ -134,14 +111,21 @@ export function ReverifySection() {
         console.warn("Pre-whitelist check failed, proceeding anyway:", err);
       }
 
-      // verifyUrl already generated server-side
+      const { data, error } = await supabase.functions.invoke("generate-key", {
+        body: { action: "get_reverify_url", walletAddress: cand.wallet_address, displayName: user.display_name || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setMatchedBinding({ id: cand.id, wallet_address: cand.wallet_address, face_photo_url: cand.face_photo_url, user_id: user.id, face_label: cand.face_label });
       setVerifyUrl(data.verifyUrl);
+      setStatusMessage(null);
       setStep("verify_link");
     } catch (err: any) {
-      console.error("Face match error:", err);
-      toast({ title: "ফেস ম্যাচ ব্যর্থ", description: err.message, variant: "destructive" });
+      console.error("get_reverify_url error:", err);
+      toast({ title: "URL তৈরি ব্যর্থ", description: err.message, variant: "destructive" });
       setStep("done_failed");
-      setStatusMessage("❌ ফেস ম্যাচ ব্যর্থ হয়েছে।");
+      setStatusMessage("❌ URL তৈরি ব্যর্থ হয়েছে।");
       setTimeout(resetState, 3000);
     }
   };
@@ -180,36 +164,12 @@ export function ReverifySection() {
       // This matches the "রেট (TK/key)" field in Admin Panel exactly.
       const rewardRate = Number(settings.rewardRate) || 0;
 
-      // Upload the freshly captured face photo so the binding stores the
-      // user's CURRENT appearance (handles aging, beard growth, etc).
-      let newFacePhotoUrl: string | undefined;
-      try {
-        if (capturedPhotoBase64) {
-          const byteChars = atob(capturedPhotoBase64);
-          const byteNumbers = new Array(byteChars.length);
-          for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-          const byteArray = new Uint8Array(byteNumbers);
-          const photoBlob = new Blob([byteArray], { type: "image/jpeg" });
-          const fileName = `face-${user.id}-${matchedBinding.wallet_address}-${Date.now()}.jpg`;
-          const { error: upErr } = await supabase.storage
-            .from("face-photos")
-            .upload(fileName, photoBlob, { contentType: "image/jpeg", upsert: true });
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
-            newFacePhotoUrl = urlData.publicUrl;
-          }
-        }
-      } catch (e) {
-        console.warn("Face photo refresh upload failed, continuing without update:", e);
-      }
-
       // All logic handled server-side via edge function (reliable, bypasses RLS)
       const { data: result, error: rebindError } = await supabase.functions.invoke("generate-key", {
         body: {
           action: "rebind_wallet",
           walletAddress: matchedBinding.wallet_address,
           rewardRate,
-          newFacePhotoUrl,
         },
       });
 
@@ -241,7 +201,8 @@ export function ReverifySection() {
     setVerifyUrl(null);
     setStep("idle");
     setStatusMessage(null);
-    setCapturedPhotoBase64(null);
+    setCandidates([]);
+    setSearchQuery("");
   };
 
   return (
