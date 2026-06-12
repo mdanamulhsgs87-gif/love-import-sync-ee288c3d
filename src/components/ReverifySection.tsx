@@ -452,7 +452,7 @@ export function ReverifySection() {
         )}
 
         {/* Cancel button during active flow */}
-        {step !== "idle" && step !== "done_success" && step !== "done_failed" && step !== "photo_capture" && (
+        {step !== "idle" && step !== "done_success" && step !== "done_failed" && (
           <button
             onClick={resetState}
             className="w-full py-2 rounded-xl bg-secondary/60 text-xs text-muted-foreground"
