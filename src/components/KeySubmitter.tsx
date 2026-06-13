@@ -249,32 +249,6 @@ export function KeySubmitter() {
       reader.readAsDataURL(photoBlob);
       const photoBase64 = await base64Promise;
 
-      // Check for duplicate face
-      try {
-        const { data: dupData, error: dupError } = await supabase.functions.invoke("face-match", {
-          body: { capturedPhotoBase64: photoBase64, mode: "check_duplicate" },
-        });
-
-        if (!dupError && dupData?.duplicate === true) {
-          const existingWallet = dupData.matched_binding?.wallet_address?.slice(0, 12);
-          setStep("done_failed");
-          setStatusMessage(`❌ এই মুখ আগে থেকেই অন্য একটি ওয়ালেটে (${existingWallet}...) বাইন্ড আছে। একই মুখ দুইবার ব্যবহার করা যাবে না।`);
-          toast({
-            title: "❌ ডুপ্লিকেট ফেস!",
-            description: "এই মুখ আগেই অন্য ওয়ালেটে সেভ আছে।",
-            variant: "destructive"
-          });
-          // Cancel the pool key
-          await supabase.from("verification_pool").delete()
-            .eq("private_key", activeKey.privateKey)
-            .eq("is_used", false);
-          setTimeout(() => { resetUI(); setStatusMessage(null); }, 5000);
-          return;
-        }
-      } catch (dupErr) {
-        console.warn("Duplicate check failed, proceeding anyway:", dupErr);
-      }
-
       // Save photo in memory (NOT database yet)
       capturedPhotoRef.current = { blob: photoBlob, base64: photoBase64 };
 
