@@ -32,7 +32,7 @@ type GeneratedKey = {
   privateKey: string;
 };
 
-type VerifyStep = "idle" | "generating" | "photo_capture" | "verify_link" | "checking" | "submitting" | "done_success" | "done_failed" | "manual_submit";
+type VerifyStep = "idle" | "name_input" | "generating" | "photo_capture" | "verify_link" | "checking" | "submitting" | "done_success" | "done_failed" | "manual_submit";
 
 export function KeySubmitter() {
   const { user, refreshUser } = useAuth();
@@ -478,17 +478,17 @@ export function KeySubmitter() {
 
               {/* Start Button */}
               <motion.button
-                onClick={() => generateKeyMutation.mutate()}
-                disabled={generateKeyMutation.isPending || isOff || !hasWatchedVideo || faceLabel.trim().length < 2}
-                whileHover={!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) ? { scale: 1.03, y: -3 } : {}}
-                whileTap={!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) ? { scale: 0.97 } : {}}
+                onClick={() => setStep("name_input")}
+                disabled={generateKeyMutation.isPending || isOff || !hasWatchedVideo}
+                whileHover={!(isOff || !hasWatchedVideo) ? { scale: 1.03, y: -3 } : {}}
+                whileTap={!(isOff || !hasWatchedVideo) ? { scale: 0.97 } : {}}
                 className={`w-full relative py-5 rounded-2xl font-black text-base overflow-hidden transition-all duration-500 ${
-                  isOff || !hasWatchedVideo || faceLabel.trim().length < 2
+                  isOff || !hasWatchedVideo
                     ? "bg-secondary/60 text-muted-foreground cursor-not-allowed border border-border/50"
                     : "text-primary-foreground shadow-2xl"
                 }`}
               >
-                {!(isOff || !hasWatchedVideo || faceLabel.trim().length < 2) && (
+                {!(isOff || !hasWatchedVideo) && (
                   <>
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--purple))] via-[hsl(var(--pink))] to-[hsl(var(--amber))]"
@@ -510,21 +510,31 @@ export function KeySubmitter() {
                     <Loader2 className="animate-spin w-6 h-6" />
                   ) : !hasWatchedVideo ? (
                     <><Lock className="w-5 h-5" /> আগে ভিডিও দেখুন</>
-                  ) : faceLabel.trim().length < 2 ? (
-                    <><Lock className="w-5 h-5" /> উপরে নাম লিখুন</>
                   ) : (
                     <><ShieldCheck className="w-6 h-6" /> ফেস ভেরিফিকেশন শুরু করুন</>
                   )}
                 </span>
               </motion.button>
 
-              {/* Name / Face Label input — required so user can find this wallet later in re-verify */}
-              <div className="rounded-2xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/10 to-[hsl(var(--orange))]/10 p-4 space-y-2">
-                <label className="text-xs font-black text-[hsl(var(--amber))] flex items-center gap-2">
-                  ⚡ যার মুখ দিয়ে ভেরিফাই করছেন, তার নাম লিখুন (বাধ্যতামূলক)
+            </motion.div>
+          )}
+
+          {/* STEP: Name input (after clicking start button) */}
+          {step === "name_input" && (
+            <motion.div
+              key="name_input"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-4"
+            >
+              <div className="rounded-2xl border-2 border-[hsl(var(--amber))]/40 bg-gradient-to-br from-[hsl(var(--amber))]/10 to-[hsl(var(--orange))]/10 p-4 space-y-3">
+                <label className="text-sm font-black text-[hsl(var(--amber))] flex items-center gap-2">
+                  ⚡ যার মুখ দিয়ে ভেরিফাই করছেন, তার নাম লিখুন
                 </label>
                 <input
                   type="text"
+                  autoFocus
                   value={faceLabel}
                   onChange={(e) => setFaceLabel(e.target.value.slice(0, 60))}
                   placeholder="যেমন: সামিউল, রহিম, করিম..."
@@ -535,6 +545,34 @@ export function KeySubmitter() {
                   📝 Re-verify করার সময় এই নাম দিয়ে আপনি ওয়ালেট সহজে খুঁজে পাবেন।
                 </p>
               </div>
+
+              <motion.button
+                onClick={() => generateKeyMutation.mutate()}
+                disabled={generateKeyMutation.isPending || faceLabel.trim().length < 2}
+                whileTap={faceLabel.trim().length >= 2 ? { scale: 0.97 } : {}}
+                className={`w-full py-4 rounded-2xl font-black text-base transition-all ${
+                  faceLabel.trim().length < 2
+                    ? "bg-secondary/60 text-muted-foreground cursor-not-allowed border border-border/50"
+                    : "bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] text-primary-foreground shadow-lg"
+                }`}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {generateKeyMutation.isPending ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : faceLabel.trim().length < 2 ? (
+                    <><Lock className="w-4 h-4" /> নাম লিখুন</>
+                  ) : (
+                    <><ShieldCheck className="w-5 h-5" /> এগিয়ে যান</>
+                  )}
+                </span>
+              </motion.button>
+
+              <button
+                onClick={() => { setFaceLabel(""); setStep("idle"); }}
+                className="w-full py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-secondary/50 transition-all"
+              >
+                বাতিল করুন
+              </button>
             </motion.div>
           )}
 
