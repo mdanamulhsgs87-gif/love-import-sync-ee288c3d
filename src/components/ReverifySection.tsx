@@ -7,6 +7,9 @@ import { RefreshCcw, ExternalLink, Loader2, CheckCircle, XCircle, Search, Sparkl
 import { ethers } from "ethers";
 import { getPublicSettings } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
+import { FaceCapture } from "./FaceCapture";
+import { speakStep } from "@/lib/voice-guide";
+import { Camera, ChevronDown } from "lucide-react";
 
 const GD_IDENTITY_ADDRESS = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42";
 const CELO_RPC = "https://forno.celo.org";
@@ -23,7 +26,8 @@ type ReverifyStep =
   | "checking"
   | "submitting"
   | "done_success"
-  | "done_failed";
+  | "done_failed"
+  | "face_scanning";
 
 type MatchedBinding = {
   id: string;
@@ -51,6 +55,25 @@ export function ReverifySection() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [showFaceScan, setShowFaceScan] = useState(false);
+  const [faceScanLoading, setFaceScanLoading] = useState(false);
+
+  // Voice narration per step
+  useEffect(() => {
+    const map: Record<ReverifyStep, string> = {
+      idle: "reverify_idle",
+      search: "reverify_search",
+      face_scanning: "reverify_face_scan",
+      loading_url: "reverify_loading_url",
+      generating_url: "reverify_loading_url",
+      verify_link: "reverify_link",
+      checking: "reverify_checking",
+      submitting: "reverify_submitting",
+      done_success: "reverify_done_success",
+      done_failed: "reverify_done_failed",
+    } as any;
+    speakStep(map[step] as any);
+  }, [step]);
 
   // Auto-check whitelist when returning from GoodDollar
   useEffect(() => {
@@ -87,7 +110,55 @@ export function ReverifySection() {
   const startReverify = async () => {
     setStep("search");
     setSearchQuery("");
+    setShowFaceScan(false);
     await loadCandidates("");
+  };
+
+  // Optional: scan face to auto-find candidate
+  const handleFaceScanCapture = async (photoBlob: Blob) => {
+    setFaceScanLoading(true);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+      });
+      reader.readAsDataURL(photoBlob);
+      const photoBase64 = await base64Promise;
+
+      const { data, error } = await supabase.functions.invoke("face-match", {
+        body: { capturedPhotoBase64: photoBase64, source: "reverify", displayName: user?.display_name || undefined },
+      });
+      if (error) throw error;
+      if (!data?.match) {
+        toast({ title: "❌ ফেস ম্যাচ হয়নি", description: "নাম দিয়ে সার্চ করে দেখুন।", variant: "destructive" });
+        setStep("search");
+        setShowFaceScan(false);
+        return;
+      }
+      // Auto-select matched candidate
+      const matched = data.match;
+      setMatchedBinding({
+        id: matched.id,
+        wallet_address: matched.wallet_address,
+        face_photo_url: matched.face_photo_url,
+        user_id: matched.user_id,
+      });
+      setVerifyUrl(data.verifyUrl);
+      setStep("verify_link");
+      setShowFaceScan(false);
+      toast({ title: "✅ ফেস ম্যাচ হয়েছে!", description: "ভেরিফাই লিঙ্ক রেডি।" });
+    } catch (err: any) {
+      toast({ title: "স্ক্যান ব্যর্থ", description: err.message, variant: "destructive" });
+      setStep("search");
+      setShowFaceScan(false);
+    } finally {
+      setFaceScanLoading(false);
+    }
+  };
+
+  const handleFaceScanCancel = () => {
+    setShowFaceScan(false);
+    setStep("search");
   };
 
   const handleSelectCandidate = async (cand: Candidate) => {
@@ -203,6 +274,7 @@ export function ReverifySection() {
     setStatusMessage(null);
     setCandidates([]);
     setSearchQuery("");
+    setShowFaceScan(false);
   };
 
   return (
