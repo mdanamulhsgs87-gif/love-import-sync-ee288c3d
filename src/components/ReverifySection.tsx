@@ -429,6 +429,42 @@ export function ReverifySection() {
                 ))}
               </div>
             )}
+
+            {/* Optional: Face scan (hidden by default) */}
+            <div className="rounded-xl border border-[hsl(var(--cyan))]/30 overflow-hidden">
+              <button
+                onClick={() => setShowFaceScan((v) => !v)}
+                className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-[hsl(var(--cyan))]/10 to-[hsl(var(--blue))]/10 hover:from-[hsl(var(--cyan))]/15"
+              >
+                <span className="flex items-center gap-2 text-xs font-black text-[hsl(var(--cyan))]">
+                  <Camera className="w-4 h-4" /> নাম মনে নেই? ফেস স্ক্যান করে খুঁজুন
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-[hsl(var(--cyan))] transition-transform ${showFaceScan ? "rotate-180" : ""}`}
+                />
+              </button>
+              <AnimatePresence>
+                {showFaceScan && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-3 bg-background/40">
+                      <p className="text-[10px] text-muted-foreground mb-2 text-center">
+                        📸 ক্যামেরায় মুখ দেখান, আপনার সেভ করা ফেসগুলোর সাথে মিলিয়ে অটো খুঁজে দেবো।
+                      </p>
+                      <FaceCapture
+                        onCapture={handleFaceScanCapture}
+                        onCancel={handleFaceScanCancel}
+                        isUploading={faceScanLoading}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         )}
 
