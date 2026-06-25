@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn } from "lucide-react";
+import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { ethers } from "ethers";
 
 const VAULT_PASSWORD = "Anamul*984516";
@@ -31,6 +31,16 @@ export function AdminKeyVault() {
   const [checkProgress, setCheckProgress] = useState({ done: 0, total: 0 });
   const [notWhitelistedKeys, setNotWhitelistedKeys] = useState<any[]>([]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [editing, setEditing] = useState<any | null>(null); // binding being edited
+  const [editLabel, setEditLabel] = useState("");
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [showCustomAdd, setShowCustomAdd] = useState(false);
+  const [customPK, setCustomPK] = useState("");
+  const [customUserId, setCustomUserId] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
+  const [customFile, setCustomFile] = useState<File | null>(null);
+  const [savingCustom, setSavingCustom] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,6 +79,85 @@ export function AdminKeyVault() {
       setUnlocked(true);
     } else {
       toast({ title: "❌ পাসওয়ার্ড ভুল", variant: "destructive" });
+    }
+  };
+
+  // Upload a face image to the `face-photos` bucket and return the public URL
+  const uploadFace = async (file: File): Promise<string> => {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from("face-photos").upload(path, file, {
+      contentType: file.type || "image/jpeg",
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("face-photos").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const openEdit = (b: any) => {
+    setEditing(b);
+    setEditLabel(b.face_label || "");
+    setEditFile(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      let face_photo_url: string | undefined;
+      if (editFile) face_photo_url = await uploadFace(editFile);
+      await vaultCall("update_binding", {
+        id: editing.id,
+        face_label: editLabel,
+        ...(face_photo_url ? { face_photo_url } : {}),
+      });
+      toast({ title: "✅ আপডেট হয়েছে" });
+      setEditing(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ আপডেট ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const submitCustomAdd = async () => {
+    if (!customPK.trim() || !customUserId.trim() || !customFile) {
+      toast({ title: "সব ফিল্ড দিন (Private Key, User ID, Face Photo)", variant: "destructive" });
+      return;
+    }
+    setSavingCustom(true);
+    try {
+      const face_photo_url = await uploadFace(customFile);
+      const result = await vaultCall("add_custom_to_queue", {
+        private_key: customPK.trim(),
+        face_photo_url,
+        assigned_user_id: parseInt(customUserId.trim(), 10),
+        face_label: customLabel.trim(),
+      });
+      toast({ title: "✅ কিউতে যুক্ত হয়েছে", description: result.wallet_address?.slice(0, 18) + "..." });
+      setCustomPK(""); setCustomUserId(""); setCustomLabel(""); setCustomFile(null);
+      setShowCustomAdd(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ যুক্ত করা ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingCustom(false);
+    }
+  };
+
+  const deleteBinding = async (b: any) => {
+    if (!confirm(`এই binding ডিলিট করবেন?\n${b.wallet_address}`)) return;
+    try {
+      await vaultCall("delete_binding", { id: b.id });
+      toast({ title: "✅ ডিলিট হয়েছে" });
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ ডিলিট ব্যর্থ", description: e.message, variant: "destructive" });
     }
   };
 
@@ -231,9 +320,19 @@ export function AdminKeyVault() {
                     <div key={b.id} className="flex items-center gap-2 p-2 bg-background/60 rounded-lg">
                       <img src={b.face_photo_url} alt="" className="w-8 h-8 rounded-lg object-cover border border-border cursor-pointer hover:ring-2 hover:ring-[hsl(var(--primary))]" onClick={() => setLightboxUrl(b.face_photo_url)} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-mono truncate">{b.private_key.slice(0, 18)}...{b.private_key.slice(-6)}</p>
+                        <p className="text-[10px] font-mono truncate">
+                          {b.face_label ? <span className="font-sans font-bold text-[hsl(var(--primary))]">{b.face_label} · </span> : null}
+                          {b.private_key.slice(0, 18)}...{b.private_key.slice(-6)}
+                        </p>
                         <p className="text-[9px] text-muted-foreground">User #{b.user_id} | {b.wallet_address.slice(0, 10)}...</p>
                       </div>
+                      <button
+                        onClick={() => openEdit(b)}
+                        className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"
+                        title="Edit face/name"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
                       <button
                         onClick={() => {
                           copyText(b.private_key);
@@ -242,6 +341,13 @@ export function AdminKeyVault() {
                         className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"
                       >
                         <Copy className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => deleteBinding(b)}
+                        className="p-1.5 bg-destructive/10 text-destructive rounded-lg shrink-0"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
@@ -256,6 +362,65 @@ export function AdminKeyVault() {
         {/* ═══ Not Whitelist Tab ═══ */}
         {activeTab === "not_whitelist" && (
           <div className="space-y-3">
+            {/* Custom add to re-verify queue */}
+            <div className="bg-[hsl(var(--primary))]/5 border border-[hsl(var(--primary))]/20 rounded-xl p-3">
+              <button
+                onClick={() => setShowCustomAdd((v) => !v)}
+                className="w-full flex items-center justify-between text-xs font-bold text-[hsl(var(--primary))]"
+              >
+                <span className="flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Custom কী + Face যোগ করুন (Re-verify Queue)</span>
+                <span>{showCustomAdd ? "−" : "+"}</span>
+              </button>
+              {showCustomAdd && (
+                <div className="mt-3 space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Private Key (0x...)"
+                    value={customPK}
+                    onChange={(e) => setCustomPK(e.target.value)}
+                    className="w-full bg-background/80 border border-border rounded-lg px-3 py-2 text-[11px] font-mono"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="User ID (যেমন 123)"
+                      value={customUserId}
+                      onChange={(e) => setCustomUserId(e.target.value)}
+                      className="w-1/3 bg-background/80 border border-border rounded-lg px-3 py-2 text-[11px]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Name / Label (Nazmul)"
+                      value={customLabel}
+                      onChange={(e) => setCustomLabel(e.target.value)}
+                      className="flex-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-[11px]"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 p-2 border border-dashed border-border rounded-lg cursor-pointer text-[11px]">
+                    <Upload className="w-3.5 h-3.5" />
+                    {customFile ? customFile.name : "Face photo বেছে নিন"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setCustomFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {customFile && (
+                    <img src={URL.createObjectURL(customFile)} alt="" className="w-20 h-20 rounded-lg object-cover border border-border" />
+                  )}
+                  <button
+                    onClick={submitCustomAdd}
+                    disabled={savingCustom}
+                    className="w-full px-3 py-2 bg-[hsl(var(--primary))] text-white text-xs font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {savingCustom ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                    Queue-এ যোগ করুন
+                  </button>
+                </div>
+              )}
+            </div>
+
             {!checking && notWhitelistedKeys.length === 0 && (
               <div className="text-center py-6">
                 <p className="text-xs text-muted-foreground mb-3">
