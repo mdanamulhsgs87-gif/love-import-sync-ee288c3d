@@ -225,6 +225,149 @@ serve(async (req) => {
       );
     }
 
+    // ═══ Admin: update an existing face_wallet_binding ═══
+    if (action === "update_binding") {
+      const { id, face_photo_url, face_label, private_key, wallet_address, user_id } = data || {};
+      if (!id) {
+        return new Response(
+          JSON.stringify({ error: "Missing binding id" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const patch: any = {};
+      if (typeof face_photo_url === "string" && face_photo_url) patch.face_photo_url = face_photo_url;
+      if (typeof face_label === "string") patch.face_label = face_label.trim().slice(0, 60) || null;
+      if (typeof private_key === "string" && private_key) patch.private_key = private_key;
+      if (typeof wallet_address === "string" && wallet_address) patch.wallet_address = wallet_address;
+      if (typeof user_id === "number") patch.user_id = user_id;
+
+      const { error } = await supabase.from("face_wallet_bindings").update(patch).eq("id", id);
+      if (error) throw error;
+
+      // Also propagate face photo to any pending queue items for this wallet
+      if (patch.face_photo_url && patch.wallet_address) {
+        await supabase.from("reverify_queue")
+          .update({ face_photo_url: patch.face_photo_url })
+          .eq("wallet_address", patch.wallet_address)
+          .eq("status", "pending");
+      } else if (patch.face_photo_url) {
+        // look up wallet from binding
+        const { data: b } = await supabase.from("face_wallet_bindings").select("wallet_address").eq("id", id).maybeSingle();
+        if (b?.wallet_address) {
+          await supabase.from("reverify_queue")
+            .update({ face_photo_url: patch.face_photo_url })
+            .eq("wallet_address", b.wallet_address)
+            .eq("status", "pending");
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ═══ Admin: manually add a custom key + face + assigned user to re-verify queue ═══
+    // Also upserts a face_wallet_binding so the user can see it in their re-verify list.
+    if (action === "add_custom_to_queue") {
+      const { private_key, face_photo_url, assigned_user_id, face_label, wallet_address: walletAddrIn } = data || {};
+      if (!private_key || !face_photo_url || !assigned_user_id) {
+        return new Response(
+          JSON.stringify({ error: "private_key, face_photo_url, assigned_user_id required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Derive wallet address from private key if not provided
+      let walletAddress = (typeof walletAddrIn === "string" && walletAddrIn) ? walletAddrIn : "";
+      if (!walletAddress) {
+        try {
+          const { ethers } = await import("https://esm.sh/ethers@6.16.0");
+          walletAddress = new ethers.Wallet(private_key).address;
+        } catch (e) {
+          return new Response(JSON.stringify({ error: "Invalid private_key" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      // Upsert binding (so the user owns it for re-verify auth in generate-key)
+      const { data: existing } = await supabase
+        .from("face_wallet_bindings")
+        .select("id")
+        .eq("wallet_address", walletAddress)
+        .maybeSingle();
+
+      let bindingId = existing?.id || null;
+      if (existing?.id) {
+        await supabase.from("face_wallet_bindings").update({
+          private_key,
+          face_photo_url,
+          user_id: assigned_user_id,
+          face_label: (typeof face_label === "string" && face_label.trim()) ? face_label.trim().slice(0, 60) : null,
+        }).eq("id", existing.id);
+      } else {
+        const { data: ins, error: insErr } = await supabase.from("face_wallet_bindings").insert({
+          wallet_address: walletAddress,
+          private_key,
+          face_photo_url,
+          user_id: assigned_user_id,
+          face_label: (typeof face_label === "string" && face_label.trim()) ? face_label.trim().slice(0, 60) : null,
+        }).select("id").maybeSingle();
+        if (insErr) throw insErr;
+        bindingId = ins?.id || null;
+      }
+
+      // Avoid duplicate pending queue
+      const { data: pending } = await supabase.from("reverify_queue")
+        .select("id")
+        .eq("wallet_address", walletAddress)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (!pending) {
+        const { error: qErr } = await supabase.from("reverify_queue").insert({
+          wallet_address: walletAddress,
+          private_key,
+          face_photo_url,
+          assigned_user_id,
+          binding_id: bindingId,
+          status: "pending",
+        });
+        if (qErr) throw qErr;
+      } else {
+        // Refresh the pending row's face + key so it matches the latest custom data
+        await supabase.from("reverify_queue").update({
+          private_key,
+          face_photo_url,
+          assigned_user_id,
+        }).eq("id", pending.id);
+      }
+
+      return new Response(JSON.stringify({ success: true, wallet_address: walletAddress }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ═══ Admin: delete a face_wallet_binding (and any related pending queue rows) ═══
+    if (action === "delete_binding") {
+      const id = data?.id;
+      if (!id) {
+        return new Response(JSON.stringify({ error: "Missing id" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: b } = await supabase.from("face_wallet_bindings").select("wallet_address").eq("id", id).maybeSingle();
+      if (b?.wallet_address) {
+        await supabase.from("reverify_queue").delete()
+          .eq("wallet_address", b.wallet_address)
+          .eq("status", "pending");
+      }
+      await supabase.from("face_wallet_bindings").delete().eq("id", id);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(
       JSON.stringify({ error: "Unknown action" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
