@@ -550,6 +550,65 @@ export function AdminKeyVault() {
           <img src={lightboxUrl} alt="Face Photo" className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => !savingEdit && setEditing(null)}>
+          <div className="bg-card border border-border rounded-2xl p-4 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm">Binding এডিট করুন</h3>
+              <button onClick={() => setEditing(null)} className="p-1 hover:bg-muted rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[10px] font-mono text-muted-foreground break-all">{editing.wallet_address}</p>
+
+            <div className="flex items-center gap-3">
+              <img
+                src={editFile ? URL.createObjectURL(editFile) : editing.face_photo_url}
+                alt=""
+                className="w-20 h-20 rounded-xl object-cover border border-border"
+              />
+              <label className="flex-1 flex items-center gap-2 p-2 border border-dashed border-border rounded-lg cursor-pointer text-[11px]">
+                <Upload className="w-3.5 h-3.5" />
+                নতুন Face বেছে নিন
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setEditFile(e.target.files?.[0] || null)}
+                />
+              </label>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground">Name / Label</label>
+              <input
+                type="text"
+                value={editLabel}
+                onChange={(e) => setEditLabel(e.target.value)}
+                placeholder="যেমন: Nazmul"
+                className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-xs"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setEditing(null)}
+                disabled={savingEdit}
+                className="flex-1 px-3 py-2 bg-muted text-xs font-bold rounded-lg"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={savingEdit}
+                className="flex-1 px-3 py-2 bg-[hsl(var(--primary))] text-white text-xs font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                সেভ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
