@@ -1117,26 +1117,44 @@ export type Database = {
         Row: {
           added_by: string
           created_at: string | null
+          face_label: string | null
+          face_photo_url: string | null
+          failed_at: string | null
+          failed_reason: string | null
           id: number
           is_used: boolean
           private_key: string
+          status: string
           verify_url: string
+          wallet_address: string | null
         }
         Insert: {
           added_by?: string
           created_at?: string | null
+          face_label?: string | null
+          face_photo_url?: string | null
+          failed_at?: string | null
+          failed_reason?: string | null
           id?: number
           is_used?: boolean
           private_key: string
+          status?: string
           verify_url: string
+          wallet_address?: string | null
         }
         Update: {
           added_by?: string
           created_at?: string | null
+          face_label?: string | null
+          face_photo_url?: string | null
+          failed_at?: string | null
+          failed_reason?: string | null
           id?: number
           is_used?: boolean
           private_key?: string
+          status?: string
           verify_url?: string
+          wallet_address?: string | null
         }
         Relationships: []
       }
