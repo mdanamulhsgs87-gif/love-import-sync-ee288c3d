@@ -180,7 +180,7 @@ serve(async (req) => {
       while (true) {
         const { data: batch } = await supabase
           .from("verification_pool")
-          .select("id, verify_url, private_key, is_used, added_by, created_at")
+          .select("id, verify_url, private_key, wallet_address, face_photo_url, face_label, status, failed_reason, failed_at, is_used, added_by, created_at")
           .order("created_at", { ascending: false })
           .range(from, from + pageSize - 1);
         if (!batch || batch.length === 0) break;
@@ -192,6 +192,39 @@ serve(async (req) => {
         JSON.stringify({ pool: allData }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ═══ Admin: edit generated/failed pool item (key, face, label, status) ═══
+    if (action === "update_pool_item") {
+      const { id, private_key, face_photo_url, face_label, status, failed_reason } = data || {};
+      if (!id) {
+        return new Response(JSON.stringify({ error: "Missing pool id" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const patch: any = {};
+      if (typeof private_key === "string" && private_key.trim()) {
+        patch.private_key = private_key.trim();
+        try {
+          const { ethers } = await import("https://esm.sh/ethers@6.16.0");
+          patch.wallet_address = new ethers.Wallet(private_key.trim()).address;
+        } catch (_) {
+          return new Response(JSON.stringify({ error: "Invalid private_key" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      if (typeof face_photo_url === "string" && face_photo_url) patch.face_photo_url = face_photo_url;
+      if (typeof face_label === "string") patch.face_label = face_label.trim().slice(0, 60) || null;
+      if (typeof status === "string" && status) patch.status = status;
+      if (typeof failed_reason === "string") patch.failed_reason = failed_reason.trim() || null;
+
+      const { error } = await supabase.from("verification_pool").update(patch).eq("id", id);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, wallet_address: patch.wallet_address }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (action === "delete_pool_key") {
@@ -225,6 +258,174 @@ serve(async (req) => {
       );
     }
 
+    // ═══ Admin: edit an existing reverify queue item (key, face, label owner) ═══
+    if (action === "update_queue_item") {
+      const { id, private_key, face_photo_url, face_label, assigned_user_id, wallet_address: walletAddrIn } = data || {};
+      if (!id) {
+        return new Response(JSON.stringify({ error: "Missing queue id" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const patch: any = {};
+      let walletAddress = typeof walletAddrIn === "string" && walletAddrIn ? walletAddrIn : "";
+      if (typeof private_key === "string" && private_key.trim()) {
+        patch.private_key = private_key.trim();
+        if (!walletAddress) {
+          try {
+            const { ethers } = await import("https://esm.sh/ethers@6.16.0");
+            walletAddress = new ethers.Wallet(private_key.trim()).address;
+          } catch (_) {
+            return new Response(JSON.stringify({ error: "Invalid private_key" }), {
+              status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      }
+      if (walletAddress) patch.wallet_address = walletAddress;
+      if (typeof face_photo_url === "string" && face_photo_url) patch.face_photo_url = face_photo_url;
+      if (typeof assigned_user_id === "number") patch.assigned_user_id = assigned_user_id;
+
+      const { data: existing } = await supabase
+        .from("reverify_queue")
+        .select("binding_id, wallet_address")
+        .eq("id", id)
+        .maybeSingle();
+
+      const { error } = await supabase.from("reverify_queue").update(patch).eq("id", id);
+      if (error) throw error;
+
+      const bindingPatch: any = {};
+      if (patch.private_key) bindingPatch.private_key = patch.private_key;
+      if (patch.wallet_address) bindingPatch.wallet_address = patch.wallet_address;
+      if (patch.face_photo_url) bindingPatch.face_photo_url = patch.face_photo_url;
+      if (typeof face_label === "string") bindingPatch.face_label = face_label.trim().slice(0, 60) || null;
+      if (patch.assigned_user_id) bindingPatch.user_id = patch.assigned_user_id;
+
+      if (Object.keys(bindingPatch).length > 0) {
+        if (existing?.binding_id) {
+          await supabase.from("face_wallet_bindings").update(bindingPatch).eq("id", existing.binding_id);
+        } else if (existing?.wallet_address || patch.wallet_address) {
+          await supabase.from("face_wallet_bindings").update(bindingPatch).eq("wallet_address", existing?.wallet_address || patch.wallet_address);
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, wallet_address: patch.wallet_address }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ═══ Admin: move a failed/generated pool item to re-verify queue without deleting it ═══
+    if (action === "add_pool_to_queue") {
+      const { pool_id, assigned_user_id } = data || {};
+      if (!pool_id) {
+        return new Response(JSON.stringify({ error: "Missing pool_id" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: poolItem } = await supabase
+        .from("verification_pool")
+        .select("id, private_key, wallet_address, face_photo_url, face_label, added_by")
+        .eq("id", pool_id)
+        .maybeSingle();
+      if (!poolItem?.private_key) {
+        return new Response(JSON.stringify({ error: "Pool key not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!poolItem.face_photo_url) {
+        return new Response(JSON.stringify({ error: "Face photo missing" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let walletAddress = poolItem.wallet_address || "";
+      try {
+        const { ethers } = await import("https://esm.sh/ethers@6.16.0");
+        walletAddress = walletAddress || new ethers.Wallet(poolItem.private_key).address;
+      } catch (_) {
+        return new Response(JSON.stringify({ error: "Invalid private_key" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let ownerId = Number(assigned_user_id) || 0;
+      if (!ownerId && poolItem.added_by) {
+        const { data: uByGuest } = await supabase.from("users").select("id").eq("guest_id", poolItem.added_by).maybeSingle();
+        ownerId = uByGuest?.id || 0;
+        if (!ownerId && /^\d+$/.test(String(poolItem.added_by))) {
+          const { data: uById } = await supabase.from("users").select("id").eq("id", Number(poolItem.added_by)).maybeSingle();
+          ownerId = uById?.id || 0;
+        }
+      }
+      if (!ownerId) {
+        return new Response(JSON.stringify({ error: "Assigned User ID required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: existing } = await supabase
+        .from("face_wallet_bindings")
+        .select("id")
+        .eq("wallet_address", walletAddress)
+        .maybeSingle();
+
+      let bindingId = existing?.id || null;
+      if (existing?.id) {
+        await supabase.from("face_wallet_bindings").update({
+          private_key: poolItem.private_key,
+          face_photo_url: poolItem.face_photo_url,
+          face_label: poolItem.face_label || null,
+          user_id: ownerId,
+        }).eq("id", existing.id);
+      } else {
+        const { data: ins, error: insErr } = await supabase.from("face_wallet_bindings").insert({
+          wallet_address: walletAddress,
+          private_key: poolItem.private_key,
+          face_photo_url: poolItem.face_photo_url,
+          face_label: poolItem.face_label || null,
+          user_id: ownerId,
+        }).select("id").maybeSingle();
+        if (insErr) throw insErr;
+        bindingId = ins?.id || null;
+      }
+
+      const { data: pending } = await supabase.from("reverify_queue")
+        .select("id")
+        .eq("wallet_address", walletAddress)
+        .eq("status", "pending")
+        .maybeSingle();
+      if (pending?.id) {
+        await supabase.from("reverify_queue").update({
+          private_key: poolItem.private_key,
+          face_photo_url: poolItem.face_photo_url,
+          assigned_user_id: ownerId,
+          binding_id: bindingId,
+        }).eq("id", pending.id);
+      } else {
+        const { error: qErr } = await supabase.from("reverify_queue").insert({
+          wallet_address: walletAddress,
+          private_key: poolItem.private_key,
+          face_photo_url: poolItem.face_photo_url,
+          assigned_user_id: ownerId,
+          binding_id: bindingId,
+          status: "pending",
+        });
+        if (qErr) throw qErr;
+      }
+
+      await supabase.from("verification_pool").update({
+        wallet_address: walletAddress,
+        status: "queued",
+        failed_reason: "Admin manually added to reverify queue",
+      }).eq("id", pool_id);
+
+      return new Response(JSON.stringify({ success: true, wallet_address: walletAddress, assigned_user_id: ownerId }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ═══ Admin: update an existing face_wallet_binding ═══
     if (action === "update_binding") {
       const { id, face_photo_url, face_label, private_key, wallet_address, user_id } = data || {};
@@ -237,7 +438,19 @@ serve(async (req) => {
       const patch: any = {};
       if (typeof face_photo_url === "string" && face_photo_url) patch.face_photo_url = face_photo_url;
       if (typeof face_label === "string") patch.face_label = face_label.trim().slice(0, 60) || null;
-      if (typeof private_key === "string" && private_key) patch.private_key = private_key;
+      if (typeof private_key === "string" && private_key) {
+        patch.private_key = private_key;
+        if (!wallet_address) {
+          try {
+            const { ethers } = await import("https://esm.sh/ethers@6.16.0");
+            patch.wallet_address = new ethers.Wallet(private_key).address;
+          } catch (_) {
+            return new Response(JSON.stringify({ error: "Invalid private_key" }), {
+              status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      }
       if (typeof wallet_address === "string" && wallet_address) patch.wallet_address = wallet_address;
       if (typeof user_id === "number") patch.user_id = user_id;
 
