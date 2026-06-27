@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       // Mark pool key as used
       await adminClient
         .from("verification_pool")
-        .update({ is_used: true })
+        .update({ is_used: true, status: "used", failed_reason: null, failed_at: null })
         .eq("private_key", privateKey);
 
       // Send Telegram notification
