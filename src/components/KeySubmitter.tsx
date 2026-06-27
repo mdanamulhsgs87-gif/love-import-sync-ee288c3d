@@ -121,10 +121,7 @@ export function KeySubmitter() {
 
     const onFocus = () => {
       if (autoCheckStartedRef.current || step !== "verify_link" || !activeKey) return;
-      if (!capturedPhotoRef.current) {
-        setStep("photo_capture");
-        return;
-      }
+      if (!capturedPhotoRef.current) return;
       autoCheckStartedRef.current = true;
       window.setTimeout(() => checkWhitelistAndBind(activeKey, true), 1200);
     };
@@ -317,13 +314,6 @@ export function KeySubmitter() {
         });
       }
 
-      // If GoodDollar was already opened, bind the face captured after verification immediately.
-      if (verifyOpened) {
-        autoCheckStartedRef.current = true;
-        await checkWhitelistAndBind(activeKey, true);
-        return;
-      }
-
       // Move to verify link step
       setStep("verify_link");
       setStatusMessage(null);
@@ -410,9 +400,9 @@ export function KeySubmitter() {
       setVerifyOpened(false);
       autoCheckStartedRef.current = false;
       capturedPhotoRef.current = null;
-      setStep("verify_link");
+      setStep("photo_capture");
       setStatusMessage(null);
-      toast({ title: "✅ কী তৈরি হয়েছে", description: "আগে Face Verification খুলুন" });
+      toast({ title: "✅ কী তৈরি হয়েছে", description: "এখন আপনার মুখের ছবি তুলুন" });
     },
     onError: (err: any) => {
       toast({ title: "ব্যর্থ হয়েছে", description: err.message, variant: "destructive" });
@@ -655,7 +645,7 @@ export function KeySubmitter() {
             </motion.div>
           )}
 
-          {/* STEP: Photo capture after GoodDollar verify link */}
+          {/* STEP 2: Photo capture FIRST (before verify link) */}
           {step === "photo_capture" && activeKey && (
             <motion.div
               key="photo"
@@ -665,7 +655,7 @@ export function KeySubmitter() {
             >
               <div className="mb-3 bg-[hsl(var(--cyan))]/10 border border-[hsl(var(--cyan))]/30 rounded-xl p-3 flex items-center gap-2">
                 <Camera className="w-5 h-5 text-[hsl(var(--cyan))] shrink-0" />
-                <p className="text-xs font-bold text-[hsl(var(--cyan))]">📸 GoodDollar-এ যেই মুখ দিয়ে verify করেছেন, সেই মুখের ছবি তুলুন।</p>
+                <p className="text-xs font-bold text-[hsl(var(--cyan))]">📸 প্রথমে আপনার মুখের ছবি তুলুন। এই ফটো এই Key-এর সাথে সেভ থাকবে।</p>
               </div>
               <FaceCapture
                 onCapture={handlePhotoCapture}
@@ -687,10 +677,10 @@ export function KeySubmitter() {
               <div className="bg-gradient-to-br from-[hsl(var(--emerald))]/15 to-[hsl(var(--cyan))]/10 border border-[hsl(var(--emerald))]/30 rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="w-5 h-5 text-[hsl(var(--emerald))]" />
-                  <p className="text-sm font-black text-[hsl(var(--emerald))]">✅ Verification Key প্রস্তুত!</p>
+                  <p className="text-sm font-black text-[hsl(var(--emerald))]">✅ ফটো সেভ হয়েছে!</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
-                  আগে GoodDollar ফেস ভেরিফিকেশন করুন। তারপর ফিরে এসে যেই মুখ দিয়ে verify করেছেন সেই মুখের ফটো তুলুন—তাহলেই auto check + submit হবে।
+                  এখন নিচের বাটনে ক্লিক করে GoodDollar ফেস ভেরিফিকেশন করুন। ভেরিফাই শেষে ফিরে আসলে auto check হবে, না হলে নিজে Submit দিতে পারবেন।
                 </p>
                 <motion.a
                   href={activeKey.verifyUrl}
@@ -706,24 +696,14 @@ export function KeySubmitter() {
               </div>
 
               <motion.button
-                onClick={() => {
-                  if (capturedPhotoRef.current) {
-                    checkWhitelistAndBind(activeKey);
-                    return;
-                  }
-                  if (!verifyOpened) {
-                    toast({ title: "আগে Face Verification খুলুন", description: "GoodDollar এ verify করার পর ফিরে এসে ফটো তুলুন" });
-                    return;
-                  }
-                  setStep("photo_capture");
-                }}
+                onClick={() => checkWhitelistAndBind(activeKey)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full relative py-4 rounded-2xl font-black text-sm overflow-hidden text-primary-foreground shadow-lg"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]" />
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {capturedPhotoRef.current ? <><ShieldCheck className="w-5 h-5" /> সাবমিট করুন</> : <><Camera className="w-5 h-5" /> ভেরিফাই শেষে ফটো তুলুন</>}
+                  <ShieldCheck className="w-5 h-5" /> সাবমিট করুন
                 </span>
               </motion.button>
 
