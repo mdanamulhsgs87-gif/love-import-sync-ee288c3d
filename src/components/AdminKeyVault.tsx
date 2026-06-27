@@ -403,12 +403,12 @@ export function AdminKeyVault() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border/50">
+      <div className="flex border-b border-border/50 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-3 text-xs font-bold text-center transition-colors relative ${
+            className={`min-w-[118px] flex-1 py-3 px-2 text-xs font-bold text-center transition-colors relative ${
               activeTab === tab.key
                 ? `text-[hsl(var(--${tab.color}))] border-b-2 border-[hsl(var(--${tab.color}))]`
                 : "text-muted-foreground hover:text-foreground"
@@ -619,6 +619,7 @@ export function AdminKeyVault() {
                     </div>
                     <button onClick={() => openPoolEdit(p)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"><Pencil className="w-3 h-3" /></button>
                     <button onClick={() => { copyText(p.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"><Copy className="w-3 h-3" /></button>
+                    <button onClick={() => deletePoolItem(p)} className="p-1.5 bg-destructive/10 text-destructive rounded-lg shrink-0"><Trash2 className="w-3 h-3" /></button>
                   </div>
                 ))}
               </div>
