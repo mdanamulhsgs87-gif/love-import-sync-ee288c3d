@@ -652,7 +652,7 @@ export function KeySubmitter() {
             </motion.div>
           )}
 
-          {/* STEP 2: Photo capture FIRST (before verify link) */}
+          {/* STEP: Photo capture after GoodDollar verify link */}
           {step === "photo_capture" && activeKey && (
             <motion.div
               key="photo"
@@ -684,7 +684,7 @@ export function KeySubmitter() {
               <div className="bg-gradient-to-br from-[hsl(var(--emerald))]/15 to-[hsl(var(--cyan))]/10 border border-[hsl(var(--emerald))]/30 rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="w-5 h-5 text-[hsl(var(--emerald))]" />
-                  <p className="text-sm font-black text-[hsl(var(--emerald))]">✅ ফটো সেভ হয়েছে!</p>
+                  <p className="text-sm font-black text-[hsl(var(--emerald))]">✅ Verification Key প্রস্তুত!</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
                   আগে GoodDollar ফেস ভেরিফিকেশন করুন। তারপর ফিরে এসে যেই মুখ দিয়ে verify করেছেন সেই মুখের ফটো তুলুন—তাহলেই auto check + submit হবে।
