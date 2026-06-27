@@ -21,11 +21,10 @@ const IDENTITY_URL = "https://goodid.gooddollar.org";
 // Tunable thresholds:
 // - Duplicate check (1st-verify): STRICT — only block if AI is near-certain it's the same person.
 //   We do NOT want false "already bound" rejections for new users.
-// - Re-verify match: LENIENT — the candidate pool is already restricted to the
-//   logged-in user's own pending wallets, so we just need a reasonable identity match.
+// - Re-verify match: SECURE — wrong face must never unlock another wallet.
 const DUPLICATE_THRESHOLD = 0.92;
-const REVERIFY_THRESHOLD_MULTI = 0.60;
-const REVERIFY_THRESHOLD_SINGLE = 0.45; // when only one candidate, be very lenient
+const REVERIFY_THRESHOLD_MULTI = 0.85;
+const REVERIFY_THRESHOLD_SINGLE = 0.85;
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
