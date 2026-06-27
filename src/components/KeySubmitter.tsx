@@ -662,7 +662,7 @@ export function KeySubmitter() {
             >
               <div className="mb-3 bg-[hsl(var(--cyan))]/10 border border-[hsl(var(--cyan))]/30 rounded-xl p-3 flex items-center gap-2">
                 <Camera className="w-5 h-5 text-[hsl(var(--cyan))] shrink-0" />
-                <p className="text-xs font-bold text-[hsl(var(--cyan))]">📸 প্রথমে আপনার মুখের ছবি তুলুন। ডুপ্লিকেট চেক হবে।</p>
+                <p className="text-xs font-bold text-[hsl(var(--cyan))]">📸 GoodDollar-এ যেই মুখ দিয়ে verify করেছেন, সেই মুখের ছবি তুলুন।</p>
               </div>
               <FaceCapture
                 onCapture={handlePhotoCapture}
