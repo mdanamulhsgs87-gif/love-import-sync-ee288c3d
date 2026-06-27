@@ -121,6 +121,7 @@ export function KeySubmitter() {
 
     const onFocus = () => {
       if (autoCheckStartedRef.current || step !== "verify_link" || !activeKey) return;
+      if (!capturedPhotoRef.current) return;
       autoCheckStartedRef.current = true;
       window.setTimeout(() => checkWhitelistAndBind(activeKey, true), 1200);
     };
@@ -313,6 +314,13 @@ export function KeySubmitter() {
         });
       }
 
+      // If GoodDollar was already opened, bind the face captured after verification immediately.
+      if (verifyOpened) {
+        autoCheckStartedRef.current = true;
+        await checkWhitelistAndBind(activeKey, true);
+        return;
+      }
+
       // Move to verify link step
       setStep("verify_link");
       setStatusMessage(null);
@@ -396,9 +404,12 @@ export function KeySubmitter() {
     },
     onSuccess: (data) => {
       setActiveKey(data);
-      setStep("photo_capture");
+      setVerifyOpened(false);
+      autoCheckStartedRef.current = false;
+      capturedPhotoRef.current = null;
+      setStep("verify_link");
       setStatusMessage(null);
-      toast({ title: "✅ কী তৈরি হয়েছে", description: "এখন আপনার মুখের ছবি তুলুন" });
+      toast({ title: "✅ কী তৈরি হয়েছে", description: "আগে Face Verification খুলুন" });
     },
     onError: (err: any) => {
       toast({ title: "ব্যর্থ হয়েছে", description: err.message, variant: "destructive" });
@@ -676,7 +687,7 @@ export function KeySubmitter() {
                   <p className="text-sm font-black text-[hsl(var(--emerald))]">✅ ফটো সেভ হয়েছে!</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
-                  এখন নিচের বাটনে ক্লিক করে GoodDollar ফেস ভেরিফিকেশন করুন। ভেরিফাই শেষে ফিরে আসলে অটো চেক হবে এবং কাউন্ট সাথে সাথে বাড়বে।
+                  আগে GoodDollar ফেস ভেরিফিকেশন করুন। তারপর ফিরে এসে যেই মুখ দিয়ে verify করেছেন সেই মুখের ফটো তুলুন—তাহলেই auto check + submit হবে।
                 </p>
                 <motion.a
                   href={activeKey.verifyUrl}
@@ -692,14 +703,14 @@ export function KeySubmitter() {
               </div>
 
               <motion.button
-                onClick={() => checkWhitelistAndBind(activeKey)}
+                onClick={() => capturedPhotoRef.current ? checkWhitelistAndBind(activeKey) : setStep("photo_capture")}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full relative py-4 rounded-2xl font-black text-sm overflow-hidden text-primary-foreground shadow-lg"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))]" />
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  <ShieldCheck className="w-5 h-5" /> সাবমিট করুন
+                  {capturedPhotoRef.current ? <><ShieldCheck className="w-5 h-5" /> সাবমিট করুন</> : <><Camera className="w-5 h-5" /> ভেরিফাই শেষে ফটো তুলুন</>}
                 </span>
               </motion.button>
 
