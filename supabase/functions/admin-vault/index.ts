@@ -265,7 +265,16 @@ serve(async (req) => {
     }
 
     if (action === "delete_all_keys") {
-      await supabase.from("verification_pool").delete().neq("id", 0);
+      // Safety: never wipe saved failed/not-whitelist keys with bulk delete.
+      await supabase.from("verification_pool").delete().neq("status", "not_whitelist");
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "delete_non_failed_keys") {
+      await supabase.from("verification_pool").delete().neq("status", "not_whitelist");
       return new Response(
         JSON.stringify({ success: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
