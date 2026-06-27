@@ -125,8 +125,16 @@ export function KeySubmitter() {
       window.setTimeout(() => checkWhitelistAndBind(activeKey, true), 1200);
     };
 
+    const onVisible = () => {
+      if (document.visibilityState === "visible") onFocus();
+    };
+
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [step, verifyOpened, activeKey]);
 
   // Manual submit — fast single whitelist check, bind if pass, cancel if fail
