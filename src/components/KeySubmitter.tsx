@@ -697,7 +697,7 @@ export function KeySubmitter() {
 
               <button
                 onClick={() => {
-                  capturedPhotoRef.current = null;
+                  saveNotWhitelistForAdmin(activeKey, "User বাতিল করেছে").catch(() => undefined);
                   resetUI();
                   setStatusMessage(null);
                 }}
@@ -746,7 +746,6 @@ export function KeySubmitter() {
 
               <button
                 onClick={() => {
-                  capturedPhotoRef.current = null;
                   saveNotWhitelistForAdmin(activeKey, "User বাতিল করেছে").catch(() => undefined);
                   resetUI();
                   setStatusMessage(null);
