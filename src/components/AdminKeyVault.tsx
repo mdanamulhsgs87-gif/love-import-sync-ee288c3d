@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn, Pencil, Plus, Trash2, Upload, Download, Clock } from "lucide-react";
 import { ethers } from "ethers";
 
 const VAULT_PASSWORD = "Anamul*984516";
@@ -11,7 +11,7 @@ const GD_IDENTITY_ADDRESS = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42";
 const CELO_RPC = "https://forno.celo.org";
 const GD_IDENTITY_ABI = ["function isWhitelisted(address account) view returns (bool)"];
 
-type Tab = "verified" | "not_whitelist" | "reverified";
+type Tab = "verified" | "queue" | "failed_pool" | "generated" | "not_whitelist" | "reverified";
 
 // Helper to call admin-vault edge function
 async function vaultCall(action: string, data?: any) {
@@ -33,8 +33,21 @@ export function AdminKeyVault() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [editing, setEditing] = useState<any | null>(null); // binding being edited
   const [editLabel, setEditLabel] = useState("");
+  const [editPrivateKey, setEditPrivateKey] = useState("");
   const [editFile, setEditFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editingQueue, setEditingQueue] = useState<any | null>(null);
+  const [queueEditLabel, setQueueEditLabel] = useState("");
+  const [queueEditPrivateKey, setQueueEditPrivateKey] = useState("");
+  const [queueEditUserId, setQueueEditUserId] = useState("");
+  const [queueEditFile, setQueueEditFile] = useState<File | null>(null);
+  const [savingQueueEdit, setSavingQueueEdit] = useState(false);
+  const [editingPool, setEditingPool] = useState<any | null>(null);
+  const [poolEditLabel, setPoolEditLabel] = useState("");
+  const [poolEditPrivateKey, setPoolEditPrivateKey] = useState("");
+  const [poolEditFile, setPoolEditFile] = useState<File | null>(null);
+  const [savingPoolEdit, setSavingPoolEdit] = useState(false);
+  const [poolAssignUserId, setPoolAssignUserId] = useState<Record<number, string>>({});
   const [showCustomAdd, setShowCustomAdd] = useState(false);
   const [customPK, setCustomPK] = useState("");
   const [customUserId, setCustomUserId] = useState("");
@@ -62,7 +75,19 @@ export function AdminKeyVault() {
     enabled: unlocked,
   });
 
+  const { data: poolItems = [] } = useQuery({
+    queryKey: ["admin-pool-vault"],
+    queryFn: async () => {
+      const result = await vaultCall("get_pool");
+      return result.pool || [];
+    },
+    enabled: unlocked,
+  });
+
   const completedReverify = reverifyQueue.filter((r: any) => r.status === "completed");
+  const pendingReverify = reverifyQueue.filter((r: any) => r.status === "pending");
+  const failedPoolItems = poolItems.filter((p: any) => p.status === "not_whitelist");
+  const generatedPoolItems = poolItems.filter((p: any) => p.status !== "not_whitelist");
   const pendingReverifyAddrs = new Set(
     reverifyQueue.filter((r: any) => r.status === "pending").map((r: any) => r.wallet_address)
   );
@@ -98,7 +123,40 @@ export function AdminKeyVault() {
   const openEdit = (b: any) => {
     setEditing(b);
     setEditLabel(b.face_label || "");
+    setEditPrivateKey(b.private_key || "");
     setEditFile(null);
+  };
+
+  const openQueueEdit = (q: any) => {
+    setEditingQueue(q);
+    setQueueEditLabel(q.face_label || q.binding?.face_label || "");
+    setQueueEditPrivateKey(q.private_key || "");
+    setQueueEditUserId(String(q.assigned_user_id || ""));
+    setQueueEditFile(null);
+  };
+
+  const openPoolEdit = (p: any) => {
+    setEditingPool(p);
+    setPoolEditLabel(p.face_label || "");
+    setPoolEditPrivateKey(p.private_key || "");
+    setPoolEditFile(null);
+  };
+
+  const downloadFace = async (url: string, name = "face-photo.jpg") => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank");
+    }
   };
 
   const saveEdit = async () => {
@@ -110,6 +168,7 @@ export function AdminKeyVault() {
       await vaultCall("update_binding", {
         id: editing.id,
         face_label: editLabel,
+        private_key: editPrivateKey.trim(),
         ...(face_photo_url ? { face_photo_url } : {}),
       });
       toast({ title: "✅ আপডেট হয়েছে" });
@@ -120,6 +179,69 @@ export function AdminKeyVault() {
       toast({ title: "❌ আপডেট ব্যর্থ", description: e.message, variant: "destructive" });
     } finally {
       setSavingEdit(false);
+    }
+  };
+
+  const saveQueueEdit = async () => {
+    if (!editingQueue) return;
+    setSavingQueueEdit(true);
+    try {
+      let face_photo_url: string | undefined;
+      if (queueEditFile) face_photo_url = await uploadFace(queueEditFile);
+      await vaultCall("update_queue_item", {
+        id: editingQueue.id,
+        private_key: queueEditPrivateKey.trim(),
+        face_label: queueEditLabel,
+        assigned_user_id: parseInt(queueEditUserId, 10),
+        ...(face_photo_url ? { face_photo_url } : {}),
+      });
+      toast({ title: "✅ Queue আপডেট হয়েছে" });
+      setEditingQueue(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+    } catch (e: any) {
+      toast({ title: "❌ Queue update ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingQueueEdit(false);
+    }
+  };
+
+  const savePoolEdit = async () => {
+    if (!editingPool) return;
+    setSavingPoolEdit(true);
+    try {
+      let face_photo_url: string | undefined;
+      if (poolEditFile) face_photo_url = await uploadFace(poolEditFile);
+      await vaultCall("update_pool_item", {
+        id: editingPool.id,
+        private_key: poolEditPrivateKey.trim(),
+        face_label: poolEditLabel,
+        status: editingPool.status || "not_whitelist",
+        ...(face_photo_url ? { face_photo_url } : {}),
+      });
+      toast({ title: "✅ Failed key আপডেট হয়েছে" });
+      setEditingPool(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-vault"] });
+    } catch (e: any) {
+      toast({ title: "❌ আপডেট ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingPoolEdit(false);
+    }
+  };
+
+  const addPoolToQueue = async (p: any) => {
+    try {
+      const assigned = poolAssignUserId[p.id]?.trim();
+      const result = await vaultCall("add_pool_to_queue", {
+        pool_id: p.id,
+        assigned_user_id: assigned ? parseInt(assigned, 10) : undefined,
+      });
+      toast({ title: "✅ Re-verify queue-তে যোগ হয়েছে", description: `User #${result.assigned_user_id}` });
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-vault"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ Queue-তে যোগ ব্যর্থ", description: e.message, variant: "destructive" });
     }
   };
 
@@ -156,6 +278,17 @@ export function AdminKeyVault() {
       toast({ title: "✅ ডিলিট হয়েছে" });
       queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
       queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ ডিলিট ব্যর্থ", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const deletePoolItem = async (p: any) => {
+    if (!confirm(`এই saved/generated key ডিলিট করবেন?\n${p.wallet_address || p.private_key?.slice(0, 18)}`)) return;
+    try {
+      await vaultCall("delete_pool_key", { id: p.id });
+      toast({ title: "✅ Saved key ডিলিট হয়েছে" });
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-vault"] });
     } catch (e: any) {
       toast({ title: "❌ ডিলিট ব্যর্থ", description: e.message, variant: "destructive" });
     }
@@ -238,8 +371,11 @@ export function AdminKeyVault() {
   }
 
   const tabs: { key: Tab; label: string; count: number; color: string }[] = [
-            { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
-    { key: "not_whitelist", label: "⚠️ Not Whitelist", count: notWhitelistedKeys.length, color: "amber" },
+    { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
+    { key: "queue", label: "🔁 Re-verify Queue", count: pendingReverify.length, color: "blue" },
+    { key: "failed_pool", label: "🛟 Failed Saved", count: failedPoolItems.length, color: "amber" },
+    { key: "generated", label: "🕒 Generated", count: generatedPoolItems.length, color: "purple" },
+    { key: "not_whitelist", label: "⚠️ Live Check", count: notWhitelistedKeys.length, color: "amber" },
     { key: "reverified", label: "🔄 Re-verified", count: completedReverify.length, color: "cyan" },
   ];
 
@@ -267,12 +403,12 @@ export function AdminKeyVault() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border/50">
+      <div className="flex border-b border-border/50 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-3 text-xs font-bold text-center transition-colors relative ${
+            className={`min-w-[118px] flex-1 py-3 px-2 text-xs font-bold text-center transition-colors relative ${
               activeTab === tab.key
                 ? `text-[hsl(var(--${tab.color}))] border-b-2 border-[hsl(var(--${tab.color}))]`
                 : "text-muted-foreground hover:text-foreground"
@@ -355,6 +491,140 @@ export function AdminKeyVault() {
               </div>
             ) : (
               <p className="text-xs text-muted-foreground text-center py-6">কোনো ভেরিফাইড কী নেই</p>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Pending Re-verify Queue Tab ═══ */}
+        {activeTab === "queue" && (
+          <div className="space-y-3">
+            {pendingReverify.length > 0 ? (
+              <>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const allKeys = pendingReverify.map((r: any) => r.private_key).join("\n");
+                      copyText(allKeys);
+                      toast({ title: `${pendingReverify.length} টি Queue কী কপি হয়েছে` });
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-[hsl(var(--blue))]/20 text-[hsl(var(--blue))] text-xs font-bold rounded-xl"
+                  >
+                    <Copy className="w-4 h-4" /> সব Queue কী কপি ({pendingReverify.length})
+                  </button>
+                </div>
+                <div className="max-h-72 overflow-y-auto space-y-1.5">
+                  {pendingReverify.map((r: any) => (
+                    <div key={r.id} className="flex items-center gap-2 p-2 bg-[hsl(var(--blue))]/5 rounded-lg border border-[hsl(var(--blue))]/10">
+                      <img src={r.face_photo_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-border cursor-pointer hover:ring-2 hover:ring-[hsl(var(--primary))]" onClick={() => setLightboxUrl(r.face_photo_url)} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-mono truncate">
+                          {r.face_label ? <span className="font-sans font-bold text-[hsl(var(--blue))]">{r.face_label} · </span> : null}
+                          {r.private_key.slice(0, 18)}...{r.private_key.slice(-6)}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">User #{r.assigned_user_id} | {r.wallet_address?.slice(0, 10)}... | {new Date(r.created_at).toLocaleString("bn-BD")}</p>
+                      </div>
+                      <button onClick={() => openQueueEdit(r)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0" title="Key/Face edit">
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => downloadFace(r.face_photo_url, `queue-face-${r.id}.jpg`)} className="p-1.5 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] rounded-lg shrink-0" title="Face download">
+                        <Download className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => { copyText(r.private_key); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">Queue-তে কোনো pending key নেই</p>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Saved Failed/Not Whitelist Pool Tab ═══ */}
+        {activeTab === "failed_pool" && (
+          <div className="space-y-3">
+            <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/25 rounded-xl p-3">
+              <p className="text-xs font-bold text-[hsl(var(--amber))]">🛟 Not Whitelist হলে Key + Face এখানে সেভ থাকবে — এখান থেকে copy/manual check/queue add করতে পারবেন।</p>
+            </div>
+            {failedPoolItems.length > 0 ? (
+              <>
+                <button
+                  onClick={() => {
+                    copyText(failedPoolItems.map((p: any) => p.private_key).join("\n"));
+                    toast({ title: `${failedPoolItems.length} টি failed key কপি হয়েছে` });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] text-xs font-bold rounded-xl"
+                >
+                  <Copy className="w-4 h-4" /> সব Failed Key কপি ({failedPoolItems.length})
+                </button>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {failedPoolItems.map((p: any) => (
+                    <div key={p.id} className="p-2.5 bg-[hsl(var(--amber))]/5 rounded-xl border border-[hsl(var(--amber))]/15 space-y-2">
+                      <div className="flex items-center gap-2">
+                        {p.face_photo_url ? (
+                          <img src={p.face_photo_url} alt="" className="w-11 h-11 rounded-lg object-cover border border-border cursor-pointer" onClick={() => setLightboxUrl(p.face_photo_url)} />
+                        ) : (
+                          <div className="w-11 h-11 rounded-lg border border-border bg-muted flex items-center justify-center text-[9px] text-muted-foreground">No Face</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-mono truncate">
+                            {p.face_label ? <span className="font-sans font-bold text-[hsl(var(--amber))]">{p.face_label} · </span> : null}
+                            {p.private_key?.slice(0, 18)}...{p.private_key?.slice(-6)}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {p.failed_at ? new Date(p.failed_at).toLocaleString("bn-BD") : new Date(p.created_at).toLocaleString("bn-BD")}</p>
+                          <p className="text-[9px] text-muted-foreground truncate">{p.failed_reason || "Not whitelist"}</p>
+                        </div>
+                        <button onClick={() => openPoolEdit(p)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"><Pencil className="w-3 h-3" /></button>
+                        {p.face_photo_url && <button onClick={() => downloadFace(p.face_photo_url, `failed-face-${p.id}.jpg`)} className="p-1.5 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] rounded-lg shrink-0"><Download className="w-3 h-3" /></button>}
+                        <button onClick={() => { copyText(p.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"><Copy className="w-3 h-3" /></button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="User ID"
+                          value={poolAssignUserId[p.id] || ""}
+                          onChange={(e) => setPoolAssignUserId((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                          className="w-24 bg-background/80 border border-border rounded-lg px-2 py-1.5 text-[11px]"
+                        />
+                        <button onClick={() => addPoolToQueue(p)} className="flex-1 px-3 py-1.5 bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] text-[11px] font-bold rounded-lg">
+                          Re-verify Queue-তে দিন
+                        </button>
+                        <button onClick={() => deletePoolItem(p)} className="px-2 py-1.5 bg-destructive/10 text-destructive text-[11px] font-bold rounded-lg" title="Saved failed key ডিলিট করুন">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">এখনো কোনো saved failed key নেই</p>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Generated Pool History Tab ═══ */}
+        {activeTab === "generated" && (
+          <div className="space-y-3">
+            {generatedPoolItems.length > 0 ? (
+              <div className="max-h-80 overflow-y-auto space-y-1.5">
+                {generatedPoolItems.map((p: any) => (
+                  <div key={p.id} className="flex items-center gap-2 p-2 bg-[hsl(var(--purple))]/5 rounded-lg border border-[hsl(var(--purple))]/10">
+                    {p.face_photo_url ? <img src={p.face_photo_url} alt="" className="w-9 h-9 rounded-lg object-cover border border-border cursor-pointer" onClick={() => setLightboxUrl(p.face_photo_url)} /> : <Key className="w-5 h-5 text-[hsl(var(--purple))]" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-mono truncate">{p.private_key?.slice(0, 18)}...{p.private_key?.slice(-6)}</p>
+                      <p className="text-[9px] text-muted-foreground">{(p.status || (p.is_used ? "used" : "ready")).toUpperCase()} | {new Date(p.created_at).toLocaleString("bn-BD")}</p>
+                    </div>
+                    <button onClick={() => openPoolEdit(p)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"><Pencil className="w-3 h-3" /></button>
+                    <button onClick={() => { copyText(p.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"><Copy className="w-3 h-3" /></button>
+                    <button onClick={() => deletePoolItem(p)} className="p-1.5 bg-destructive/10 text-destructive rounded-lg shrink-0"><Trash2 className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">Generated key history নেই</p>
             )}
           </div>
         )}
@@ -576,6 +846,29 @@ export function AdminKeyVault() {
                   onChange={(e) => setEditFile(e.target.files?.[0] || null)}
                 />
               </label>
+              <button
+                onClick={() => downloadFace(editing.face_photo_url, `binding-face-${editing.id}.jpg`)}
+                className="p-2 border border-border rounded-lg text-[hsl(var(--cyan))] hover:bg-[hsl(var(--cyan))]/10"
+                title="Face download"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground">Private Key</label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="text"
+                  value={editPrivateKey}
+                  onChange={(e) => setEditPrivateKey(e.target.value)}
+                  placeholder="0x..."
+                  className="flex-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-[10px] font-mono"
+                />
+                <button onClick={() => { copyText(editPrivateKey); toast({ title: "কী কপি হয়েছে" }); }} className="px-2 bg-secondary rounded-lg text-muted-foreground">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             <div>
@@ -603,6 +896,102 @@ export function AdminKeyVault() {
                 className="flex-1 px-3 py-2 bg-[hsl(var(--primary))] text-white text-xs font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                সেভ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingQueue && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => !savingQueueEdit && setEditingQueue(null)}>
+          <div className="bg-card border border-border rounded-2xl p-4 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm">Re-verify Queue এডিট করুন</h3>
+              <button onClick={() => setEditingQueue(null)} className="p-1 hover:bg-muted rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[10px] font-mono text-muted-foreground break-all">{editingQueue.wallet_address}</p>
+
+            <div className="flex items-center gap-3">
+              {editingQueue.face_photo_url || queueEditFile ? (
+                <img src={queueEditFile ? URL.createObjectURL(queueEditFile) : editingQueue.face_photo_url} alt="" className="w-20 h-20 rounded-xl object-cover border border-border" />
+              ) : null}
+              <label className="flex-1 flex items-center gap-2 p-2 border border-dashed border-border rounded-lg cursor-pointer text-[11px]">
+                <Upload className="w-3.5 h-3.5" />
+                Gallery থেকে Face
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => setQueueEditFile(e.target.files?.[0] || null)} />
+              </label>
+              {editingQueue.face_photo_url && (
+                <button onClick={() => downloadFace(editingQueue.face_photo_url, `queue-face-${editingQueue.id}.jpg`)} className="p-2 border border-border rounded-lg text-[hsl(var(--cyan))]">
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground">Private Key</label>
+              <input type="text" value={queueEditPrivateKey} onChange={(e) => setQueueEditPrivateKey(e.target.value)} className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-[10px] font-mono" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[11px] font-bold text-muted-foreground">User ID</label>
+                <input type="number" value={queueEditUserId} onChange={(e) => setQueueEditUserId(e.target.value)} className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-muted-foreground">Name / Label</label>
+                <input type="text" value={queueEditLabel} onChange={(e) => setQueueEditLabel(e.target.value)} className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-xs" />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setEditingQueue(null)} disabled={savingQueueEdit} className="flex-1 px-3 py-2 bg-muted text-xs font-bold rounded-lg">বাতিল</button>
+              <button onClick={saveQueueEdit} disabled={savingQueueEdit} className="flex-1 px-3 py-2 bg-[hsl(var(--primary))] text-white text-xs font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                {savingQueueEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                সেভ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingPool && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => !savingPoolEdit && setEditingPool(null)}>
+          <div className="bg-card border border-border rounded-2xl p-4 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm">Saved/Generated Key এডিট করুন</h3>
+              <button onClick={() => setEditingPool(null)} className="p-1 hover:bg-muted rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Status: <b>{editingPool.status || (editingPool.is_used ? "used" : "ready")}</b></p>
+
+            <div className="flex items-center gap-3">
+              {editingPool.face_photo_url || poolEditFile ? (
+                <img src={poolEditFile ? URL.createObjectURL(poolEditFile) : editingPool.face_photo_url} alt="" className="w-20 h-20 rounded-xl object-cover border border-border" />
+              ) : <div className="w-20 h-20 rounded-xl border border-border bg-muted flex items-center justify-center text-[10px] text-muted-foreground">No Face</div>}
+              <label className="flex-1 flex items-center gap-2 p-2 border border-dashed border-border rounded-lg cursor-pointer text-[11px]">
+                <Upload className="w-3.5 h-3.5" />
+                Gallery থেকে Face
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => setPoolEditFile(e.target.files?.[0] || null)} />
+              </label>
+              {editingPool.face_photo_url && (
+                <button onClick={() => downloadFace(editingPool.face_photo_url, `saved-face-${editingPool.id}.jpg`)} className="p-2 border border-border rounded-lg text-[hsl(var(--cyan))]">
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground">Private Key</label>
+              <input type="text" value={poolEditPrivateKey} onChange={(e) => setPoolEditPrivateKey(e.target.value)} className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-[10px] font-mono" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground">Name / Label</label>
+              <input type="text" value={poolEditLabel} onChange={(e) => setPoolEditLabel(e.target.value)} className="w-full mt-1 bg-background/80 border border-border rounded-lg px-3 py-2 text-xs" />
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setEditingPool(null)} disabled={savingPoolEdit} className="flex-1 px-3 py-2 bg-muted text-xs font-bold rounded-lg">বাতিল</button>
+              <button onClick={savePoolEdit} disabled={savingPoolEdit} className="flex-1 px-3 py-2 bg-[hsl(var(--primary))] text-white text-xs font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                {savingPoolEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
                 সেভ করুন
               </button>
             </div>

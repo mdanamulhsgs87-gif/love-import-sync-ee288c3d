@@ -21,11 +21,10 @@ const IDENTITY_URL = "https://goodid.gooddollar.org";
 // Tunable thresholds:
 // - Duplicate check (1st-verify): STRICT — only block if AI is near-certain it's the same person.
 //   We do NOT want false "already bound" rejections for new users.
-// - Re-verify match: LENIENT — the candidate pool is already restricted to the
-//   logged-in user's own pending wallets, so we just need a reasonable identity match.
+// - Re-verify match: SECURE — wrong face must never unlock another wallet.
 const DUPLICATE_THRESHOLD = 0.92;
-const REVERIFY_THRESHOLD_MULTI = 0.60;
-const REVERIFY_THRESHOLD_SINGLE = 0.45; // when only one candidate, be very lenient
+const REVERIFY_THRESHOLD_MULTI = 0.85;
+const REVERIFY_THRESHOLD_SINGLE = 0.85;
 
 function extractJsonObject(text: string): any | null {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -226,14 +225,14 @@ Respond with ONLY a JSON object:
     } else {
       promptText = `You are a strict biometric face matching system. I will show you a captured selfie photo (labeled "SELFIE") and ${bindingsWithPhotos.length} stored reference photos (labeled "REF_1", "REF_2", etc.). Each reference photo has an ID.
 
-Your task: Find which reference photo shows the SAME person as the selfie. The selfie is taken DAYS or WEEKS later, so allow for normal variation.
+Your task: Find which reference photo shows the SAME person as the selfie. This is a wallet/private-key security check, so false matches are dangerous.
 
 CRITICAL RULES:
 - IGNORE clothing, background, lighting, camera angle, pose, hairstyle, beard growth/trim, glasses on/off, accessories, mild weight change, mild aging.
 - Compare stable facial biometrics: eye spacing/shape, nose bridge/tip, mouth/lip shape, jaw/chin structure, cheekbones, face proportions, ears.
-- Be REASONABLE: the same person photographed twice will NOT look pixel-identical. Lighting and angle change everything visually. Focus on identity, not appearance.
-- If the overall facial structure looks like the same person — even with differences in lighting, beard, or expression — RETURN the match.
-- Only return null if the facial structure clearly belongs to a different person.
+- Only return a match when you are highly confident from multiple stable facial features.
+- If there is any real doubt, return null. A false positive can give the wrong private key to the wrong person.
+- Different people can look similar in one or two features; that is NOT enough.
 
 Reference photo IDs:
 ${bindingsWithPhotos.map((b, i) => `REF_${i + 1}: ID="${b.id}", Wallet="${b.wallet_address.slice(0, 10)}..."`).join("\n")}

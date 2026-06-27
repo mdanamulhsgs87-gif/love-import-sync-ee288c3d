@@ -51,6 +51,12 @@ export type PoolItem = {
   is_used: boolean;
   added_by: string;
   created_at: string | null;
+  wallet_address?: string | null;
+  face_photo_url?: string | null;
+  face_label?: string | null;
+  status?: string | null;
+  failed_reason?: string | null;
+  failed_at?: string | null;
 };
 
 export type SubmittedNumber = {

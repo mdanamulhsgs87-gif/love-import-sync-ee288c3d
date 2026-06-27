@@ -445,8 +445,8 @@ export default function AdminPanel() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-pool"] }); toast({ title: "কি ডিলিট হয়েছে" }); },
   });
   const deleteAllKeysMutation = useMutation({
-    mutationFn: () => supabase.functions.invoke("admin-vault", { body: { password: "Anamul*984516", action: "delete_all_keys" } }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-pool"] }); toast({ title: "সব Key ডিলিট হয়েছে" }); },
+    mutationFn: () => supabase.functions.invoke("admin-vault", { body: { password: "Anamul*984516", action: "delete_non_failed_keys" } }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-pool"] }); toast({ title: "Failed Saved বাদে বাকি Key ডিলিট হয়েছে" }); },
   });
   const clearSubmittedMutation = useMutation({
     mutationFn: clearAllSubmittedNumbers,
@@ -1932,9 +1932,9 @@ export default function AdminPanel() {
                         className="btn-primary text-xs py-2">
                         <Copy className="w-3 h-3" /> সব কপি ({pool?.length})
                       </button>
-                      <button onClick={() => { if (confirm("সত্যিই সব Key ডিলিট করতে চান?")) deleteAllKeysMutation.mutate(); }} disabled={deleteAllKeysMutation.isPending}
+                      <button onClick={() => { if (confirm("Failed Saved বাদে generated/used Key গুলো ডিলিট করবেন?")) deleteAllKeysMutation.mutate(); }} disabled={deleteAllKeysMutation.isPending}
                         className="btn-primary bg-destructive text-xs py-2">
-                        {deleteAllKeysMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Trash2 className="w-3 h-3" /> সব ডিলিট ({pool?.length})</>}
+                        {deleteAllKeysMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Trash2 className="w-3 h-3" /> Failed বাদে ডিলিট</>}
                       </button>
                     </>
                   )}
@@ -1944,10 +1944,12 @@ export default function AdminPanel() {
                     <div key={item.id} className="flex items-center justify-between p-2.5 bg-secondary/50 rounded-xl border border-border">
                       <div className="flex-1 truncate mr-3">
                         <div className="flex items-center gap-1.5">
-                          {item.is_used ? (
+                          {item.status === "not_whitelist" ? (
+                            <span className="text-[9px] bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] px-1.5 py-0.5 rounded font-bold shrink-0">SAVED</span>
+                          ) : item.is_used ? (
                             <span className="text-[9px] bg-[hsl(var(--emerald))]/20 text-[hsl(var(--emerald))] px-1.5 py-0.5 rounded font-bold shrink-0">USED</span>
                           ) : (
-                            <span className="text-[9px] bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] px-1.5 py-0.5 rounded font-bold shrink-0">READY</span>
+                            <span className="text-[9px] bg-[hsl(var(--blue))]/20 text-[hsl(var(--blue))] px-1.5 py-0.5 rounded font-bold shrink-0">{(item.status || "READY").toUpperCase()}</span>
                           )}
                           <p className="text-xs font-mono truncate flex-1">{item.verify_url?.slice(0, 30) || "—"}...</p>
                           {item.verify_url && (
@@ -1962,7 +1964,10 @@ export default function AdminPanel() {
                           <button onClick={(e) => { e.stopPropagation(); copyText(item.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }}
                             className="text-muted-foreground hover:text-foreground shrink-0"><Copy className="w-2.5 h-2.5" /></button>
                         </div>
-                        {item.added_by !== "Unknown" && <span className="text-[9px] bg-[hsl(var(--blue))]/20 text-[hsl(var(--blue))] px-1.5 py-0.5 rounded font-bold mt-0.5 inline-block">{item.added_by}</span>}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.added_by !== "Unknown" && <span className="text-[9px] bg-[hsl(var(--blue))]/20 text-[hsl(var(--blue))] px-1.5 py-0.5 rounded font-bold">{item.added_by}</span>}
+                          <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-bold">{item.created_at ? new Date(item.created_at).toLocaleString("bn-BD") : ""}</span>
+                        </div>
                       </div>
                       <button onClick={() => deletePoolMutation.mutate(item.id)} className="text-destructive hover:bg-destructive/10 p-1 rounded shrink-0"><XCircle className="w-3.5 h-3.5" /></button>
                     </div>
