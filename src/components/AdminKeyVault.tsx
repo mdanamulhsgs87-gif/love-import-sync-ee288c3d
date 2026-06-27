@@ -484,6 +484,139 @@ export function AdminKeyVault() {
           </div>
         )}
 
+        {/* ═══ Pending Re-verify Queue Tab ═══ */}
+        {activeTab === "queue" && (
+          <div className="space-y-3">
+            {pendingReverify.length > 0 ? (
+              <>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const allKeys = pendingReverify.map((r: any) => r.private_key).join("\n");
+                      copyText(allKeys);
+                      toast({ title: `${pendingReverify.length} টি Queue কী কপি হয়েছে` });
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-[hsl(var(--blue))]/20 text-[hsl(var(--blue))] text-xs font-bold rounded-xl"
+                  >
+                    <Copy className="w-4 h-4" /> সব Queue কী কপি ({pendingReverify.length})
+                  </button>
+                </div>
+                <div className="max-h-72 overflow-y-auto space-y-1.5">
+                  {pendingReverify.map((r: any) => (
+                    <div key={r.id} className="flex items-center gap-2 p-2 bg-[hsl(var(--blue))]/5 rounded-lg border border-[hsl(var(--blue))]/10">
+                      <img src={r.face_photo_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-border cursor-pointer hover:ring-2 hover:ring-[hsl(var(--primary))]" onClick={() => setLightboxUrl(r.face_photo_url)} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-mono truncate">
+                          {r.face_label ? <span className="font-sans font-bold text-[hsl(var(--blue))]">{r.face_label} · </span> : null}
+                          {r.private_key.slice(0, 18)}...{r.private_key.slice(-6)}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">User #{r.assigned_user_id} | {r.wallet_address?.slice(0, 10)}... | {new Date(r.created_at).toLocaleString("bn-BD")}</p>
+                      </div>
+                      <button onClick={() => openQueueEdit(r)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0" title="Key/Face edit">
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => downloadFace(r.face_photo_url, `queue-face-${r.id}.jpg`)} className="p-1.5 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] rounded-lg shrink-0" title="Face download">
+                        <Download className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => { copyText(r.private_key); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">Queue-তে কোনো pending key নেই</p>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Saved Failed/Not Whitelist Pool Tab ═══ */}
+        {activeTab === "failed_pool" && (
+          <div className="space-y-3">
+            <div className="bg-[hsl(var(--amber))]/10 border border-[hsl(var(--amber))]/25 rounded-xl p-3">
+              <p className="text-xs font-bold text-[hsl(var(--amber))]">🛟 Not Whitelist হলে Key + Face এখানে সেভ থাকবে — এখান থেকে copy/manual check/queue add করতে পারবেন।</p>
+            </div>
+            {failedPoolItems.length > 0 ? (
+              <>
+                <button
+                  onClick={() => {
+                    copyText(failedPoolItems.map((p: any) => p.private_key).join("\n"));
+                    toast({ title: `${failedPoolItems.length} টি failed key কপি হয়েছে` });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] text-xs font-bold rounded-xl"
+                >
+                  <Copy className="w-4 h-4" /> সব Failed Key কপি ({failedPoolItems.length})
+                </button>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {failedPoolItems.map((p: any) => (
+                    <div key={p.id} className="p-2.5 bg-[hsl(var(--amber))]/5 rounded-xl border border-[hsl(var(--amber))]/15 space-y-2">
+                      <div className="flex items-center gap-2">
+                        {p.face_photo_url ? (
+                          <img src={p.face_photo_url} alt="" className="w-11 h-11 rounded-lg object-cover border border-border cursor-pointer" onClick={() => setLightboxUrl(p.face_photo_url)} />
+                        ) : (
+                          <div className="w-11 h-11 rounded-lg border border-border bg-muted flex items-center justify-center text-[9px] text-muted-foreground">No Face</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-mono truncate">
+                            {p.face_label ? <span className="font-sans font-bold text-[hsl(var(--amber))]">{p.face_label} · </span> : null}
+                            {p.private_key?.slice(0, 18)}...{p.private_key?.slice(-6)}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {p.failed_at ? new Date(p.failed_at).toLocaleString("bn-BD") : new Date(p.created_at).toLocaleString("bn-BD")}</p>
+                          <p className="text-[9px] text-muted-foreground truncate">{p.failed_reason || "Not whitelist"}</p>
+                        </div>
+                        <button onClick={() => openPoolEdit(p)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"><Pencil className="w-3 h-3" /></button>
+                        {p.face_photo_url && <button onClick={() => downloadFace(p.face_photo_url, `failed-face-${p.id}.jpg`)} className="p-1.5 bg-[hsl(var(--cyan))]/10 text-[hsl(var(--cyan))] rounded-lg shrink-0"><Download className="w-3 h-3" /></button>}
+                        <button onClick={() => { copyText(p.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"><Copy className="w-3 h-3" /></button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="User ID"
+                          value={poolAssignUserId[p.id] || ""}
+                          onChange={(e) => setPoolAssignUserId((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                          className="w-24 bg-background/80 border border-border rounded-lg px-2 py-1.5 text-[11px]"
+                        />
+                        <button onClick={() => addPoolToQueue(p)} className="flex-1 px-3 py-1.5 bg-[hsl(var(--amber))]/20 text-[hsl(var(--amber))] text-[11px] font-bold rounded-lg">
+                          Re-verify Queue-তে দিন
+                        </button>
+                        <button onClick={() => deleteBinding({ id: p.id, wallet_address: p.wallet_address })} className="px-2 py-1.5 bg-destructive/10 text-destructive text-[11px] font-bold rounded-lg" title="শুধু binding delete নয়; pool delete নিচের Generated tab থেকে করুন">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">এখনো কোনো saved failed key নেই</p>
+            )}
+          </div>
+        )}
+
+        {/* ═══ Generated Pool History Tab ═══ */}
+        {activeTab === "generated" && (
+          <div className="space-y-3">
+            {generatedPoolItems.length > 0 ? (
+              <div className="max-h-80 overflow-y-auto space-y-1.5">
+                {generatedPoolItems.map((p: any) => (
+                  <div key={p.id} className="flex items-center gap-2 p-2 bg-[hsl(var(--purple))]/5 rounded-lg border border-[hsl(var(--purple))]/10">
+                    {p.face_photo_url ? <img src={p.face_photo_url} alt="" className="w-9 h-9 rounded-lg object-cover border border-border cursor-pointer" onClick={() => setLightboxUrl(p.face_photo_url)} /> : <Key className="w-5 h-5 text-[hsl(var(--purple))]" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-mono truncate">{p.private_key?.slice(0, 18)}...{p.private_key?.slice(-6)}</p>
+                      <p className="text-[9px] text-muted-foreground">{(p.status || (p.is_used ? "used" : "ready")).toUpperCase()} | {new Date(p.created_at).toLocaleString("bn-BD")}</p>
+                    </div>
+                    <button onClick={() => openPoolEdit(p)} className="p-1.5 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-lg shrink-0"><Pencil className="w-3 h-3" /></button>
+                    <button onClick={() => { copyText(p.private_key || ""); toast({ title: "কী কপি হয়েছে" }); }} className="p-1.5 bg-[hsl(var(--emerald))]/10 text-[hsl(var(--emerald))] rounded-lg shrink-0"><Copy className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">Generated key history নেই</p>
+            )}
+          </div>
+        )}
+
         {/* ═══ Not Whitelist Tab ═══ */}
         {activeTab === "not_whitelist" && (
           <div className="space-y-3">
