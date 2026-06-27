@@ -30,6 +30,7 @@ type GeneratedKey = {
   address: string;
   verifyUrl: string;
   privateKey: string;
+  poolId?: number;
 };
 
 type VerifyStep = "idle" | "name_input" | "generating" | "photo_capture" | "verify_link" | "checking" | "submitting" | "done_success" | "done_failed" | "manual_submit";
@@ -41,11 +42,13 @@ export function KeySubmitter() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [faceLabel, setFaceLabel] = useState<string>("");
+  const [verifyOpened, setVerifyOpened] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Store captured photo in memory until whitelist verified
-  const capturedPhotoRef = useRef<{ blob: Blob; base64: string } | null>(null);
+  // Store captured photo + uploaded URL until whitelist verified
+  const capturedPhotoRef = useRef<{ blob: Blob; base64: string; publicUrl?: string } | null>(null);
+  const autoCheckStartedRef = useRef(false);
 
   const { data: publicSettings } = useQuery({
     queryKey: ["public-settings"],
@@ -60,6 +63,8 @@ export function KeySubmitter() {
     setActiveKey(null);
     setStep("idle");
     setIsPhotoUploading(false);
+    setVerifyOpened(false);
+    autoCheckStartedRef.current = false;
     capturedPhotoRef.current = null;
     resetVoiceGuide();
   }, []);
@@ -69,8 +74,63 @@ export function KeySubmitter() {
     speakStep(step as any);
   }, [step]);
 
+  const updatePoolRow = async (key: GeneratedKey, patch: Record<string, any>) => {
+    if (key.poolId) {
+      await supabase.from("verification_pool").update(patch as any).eq("id", key.poolId);
+      return;
+    }
+    await supabase.from("verification_pool").update(patch as any).eq("private_key", key.privateKey);
+  };
+
+  const uploadCapturedPhotoIfNeeded = async (key: GeneratedKey) => {
+    if (!capturedPhotoRef.current) throw new Error("ফটো পাওয়া যায়নি");
+    if (capturedPhotoRef.current.publicUrl) return capturedPhotoRef.current.publicUrl;
+
+    const fileName = `face-${user?.id}-${key.address}-${Date.now()}.jpg`;
+    const { error: uploadError } = await supabase.storage
+      .from("face-photos")
+      .upload(fileName, capturedPhotoRef.current.blob, { contentType: "image/jpeg", upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
+    capturedPhotoRef.current.publicUrl = urlData.publicUrl;
+    await updatePoolRow(key, {
+      face_photo_url: urlData.publicUrl,
+      face_label: faceLabel.trim() || null,
+      wallet_address: key.address,
+      status: "photo_saved",
+    });
+    return urlData.publicUrl;
+  };
+
+  const saveNotWhitelistForAdmin = async (key: GeneratedKey, reason = "GoodDollar whitelist পাওয়া যায়নি") => {
+    const facePhotoUrl = capturedPhotoRef.current?.publicUrl || (capturedPhotoRef.current ? await uploadCapturedPhotoIfNeeded(key) : null);
+    await updatePoolRow(key, {
+      wallet_address: key.address,
+      face_photo_url: facePhotoUrl,
+      face_label: faceLabel.trim() || null,
+      status: "not_whitelist",
+      failed_reason: reason,
+      failed_at: new Date().toISOString(),
+      is_used: false,
+    });
+  };
+
+  useEffect(() => {
+    if (step !== "verify_link" || !verifyOpened || !activeKey || autoCheckStartedRef.current) return;
+
+    const onFocus = () => {
+      if (autoCheckStartedRef.current || step !== "verify_link" || !activeKey) return;
+      autoCheckStartedRef.current = true;
+      window.setTimeout(() => checkWhitelistAndBind(activeKey, true), 1200);
+    };
+
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [step, verifyOpened, activeKey]);
+
   // Manual submit — fast single whitelist check, bind if pass, cancel if fail
-  const checkWhitelistAndBind = async (key: GeneratedKey) => {
+  const checkWhitelistAndBind = async (key: GeneratedKey, silentFail = false) => {
     setStep("checking");
     setStatusMessage("🔍 হোয়াইটলিস্ট চেক হচ্ছে...");
     try {
@@ -92,28 +152,15 @@ export function KeySubmitter() {
       }
 
       if (!isWhitelisted) {
-        // Cancel — delete unused pool key, reset
-        await supabase.from("verification_pool").delete()
-          .eq("private_key", key.privateKey)
-          .eq("is_used", false);
-        capturedPhotoRef.current = null;
-        setStep("done_failed");
-        setStatusMessage("❌ Whitelist হয়নি। বাতিল করা হলো।");
-        toast({ title: "❌ Whitelist পাওয়া যায়নি", variant: "destructive" });
-        setTimeout(() => { resetUI(); setStatusMessage(null); }, 3000);
+        await saveNotWhitelistForAdmin(key);
+        setStep("manual_submit");
+        setStatusMessage("⚠️ Whitelist এখনো পাওয়া যায়নি। Key + Face Admin review-তে সেভ আছে।");
+        if (!silentFail) toast({ title: "⚠️ Admin review-তে সেভ হয়েছে", description: "কী হারাবে না", variant: "destructive" });
         return;
       }
 
-      // Whitelisted! Upload face photo
-      const { blob: photoBlob } = capturedPhotoRef.current;
-      const fileName = `face-${user?.id}-${key.address}-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from("face-photos")
-        .upload(fileName, photoBlob, { contentType: "image/jpeg", upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
-      const facePhotoUrl = urlData.publicUrl;
+      // Whitelisted! Ensure face photo is already saved
+      const facePhotoUrl = await uploadCapturedPhotoIfNeeded(key);
 
       // Bind face + wallet (using service role via edge function for private_key insert)
       const { data, error } = await supabase.functions.invoke("generate-key", {
@@ -137,6 +184,7 @@ export function KeySubmitter() {
       if (data?.error) throw new Error(data.error);
 
       // Success!
+      await updatePoolRow(key, { status: "used", is_used: true, failed_reason: null, failed_at: null });
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
@@ -153,7 +201,7 @@ export function KeySubmitter() {
     }
   };
 
-  // Manual submit — checks whitelist FIRST, only binds if whitelisted
+  // Manual submit — checks whitelist again; if still not found, keeps key+face saved for admin review
   const forceBindAndSubmit = async (key: GeneratedKey) => {
     setStep("checking");
     setStatusMessage("🔍 হোয়াইটলিস্ট চেক হচ্ছে...");
@@ -176,9 +224,11 @@ export function KeySubmitter() {
       }
 
       if (!isWhitelisted) {
-        setStep("manual_submit");
-        setStatusMessage("❌ এখনো Whitelist হয়নি। GoodDollar এ ভেরিফাই সম্পন্ন করে আবার চেষ্টা করুন।");
-        toast({ title: "❌ Whitelist পাওয়া যায়নি", variant: "destructive" });
+        await saveNotWhitelistForAdmin(key, "Manual submit করেও whitelist পাওয়া যায়নি");
+        setStep("done_failed");
+        setStatusMessage("⚠️ Whitelist পাওয়া যায়নি, কিন্তু Key + Face Admin Panel-এ সেভ আছে — হারাবে না।");
+        toast({ title: "⚠️ Admin review-তে সেভ হয়েছে", description: "Admin চাইলে manual check করে queue-তে দিতে পারবে" });
+        setTimeout(() => { resetUI(); setStatusMessage(null); }, 4500);
         return;
       }
 
@@ -186,15 +236,7 @@ export function KeySubmitter() {
       setStep("submitting");
       setStatusMessage("📤 সাবমিট হচ্ছে...");
 
-      const { blob: photoBlob } = capturedPhotoRef.current;
-      const fileName = `face-${user?.id}-${key.address}-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from("face-photos")
-        .upload(fileName, photoBlob, { contentType: "image/jpeg", upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("face-photos").getPublicUrl(fileName);
-      const facePhotoUrl = urlData.publicUrl;
+      const facePhotoUrl = await uploadCapturedPhotoIfNeeded(key);
 
       const { data, error } = await supabase.functions.invoke("generate-key", {
         body: {
@@ -217,6 +259,7 @@ export function KeySubmitter() {
       if (data?.error) throw new Error(data.error);
 
       await refreshUser();
+      await updatePoolRow(key, { status: "used", is_used: true, failed_reason: null, failed_at: null });
       queryClient.invalidateQueries({ queryKey: ["pending-keys-count"] });
       capturedPhotoRef.current = null;
       setFaceLabel("");
@@ -249,8 +292,18 @@ export function KeySubmitter() {
       reader.readAsDataURL(photoBlob);
       const photoBase64 = await base64Promise;
 
-      // Save photo in memory (NOT database yet)
+      // Save photo in memory and upload immediately so failed/not-whitelist keys are never lost
       capturedPhotoRef.current = { blob: photoBlob, base64: photoBase64 };
+
+      if (activeKey) {
+        const facePhotoUrl = await uploadCapturedPhotoIfNeeded(activeKey);
+        await updatePoolRow(activeKey, {
+          wallet_address: activeKey.address,
+          face_photo_url: facePhotoUrl,
+          face_label: faceLabel.trim() || null,
+          status: "photo_saved",
+        });
+      }
 
       // Move to verify link step
       setStep("verify_link");
@@ -321,13 +374,17 @@ export function KeySubmitter() {
       }
 
       // Store in verification pool
-      await supabase.from("verification_pool").insert({
+      const { data: poolRow, error: poolError } = await supabase.from("verification_pool").insert({
         private_key: privateKey,
         verify_url: verifyUrl,
+        wallet_address: address,
+        face_label: faceLabel.trim() || null,
+        status: "generated",
         added_by: user?.guest_id || "unknown",
-      });
+      } as any).select("id").maybeSingle();
+      if (poolError) throw poolError;
 
-      return { address, verifyUrl, privateKey } as GeneratedKey;
+      return { address, verifyUrl, privateKey, poolId: poolRow?.id } as GeneratedKey;
     },
     onSuccess: (data) => {
       setActiveKey(data);
@@ -617,6 +674,7 @@ export function KeySubmitter() {
                   href={activeKey.verifyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => setVerifyOpened(true)}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[hsl(var(--emerald))] to-[hsl(var(--cyan))] text-primary-foreground font-black py-4 rounded-2xl shadow-lg"
@@ -689,8 +747,7 @@ export function KeySubmitter() {
               <button
                 onClick={() => {
                   capturedPhotoRef.current = null;
-                  // Delete unused pool key
-                  supabase.from("verification_pool").delete().eq("private_key", activeKey.privateKey).eq("is_used", false);
+                  saveNotWhitelistForAdmin(activeKey, "User বাতিল করেছে").catch(() => undefined);
                   resetUI();
                   setStatusMessage(null);
                 }}
