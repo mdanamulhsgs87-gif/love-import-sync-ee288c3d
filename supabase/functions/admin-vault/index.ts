@@ -43,8 +43,22 @@ serve(async (req) => {
         .from("reverify_queue")
         .select("*")
         .order("created_at", { ascending: false });
+
+      const bindingIds = [...new Set((queue || []).map((q: any) => q.binding_id).filter(Boolean))];
+      let bindingMap: Record<string, any> = {};
+      if (bindingIds.length > 0) {
+        const { data: bindings } = await supabase
+          .from("face_wallet_bindings")
+          .select("id, face_label")
+          .in("id", bindingIds);
+        (bindings || []).forEach((b: any) => { bindingMap[b.id] = b; });
+      }
+      const enrichedQueue = (queue || []).map((q: any) => ({
+        ...q,
+        face_label: q.binding_id ? (bindingMap[q.binding_id]?.face_label || "") : "",
+      }));
       return new Response(
-        JSON.stringify({ queue: queue || [] }),
+        JSON.stringify({ queue: enrichedQueue }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
