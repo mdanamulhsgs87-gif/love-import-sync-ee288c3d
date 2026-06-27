@@ -121,7 +121,10 @@ export function KeySubmitter() {
 
     const onFocus = () => {
       if (autoCheckStartedRef.current || step !== "verify_link" || !activeKey) return;
-      if (!capturedPhotoRef.current) return;
+      if (!capturedPhotoRef.current) {
+        setStep("photo_capture");
+        return;
+      }
       autoCheckStartedRef.current = true;
       window.setTimeout(() => checkWhitelistAndBind(activeKey, true), 1200);
     };
