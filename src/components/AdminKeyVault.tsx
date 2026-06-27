@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Copy, Lock, Loader2, RefreshCcw, CheckCircle, XCircle, Eye, EyeOff, Key, Shield, X, ZoomIn, Pencil, Plus, Trash2, Upload, Download, Clock } from "lucide-react";
 import { ethers } from "ethers";
 
 const VAULT_PASSWORD = "Anamul*984516";
@@ -11,7 +11,7 @@ const GD_IDENTITY_ADDRESS = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42";
 const CELO_RPC = "https://forno.celo.org";
 const GD_IDENTITY_ABI = ["function isWhitelisted(address account) view returns (bool)"];
 
-type Tab = "verified" | "not_whitelist" | "reverified";
+type Tab = "verified" | "queue" | "failed_pool" | "generated" | "not_whitelist" | "reverified";
 
 // Helper to call admin-vault edge function
 async function vaultCall(action: string, data?: any) {
@@ -33,8 +33,21 @@ export function AdminKeyVault() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [editing, setEditing] = useState<any | null>(null); // binding being edited
   const [editLabel, setEditLabel] = useState("");
+  const [editPrivateKey, setEditPrivateKey] = useState("");
   const [editFile, setEditFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editingQueue, setEditingQueue] = useState<any | null>(null);
+  const [queueEditLabel, setQueueEditLabel] = useState("");
+  const [queueEditPrivateKey, setQueueEditPrivateKey] = useState("");
+  const [queueEditUserId, setQueueEditUserId] = useState("");
+  const [queueEditFile, setQueueEditFile] = useState<File | null>(null);
+  const [savingQueueEdit, setSavingQueueEdit] = useState(false);
+  const [editingPool, setEditingPool] = useState<any | null>(null);
+  const [poolEditLabel, setPoolEditLabel] = useState("");
+  const [poolEditPrivateKey, setPoolEditPrivateKey] = useState("");
+  const [poolEditFile, setPoolEditFile] = useState<File | null>(null);
+  const [savingPoolEdit, setSavingPoolEdit] = useState(false);
+  const [poolAssignUserId, setPoolAssignUserId] = useState<Record<number, string>>({});
   const [showCustomAdd, setShowCustomAdd] = useState(false);
   const [customPK, setCustomPK] = useState("");
   const [customUserId, setCustomUserId] = useState("");
@@ -62,7 +75,19 @@ export function AdminKeyVault() {
     enabled: unlocked,
   });
 
+  const { data: poolItems = [] } = useQuery({
+    queryKey: ["admin-pool-vault"],
+    queryFn: async () => {
+      const result = await vaultCall("get_pool");
+      return result.pool || [];
+    },
+    enabled: unlocked,
+  });
+
   const completedReverify = reverifyQueue.filter((r: any) => r.status === "completed");
+  const pendingReverify = reverifyQueue.filter((r: any) => r.status === "pending");
+  const failedPoolItems = poolItems.filter((p: any) => p.status === "not_whitelist");
+  const generatedPoolItems = poolItems.filter((p: any) => p.status !== "not_whitelist");
   const pendingReverifyAddrs = new Set(
     reverifyQueue.filter((r: any) => r.status === "pending").map((r: any) => r.wallet_address)
   );
@@ -98,7 +123,40 @@ export function AdminKeyVault() {
   const openEdit = (b: any) => {
     setEditing(b);
     setEditLabel(b.face_label || "");
+    setEditPrivateKey(b.private_key || "");
     setEditFile(null);
+  };
+
+  const openQueueEdit = (q: any) => {
+    setEditingQueue(q);
+    setQueueEditLabel(q.face_label || q.binding?.face_label || "");
+    setQueueEditPrivateKey(q.private_key || "");
+    setQueueEditUserId(String(q.assigned_user_id || ""));
+    setQueueEditFile(null);
+  };
+
+  const openPoolEdit = (p: any) => {
+    setEditingPool(p);
+    setPoolEditLabel(p.face_label || "");
+    setPoolEditPrivateKey(p.private_key || "");
+    setPoolEditFile(null);
+  };
+
+  const downloadFace = async (url: string, name = "face-photo.jpg") => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank");
+    }
   };
 
   const saveEdit = async () => {
@@ -110,6 +168,7 @@ export function AdminKeyVault() {
       await vaultCall("update_binding", {
         id: editing.id,
         face_label: editLabel,
+        private_key: editPrivateKey.trim(),
         ...(face_photo_url ? { face_photo_url } : {}),
       });
       toast({ title: "✅ আপডেট হয়েছে" });
@@ -120,6 +179,69 @@ export function AdminKeyVault() {
       toast({ title: "❌ আপডেট ব্যর্থ", description: e.message, variant: "destructive" });
     } finally {
       setSavingEdit(false);
+    }
+  };
+
+  const saveQueueEdit = async () => {
+    if (!editingQueue) return;
+    setSavingQueueEdit(true);
+    try {
+      let face_photo_url: string | undefined;
+      if (queueEditFile) face_photo_url = await uploadFace(queueEditFile);
+      await vaultCall("update_queue_item", {
+        id: editingQueue.id,
+        private_key: queueEditPrivateKey.trim(),
+        face_label: queueEditLabel,
+        assigned_user_id: parseInt(queueEditUserId, 10),
+        ...(face_photo_url ? { face_photo_url } : {}),
+      });
+      toast({ title: "✅ Queue আপডেট হয়েছে" });
+      setEditingQueue(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+    } catch (e: any) {
+      toast({ title: "❌ Queue update ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingQueueEdit(false);
+    }
+  };
+
+  const savePoolEdit = async () => {
+    if (!editingPool) return;
+    setSavingPoolEdit(true);
+    try {
+      let face_photo_url: string | undefined;
+      if (poolEditFile) face_photo_url = await uploadFace(poolEditFile);
+      await vaultCall("update_pool_item", {
+        id: editingPool.id,
+        private_key: poolEditPrivateKey.trim(),
+        face_label: poolEditLabel,
+        status: editingPool.status || "not_whitelist",
+        ...(face_photo_url ? { face_photo_url } : {}),
+      });
+      toast({ title: "✅ Failed key আপডেট হয়েছে" });
+      setEditingPool(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-vault"] });
+    } catch (e: any) {
+      toast({ title: "❌ আপডেট ব্যর্থ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingPoolEdit(false);
+    }
+  };
+
+  const addPoolToQueue = async (p: any) => {
+    try {
+      const assigned = poolAssignUserId[p.id]?.trim();
+      const result = await vaultCall("add_pool_to_queue", {
+        pool_id: p.id,
+        assigned_user_id: assigned ? parseInt(assigned, 10) : undefined,
+      });
+      toast({ title: "✅ Re-verify queue-তে যোগ হয়েছে", description: `User #${result.assigned_user_id}` });
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-vault"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-face-bindings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-reverify-queue"] });
+    } catch (e: any) {
+      toast({ title: "❌ Queue-তে যোগ ব্যর্থ", description: e.message, variant: "destructive" });
     }
   };
 
@@ -238,8 +360,11 @@ export function AdminKeyVault() {
   }
 
   const tabs: { key: Tab; label: string; count: number; color: string }[] = [
-            { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
-    { key: "not_whitelist", label: "⚠️ Not Whitelist", count: notWhitelistedKeys.length, color: "amber" },
+    { key: "verified", label: "✅ Verified Keys", count: verifiedBindings.length, color: "emerald" },
+    { key: "queue", label: "🔁 Re-verify Queue", count: pendingReverify.length, color: "blue" },
+    { key: "failed_pool", label: "🛟 Failed Saved", count: failedPoolItems.length, color: "amber" },
+    { key: "generated", label: "🕒 Generated", count: generatedPoolItems.length, color: "purple" },
+    { key: "not_whitelist", label: "⚠️ Live Check", count: notWhitelistedKeys.length, color: "amber" },
     { key: "reverified", label: "🔄 Re-verified", count: completedReverify.length, color: "cyan" },
   ];
 
