@@ -703,7 +703,17 @@ export function KeySubmitter() {
               </div>
 
               <motion.button
-                onClick={() => capturedPhotoRef.current ? checkWhitelistAndBind(activeKey) : setStep("photo_capture")}
+                onClick={() => {
+                  if (capturedPhotoRef.current) {
+                    checkWhitelistAndBind(activeKey);
+                    return;
+                  }
+                  if (!verifyOpened) {
+                    toast({ title: "আগে Face Verification খুলুন", description: "GoodDollar এ verify করার পর ফিরে এসে ফটো তুলুন" });
+                    return;
+                  }
+                  setStep("photo_capture");
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full relative py-4 rounded-2xl font-black text-sm overflow-hidden text-primary-foreground shadow-lg"
